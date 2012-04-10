@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 Database repository for the Solutions for Open Land Administration-----
+=======
+Database repository for the Solutions for Open Land Administration*****
+>>>>>>> nepal_custom
 (SOLA) open source project. This repository contains sql scripts
 and database backups for building and populating the SOLA PostgreSQL database.
 
