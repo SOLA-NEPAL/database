@@ -47,6 +47,11 @@ DROP SCHEMA IF EXISTS transaction CASCADE;
         
 CREATE SCHEMA transaction;
 
+--Create schema nep_system--
+DROP SCHEMA IF EXISTS nep_system CASCADE;
+        
+CREATE SCHEMA nep_system;
+
 --Adding handy common functions --
 
 -- Enable/disable all the triggers in database --
@@ -128,21 +133,20 @@ $BODY$
 -- FROM snap_geometry_to_geometry(geomfromtext('POLYGON((0.1 0, 0.1 5.7, 4 3, 0.1 0))'), 
 --    geomfromtext('POLYGON((0 0, 0 6, 6 6, 6 0, 0 0),(1 1, 3 5, 4 5, 1 1))'), 1, true)
 
-CREATE OR REPLACE FUNCTION snap_geometry_to_geometry(
+create or replace function snap_geometry_to_geometry(
   inout geom_to_snap geometry, -- Geometry that has to be snapped. It can be point, linestring or polygon
   inout target_geom geometry, -- Geometry that will be the target to used for snapping
   snap_distance float, -- The snap distance in meters
   change_target_if_needed boolean, -- It gives if it is allowed to change target during snapping
   out snapped boolean, -- An output value showing if the geometry is snapped. If it is a linestring or polygon, even if one point of them is snapped it returns true.
   out target_is_changed boolean -- It shows if the target changed during the snapping process
-)
-  RETURNS record AS
+  ) 
+returns record as
 $BODY$
 DECLARE
   i integer;
   nr_elements integer;
   rec record;
-  rec2 record;
   point_location float;
   rings geometry[];
   
@@ -211,17 +215,7 @@ BEGIN
         snapped = true;
       end if;
       i = i+1;
-    end loop;
-    -- For each point of the target checks if it can snap to the geom_to_snap
-    for rec in select * from ST_DumpPoints(target_geom) t 
-      where st_dwithin(geom_to_snap, t.geom, snap_distance) loop
-      select t.* into rec2
-        from snap_geometry_to_geometry(rec.geom, geom_to_snap, snap_distance, true) t;
-      if rec2.target_is_changed then
-        geom_to_snap = rec2.target_geom;
-        snapped = true;
-      end if;
-    end loop;
+    end loop;    
   elseif st_geometrytype(geom_to_snap) = 'ST_Polygon' then
     select  array_agg(ST_ExteriorRing(geom)) into rings from ST_DumpRings(geom_to_snap);
     nr_elements = array_upper(rings,1);
@@ -247,7 +241,7 @@ BEGIN
 END;
 $BODY$
   LANGUAGE plpgsql;
-  
+
 -- This function assigns a srid found in the settings to the geometry passed as parameter  
 CREATE OR REPLACE FUNCTION get_geometry_with_srid(geom geometry)
   RETURNS geometry AS
@@ -287,7 +281,138 @@ LANGUAGE 'plpgsql';
 
     
 --Adding functions --
---Adding trigger function to track changes--
+
+
+-- Function public.nepali_to_englishdate -----
+CREATE OR REPLACE FUNCTION public.nepali_to_englishdate(
+    nepalidatestring varchar)
+RETURNS date AS
+$BODY$
+DECLARE
+constDate Date:='2007-04-14';
+nepYear integer[] := '{}';
+nepMonth integer[]:='{}';
+days integer[] := '{}';
+test varchar(50);
+yr integer;
+mm integer;
+d integer;
+cnt integer;
+dt Date;
+r integer;
+r1 integer;
+i integer;
+dd integer:=0;
+BEGIN
+dt:=nepalidatestring;
+SELECT into yr EXTRACT(YEAR FROM  dt);
+SELECT into mm EXTRACT(MONTH FROM  dt);
+SELECT into d EXTRACT(DAY FROM  dt);
+select count('nep_year') into cnt from nep_system.np_calendar;
+i:=0;
+for r in select "nep_year" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nepYear[i]:=r;
+i=i+1;
+end loop;
+
+i:=0;
+for r in select "nep_month" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nepMonth[i]:=r;
+i=i+1;
+end loop;
+
+i:=0;
+for r in select "dayss" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+days[i]:=r;
+i=i+1;
+end loop;
+i:=0;
+WHILE i<= cnt LOOP
+    if nepYear[i]=yr and nepMonth[i]=mm then
+	Exit;
+	else
+	dd=dd+days[i];
+    end if;
+    i=i+1;
+end LOOP;
+dd=dd+d-1;
+test:=constDate+dd;
+--test:=yr||'/'||mm||'/'||d;
+--test:=to_date(test, 'yyyy/mm/dd');
+return test;
+
+END$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION nepali_to_englishdate(character varying)
+  OWNER TO postgres;
+COMMENT ON FUNCTION nepali_to_englishdate(character varying) IS 'This function converts the given western date in the format "yyyy/MM/dd" to Nepali date';
+
+-- Function public.english_to_nepalidatestring -----
+CREATE OR REPLACE FUNCTION public.english_to_nepalidatestring(
+    englishdate date)
+RETURNS character varying AS
+$BODY$
+DECLARE
+constDate Date:='2007-04-14';
+nepYear integer[] := '{}';
+nepMonth integer[]:='{}';
+days integer[] := '{}';
+test varchar(50);
+yr integer:=0;
+mm integer:=0;
+d integer:=0;
+cnt integer;
+--dt Date;
+r integer;
+r1 integer;
+i integer;
+dd integer:=0;
+dateDiff integer:=0;
+BEGIN
+--dt:=eng_date;
+dateDiff=englishdate-constDate;
+select count('nep_year') into cnt from  nep_system.np_calendar;
+
+i=0;
+for r in select "nep_year" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nepYear[i]:=r;
+i=i+1;
+end loop;
+
+i:=0;
+for r in select "nep_month" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nepMonth[i]:=r;
+i=i+1;
+end loop;
+
+i:=0;
+for r in select "dayss" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+days[i]:=r;
+i=i+1;
+end loop;
+
+i:=0;
+WHILE i<= cnt LOOP
+  if d<=dateDiff then
+	d=d+days[i];
+	yr=nepYear[i];
+	mm=nepMonth[i];
+	else
+	d=d-days[i-1];
+	exit;
+   end if;
+   i=i+1;
+end LOOP;
+
+test=yr||'-'||mm||'-'||dateDiff-d+1;
+return test ;
+END$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
+ALTER FUNCTION english_to_nepalidatestring(date)
+  OWNER TO postgres;
+COMMENT ON FUNCTION english_to_nepalidatestring(date) IS 'This function converts the given western date in the format "yyyy/MM/dd" to Nepali date';--Adding trigger function to track changes--
 
 CREATE OR REPLACE FUNCTION f_for_trg_track_changes() RETURNS TRIGGER 
 AS $$
@@ -1273,15 +1398,15 @@ CREATE TABLE cadastre.spatial_unit(
     label varchar(255),
     surface_relation_code varchar(20) NOT NULL DEFAULT ('onSurface'),
     level_id varchar(40),
-    reference_point GEOMETRY
-        CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-        CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 2193),
-        CONSTRAINT enforce_valid_reference_point CHECK (st_isvalid(reference_point)),
-        CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1314,15 +1439,15 @@ CREATE TABLE cadastre.spatial_unit_historic
     label varchar(255),
     surface_relation_code varchar(20),
     level_id varchar(40),
-    reference_point GEOMETRY
-        CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-        CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 2193),
-        CONSTRAINT enforce_valid_reference_point CHECK (st_isvalid(reference_point)),
-        CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1585,7 +1710,7 @@ insert into cadastre.structure_type(code, display_value, status) values('polygon
 insert into cadastre.structure_type(code, display_value, status) values('sketch', 'Sketch::::Schizzo', 'c');
 insert into cadastre.structure_type(code, display_value, status) values('text', 'Text::::Testo', 'c');
 insert into cadastre.structure_type(code, display_value, status) values('topological', 'Topological::::Topologico', 'c');
-insert into cadastre.structure_type(code, display_value, status) values('unStructuredLine', 'UnstructuredLine::::LineanonDefinita', 'c');
+insert into cadastre.structure_type(code, display_value) values('unStructuredLine', 'UnstructuredLine::::LineanonDefinita');
 
 
 
@@ -1624,16 +1749,16 @@ CREATE TABLE cadastre.spatial_unit_group(
     hierarchy_level integer NOT NULL,
     label varchar(50),
     name varchar(50),
-    reference_point GEOMETRY
-        CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-        CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 2193),
-        CONSTRAINT enforce_valid_reference_point CHECK (st_isvalid(reference_point)),
-        CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'MULTIPOLYGON'::text OR geom IS NULL),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'MULTIPOLYGON'::text OR geom IS NULL),
     found_in_spatial_unit_group_id varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -1666,16 +1791,16 @@ CREATE TABLE cadastre.spatial_unit_group_historic
     hierarchy_level integer,
     label varchar(50),
     name varchar(50),
-    reference_point GEOMETRY
-        CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-        CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 2193),
-        CONSTRAINT enforce_valid_reference_point CHECK (st_isvalid(reference_point)),
-        CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'MULTIPOLYGON'::text OR geom IS NULL),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'MULTIPOLYGON'::text OR geom IS NULL),
     found_in_spatial_unit_group_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
@@ -1798,10 +1923,10 @@ CREATE TABLE cadastre.legal_space_utility_network(
     ext_physical_network_id varchar(40),
     status_code varchar(20),
     type_code varchar(20) NOT NULL,
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1832,10 +1957,10 @@ CREATE TABLE cadastre.legal_space_utility_network_historic
     ext_physical_network_id varchar(40),
     status_code varchar(20),
     type_code varchar(20),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1933,11 +2058,11 @@ CREATE TABLE application.application(
     expected_completion_date date NOT NULL DEFAULT (now()),
     assignee_id varchar(40),
     assigned_datetime timestamp,
-    location GEOMETRY
-        CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
-        CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 2193),
-        CONSTRAINT enforce_valid_location CHECK (st_isvalid(location)),
-        CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
+    location GEOMETRY,
+    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+    
+            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
+    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
     services_fee numeric(20, 2) NOT NULL DEFAULT (0),
     tax numeric(20, 2) NOT NULL DEFAULT (0),
     total_fee numeric(20, 2) NOT NULL DEFAULT (0),
@@ -1981,11 +2106,11 @@ CREATE TABLE application.application_historic
     expected_completion_date date,
     assignee_id varchar(40),
     assigned_datetime timestamp,
-    location GEOMETRY
-        CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
-        CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 2193),
-        CONSTRAINT enforce_valid_location CHECK (st_isvalid(location)),
-        CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
+    location GEOMETRY,
+    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+    
+            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
+    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
     services_fee numeric(20, 2),
     tax numeric(20, 2),
     total_fee numeric(20, 2),
@@ -2857,7 +2982,7 @@ insert into system.setting(name, vl, active, description) values('map-west', '17
 insert into system.setting(name, vl, active, description) values('map-south', '5919888', true, 'The most south coordinate. It is used in the map control.');
 insert into system.setting(name, vl, active, description) values('map-east', '1795771', true, 'The most east coordinate. It is used in the map control.');
 insert into system.setting(name, vl, active, description) values('map-north', '5932259', true, 'The most north coordinate. It is used in the map control.');
-insert into system.setting(name, vl, active, description) values('map-tolerance', '0.01', true, 'The tolerance that is used while snapping geometries to each other. If two points are within this distance are considered being in the same location.');
+insert into system.setting(name, vl, active, description) values('map-tolerance', '0.001', true, 'The tolerance that is used while snapping geometries to each other. If two points are within this distance are considered being in the same location.');
 insert into system.setting(name, vl, active, description) values('map-shift-tolerance-rural', '20', true, 'The shift tolerance of boundary points used in cadastre change in rural areas.');
 insert into system.setting(name, vl, active, description) values('map-shift-tolerance-urban', '5', true, 'The shift tolerance of boundary points used in cadastre change in urban areas.');
 
@@ -2926,10 +3051,12 @@ CREATE TABLE system.config_map_layer(
  -- Data for the table system.config_map_layer -- 
 insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('parcels', 'Parcels::::ITALIANO', 'pojo', 'SpatialResult.getParcels', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_parcel', 'parcel.xml', true, 1);
 insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('pending-parcels', 'Pending parcels::::ITALIANO', 'pojo', 'SpatialResult.getParcelsPending', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_parcel_pending', 'pending_parcels.xml', true, 2);
-insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('roads', 'Roads::::ITALIANO', 'pojo', 'SpatialResult.getRoads', 'theGeom:MultiPolygon,label:""', 'dynamic.informationtool.get_road', 'road.xml', true, 3);
-insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('survey-controls', 'Survey controls::::ITALIANO', 'pojo', 'SpatialResult.getSurveyControls', 'theGeom:Point,label:""', 'dynamic.informationtool.get_survey_control', 'survey_control.xml', true, 4);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('roads', 'Roads::::ITALIANO', 'pojo', 'SpatialResult.getRoads', 'theGeom:MultiPolygon,label:""', 'dynamic.informationtool.get_road', 'road.xml', true, 7);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('survey-controls', 'Survey controls::::ITALIANO', 'pojo', 'SpatialResult.getSurveyControls', 'theGeom:Point,label:""', 'dynamic.informationtool.get_survey_control', 'survey_control.xml', true, 8);
 insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('place-names', 'Places names::::ITALIANO', 'pojo', 'SpatialResult.getPlaceNames', 'theGeom:Point,label:""', 'dynamic.informationtool.get_place_name', 'place_name.xml', true, 5);
 insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('applications', 'Applications::::ITALIANO', 'pojo', 'SpatialResult.getApplications', 'theGeom:MultiPoint,label:""', 'dynamic.informationtool.get_application', 'application.xml', true, 6);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('constructions', 'constructions::::ITALIANO', 'pojo', 'SpatialResult.getconstructions', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_construction', 'construction.xml', true, 3);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('segments', 'segments::::segments', 'pojo', 'SpatialResult.getsegments', 'theGeom:LineString,label:""', 'dynamic.informationtool.get_segment', 'segment.xml', true, 4);
 
 
 
@@ -3133,9 +3260,9 @@ CREATE TABLE cadastre.cadastre_object_type(
 
     
  -- Data for the table cadastre.cadastre_object_type -- 
-insert into cadastre.cadastre_object_type(code, display_value, status) values('parcel', 'Parcel::::ITALIANO', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, status) values('buildingUnit', 'Building Unit::::ITALIANO', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, status) values('utilityNetwork', 'Utility Network::::ITALIANO', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('parcel', 'Parcel::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('buildingUnit', 'Building Unit::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('utilityNetwork', 'Utility Network::::ITALIANO', '', 'c');
 
 
 
@@ -3148,15 +3275,22 @@ CREATE TABLE cadastre.cadastre_object(
     approval_datetime timestamp,
     historic_datetime timestamp,
     source_reference varchar(100),
-    name_firstpart varchar(20) NOT NULL,
-    name_lastpart varchar(50) NOT NULL,
+    name_firstpart varchar(20),
+    name_lastpart varchar(50),
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    geom_polygon GEOMETRY
-        CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-        CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 2193),
-        CONSTRAINT enforce_valid_geom_polygon CHECK (st_isvalid(geom_polygon)),
-        CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40) NOT NULL,
+    parcel_no integer,
+    district integer,
+    vdc integer,
+    wardno varchar(3),
+    grids1 varchar(20),
+    parcel_note varchar(255),
+    parcel_type integer NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3165,7 +3299,6 @@ CREATE TABLE cadastre.cadastre_object(
 
     -- Internal constraints
     
-    CONSTRAINT cadastre_object_name UNIQUE (name_firstpart, name_lastpart),
     CONSTRAINT cadastre_object_pkey PRIMARY KEY (id)
 );
 
@@ -3193,12 +3326,19 @@ CREATE TABLE cadastre.cadastre_object_historic
     name_firstpart varchar(20),
     name_lastpart varchar(50),
     status_code varchar(20),
-    geom_polygon GEOMETRY
-        CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-        CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 2193),
-        CONSTRAINT enforce_valid_geom_polygon CHECK (st_isvalid(geom_polygon)),
-        CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40),
+    parcel_no integer,
+    district integer,
+    vdc integer,
+    wardno varchar(3),
+    grids1 varchar(20),
+    parcel_note varchar(255),
+    parcel_type integer,
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -3231,12 +3371,6 @@ CREATE TABLE administrative.ba_unit_rel_type(
 );
 
     
- -- Data for the table administrative.ba_unit_rel_type -- 
-insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('priorTitle', 'Prior Title', 'Prior Title', 'c');
-insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('rootTitle', 'Root of Title', 'Root of Title', 'c');
-
-
-
 --Table administrative.notation ----
 DROP TABLE IF EXISTS administrative.notation CASCADE;
 CREATE TABLE administrative.notation(
@@ -3514,11 +3648,11 @@ DROP TABLE IF EXISTS cadastre.cadastre_object_target CASCADE;
 CREATE TABLE cadastre.cadastre_object_target(
     transaction_id varchar(40) NOT NULL,
     cadastre_object_id varchar(40) NOT NULL,
-    geom_polygon GEOMETRY
-        CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-        CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 2193),
-        CONSTRAINT enforce_valid_geom_polygon CHECK (st_isvalid(geom_polygon)),
-        CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3547,11 +3681,11 @@ CREATE TABLE cadastre.cadastre_object_target_historic
 (
     transaction_id varchar(40),
     cadastre_object_id varchar(40),
-    geom_polygon GEOMETRY
-        CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-        CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 2193),
-        CONSTRAINT enforce_valid_geom_polygon CHECK (st_isvalid(geom_polygon)),
-        CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -3596,16 +3730,16 @@ CREATE TABLE cadastre.survey_point(
     transaction_id varchar(40) NOT NULL,
     id varchar(40) NOT NULL,
     boundary bool NOT NULL DEFAULT (true),
-    geom GEOMETRY NOT NULL
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    original_geom GEOMETRY NOT NULL
-        CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
-        CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 2193),
-        CONSTRAINT enforce_valid_original_geom CHECK (st_isvalid(original_geom)),
-        CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
+    geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    original_geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
+    
+            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
+    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3636,16 +3770,16 @@ CREATE TABLE cadastre.survey_point_historic
     transaction_id varchar(40),
     id varchar(40),
     boundary bool,
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    original_geom GEOMETRY
-        CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
-        CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 2193),
-        CONSTRAINT enforce_valid_original_geom CHECK (st_isvalid(original_geom)),
-        CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    original_geom GEOMETRY,
+    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
+    
+            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
+    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -3862,6 +3996,10 @@ insert into system.query(name, sql) values('dynamic.informationtool.get_place_na
 insert into system.query(name, sql) values('dynamic.informationtool.get_road', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 insert into system.query(name, sql) values('dynamic.informationtool.get_application', 'select id, nr,  st_asewkb(location) as the_geom from application.application where ST_Intersects(location, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 insert into system.query(name, sql) values('dynamic.informationtool.get_survey_control', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.survey_control where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getconstructions', 'select cid, id,constype, st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_construction', 'select cid, id,constype,  st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getsegments', 'select sid,id,bound_type,segno,shape_length, st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_segment', 'select sid, id,bound_type,segno,shape_length,  st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 
 
 
@@ -3903,6 +4041,15 @@ insert into system.query_field(query_name, index_in_query, name) values('dynamic
 insert into system.query_field(query_name, index_in_query, name) values('dynamic.informationtool.get_survey_control', 0, 'id');
 insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_survey_control', 1, 'label', 'Label::::ITALIANO');
 insert into system.query_field(query_name, index_in_query, name) values('dynamic.informationtool.get_survey_control', 2, 'the_geom');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_construction', 0, 'cid', 'Const. ID::::Const.ID');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_construction', 1, 'id', 'Parcel ID::::Parcel ID');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_construction', 2, 'constype', 'Construction type::::Construction type');
+insert into system.query_field(query_name, index_in_query, name) values('dynamic.informationtool.get_construction', 3, 'the_geom');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_segment', 0, 'sid', 'Seg ID::::Seg ID');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_segment', 1, 'id', 'Parcel ID::::Parcel ID');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_segment', 2, 'bound_type', 'Boundary type::::Boundary type');
+insert into system.query_field(query_name, index_in_query, name, display_value) values('dynamic.informationtool.get_segment', 3, 'shape_length', 'Shape Length::::Shape Length');
+insert into system.query_field(query_name, index_in_query, name) values('dynamic.informationtool.get_segment', 4, 'the_geom');
 
 
 
@@ -3911,11 +4058,11 @@ DROP TABLE IF EXISTS cadastre.cadastre_object_node_target CASCADE;
 CREATE TABLE cadastre.cadastre_object_node_target(
     transaction_id varchar(40) NOT NULL,
     node_id varchar(40) NOT NULL,
-    geom GEOMETRY NOT NULL
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3944,11 +4091,11 @@ CREATE TABLE cadastre.cadastre_object_node_target_historic
 (
     transaction_id varchar(40),
     node_id varchar(40),
-    geom GEOMETRY
-        CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-        CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 2193),
-        CONSTRAINT enforce_valid_geom CHECK (st_isvalid(geom)),
-        CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4013,6 +4160,443 @@ DROP TRIGGER IF EXISTS __track_history ON administrative.ba_unit_target CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.ba_unit_target FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table cadastre.verticalParcel ----
+DROP TABLE IF EXISTS cadastre.verticalParcel CASCADE;
+CREATE TABLE cadastre.verticalParcel(
+    vid integer NOT NULL,
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    id varchar(40) NOT NULL,
+    height numeric(19, 3),
+    ownerId integer,
+    area numeric(29, 3),
+
+    -- Internal constraints
+    
+    CONSTRAINT verticalParcel_pkey PRIMARY KEY (vid,id)
+);
+
+
+CREATE INDEX verticalParcel_index_on_geom_polygon ON cadastre.verticalParcel USING gist (geom_polygon);
+
+    
+--Table cadastre.construction ----
+DROP TABLE IF EXISTS cadastre.construction CASCADE;
+CREATE TABLE cadastre.construction(
+    cid integer NOT NULL,
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    id varchar(40) NOT NULL,
+    constype integer NOT NULL,
+    area numeric(29, 3),
+
+    -- Internal constraints
+    
+    CONSTRAINT construction_pkey PRIMARY KEY (cid,id)
+);
+
+
+CREATE INDEX construction_index_on_geom_polygon ON cadastre.construction USING gist (geom_polygon);
+
+    
+--Table cadastre.boundary_type ----
+DROP TABLE IF EXISTS cadastre.boundary_type CASCADE;
+CREATE TABLE cadastre.boundary_type(
+    code integer NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT boundary_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.boundary_type -- 
+insert into cadastre.boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.boundary_type(code, description) values(10, 'Building Foot Print::::Building Foot Print');
+insert into cadastre.boundary_type(code, description) values(20, 'Wall::::Wall');
+insert into cadastre.boundary_type(code, description) values(25, 'Shared Wall::::Shared Wall');
+insert into cadastre.boundary_type(code, description) values(30, 'Fence::::Fence');
+insert into cadastre.boundary_type(code, description) values(35, 'Shared Fence::::Shared Fence');
+insert into cadastre.boundary_type(code, description) values(40, 'Gate::::Gate');
+insert into cadastre.boundary_type(code, description) values(50, 'Line Canal::::Line Canal');
+insert into cadastre.boundary_type(code, description) values(52, 'Line Canal and Wall::::Line Canal and Wall');
+insert into cadastre.boundary_type(code, description) values(54, 'Line Canal and Fence::::Line Canal and Fence');
+insert into cadastre.boundary_type(code, description) values(58, 'Line Canal and Gate::::Line Canal and Gate');
+
+
+
+--Table cadastre.parcel_type ----
+DROP TABLE IF EXISTS cadastre.parcel_type CASCADE;
+CREATE TABLE cadastre.parcel_type(
+    code integer NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT parcel_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.parcel_type -- 
+insert into cadastre.parcel_type(code, description) values(0, 'Private::::Private');
+insert into cadastre.parcel_type(code, description) values(20, 'River::::River');
+insert into cadastre.parcel_type(code, description) values(30, 'Forest::::Forest');
+insert into cadastre.parcel_type(code, description) values(60, 'Government::::Government');
+insert into cadastre.parcel_type(code, description) values(70, 'Institutional::::Institutional');
+insert into cadastre.parcel_type(code, description) values(10, 'Public::::Public');
+insert into cadastre.parcel_type(code, description) values(40, 'Cultivatable::::Cultivatable');
+insert into cadastre.parcel_type(code, description) values(50, 'Not Cultivatable::::Not Cultivatable');
+
+
+
+--Table cadastre.construction_type ----
+DROP TABLE IF EXISTS cadastre.construction_type CASCADE;
+CREATE TABLE cadastre.construction_type(
+    code integer NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT construction_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.construction_type -- 
+insert into cadastre.construction_type(code, description) values(0, 'Permanent Building::::Permanent Building');
+insert into cadastre.construction_type(code, description) values(10, 'Temporary Building::::Temporary Building');
+insert into cadastre.construction_type(code, description) values(20, 'Damaged Building::::Damaged Building');
+insert into cadastre.construction_type(code, description) values(30, 'Wall::::Wall');
+insert into cadastre.construction_type(code, description) values(40, 'Pond::::Pond');
+insert into cadastre.construction_type(code, description) values(50, 'Gate/Entrance::::Gate/Entrance');
+insert into cadastre.construction_type(code, description) values(60, 'Temple::::Temple');
+insert into cadastre.construction_type(code, description) values(150, 'Stupa::::Stupa');
+
+
+
+--Table cadastre.adminstrative_boundary_type ----
+DROP TABLE IF EXISTS cadastre.adminstrative_boundary_type CASCADE;
+CREATE TABLE cadastre.adminstrative_boundary_type(
+    code integer NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT adminstrative_boundary_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.adminstrative_boundary_type -- 
+insert into cadastre.adminstrative_boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.adminstrative_boundary_type(code, description) values(10, 'Ward::::Ward');
+insert into cadastre.adminstrative_boundary_type(code, description) values(20, 'VDC/Municipality::::VDC/Municipality');
+insert into cadastre.adminstrative_boundary_type(code, description) values(30, 'District::::District');
+insert into cadastre.adminstrative_boundary_type(code, description) values(40, 'Zone::::Zone');
+insert into cadastre.adminstrative_boundary_type(code, description) values(50, 'National::::National');
+
+
+
+--Table cadastre.map_boundary_type ----
+DROP TABLE IF EXISTS cadastre.map_boundary_type CASCADE;
+CREATE TABLE cadastre.map_boundary_type(
+    code integer NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT map_boundary_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.map_boundary_type -- 
+insert into cadastre.map_boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.map_boundary_type(code, description) values(10, 'Grid Sheet::::Grid Sheet');
+insert into cadastre.map_boundary_type(code, description) values(20, 'Free Sheet::::Free Sheet');
+
+
+
+--Table cadastre.segments ----
+DROP TABLE IF EXISTS cadastre.segments CASCADE;
+CREATE TABLE cadastre.segments(
+    sid integer NOT NULL,
+    segno integer,
+    the_geom GEOMETRY,
+    CONSTRAINT enforce_dims_the_geom CHECK (st_ndims(the_geom) = 2),
+    
+            CONSTRAINT enforce_srid_the_geom CHECK (st_srid(the_geom) = 97261),
+    CONSTRAINT enforce_geotype_the_geom CHECK (geometrytype(the_geom) = 'LINESTRING'::text OR the_geom IS NULL),
+    bound_type integer NOT NULL,
+    id varchar(40) NOT NULL,
+    mbound_type integer NOT NULL,
+    abound_type integer NOT NULL,
+    shape_length numeric(19, 3),
+
+    -- Internal constraints
+    
+    CONSTRAINT segments_pkey PRIMARY KEY (sid,id)
+);
+
+
+CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geom);
+
+    
+--Table nep_system.np_calendar ----
+DROP TABLE IF EXISTS nep_system.np_calendar CASCADE;
+CREATE TABLE nep_system.np_calendar(
+    code integer NOT NULL,
+    nep_year integer NOT NULL,
+    nep_month integer NOT NULL,
+    dayss integer,
+
+    -- Internal constraints
+    
+    CONSTRAINT np_calendar_code_unique UNIQUE (code),
+    CONSTRAINT np_calendar_pkey PRIMARY KEY (nep_year,nep_month)
+);
+
+    
+ -- Data for the table nep_system.np_calendar -- 
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(1, 2064, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(2, 2065, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(3, 2066, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(4, 2067, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(5, 2068, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(6, 2069, 1, 31);
+insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(7, 2070, 1, 31);
+
+
+
+--Table nep_system.land_owner_certificate ----
+DROP TABLE IF EXISTS nep_system.land_owner_certificate CASCADE;
+CREATE TABLE nep_system.land_owner_certificate(
+    loc_sid varchar(40) NOT NULL,
+    moth_sid integer NOT NULL,
+    pana_no integer,
+    tmp_pana_no integer,
+    property_type integer,
+    oshp_type integer,
+    transaction_no integer,
+    record_status varchar(10),
+    update_user varchar(15),
+    update_date date,
+    update_date_nepali integer,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT land_owner_certificate_pkey PRIMARY KEY (loc_sid)
+);
+
+
+CREATE INDEX land_owner_certificate_index_on_rowidentifier ON nep_system.land_owner_certificate (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON nep_system.land_owner_certificate CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON nep_system.land_owner_certificate FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table nep_system.land_owner_certificate_historic used for the history of data of table nep_system.land_owner_certificate ---
+DROP TABLE IF EXISTS nep_system.land_owner_certificate_historic CASCADE;
+CREATE TABLE nep_system.land_owner_certificate_historic
+(
+    loc_sid varchar(40),
+    moth_sid integer,
+    pana_no integer,
+    tmp_pana_no integer,
+    property_type integer,
+    oshp_type integer,
+    transaction_no integer,
+    record_status varchar(10),
+    update_user varchar(15),
+    update_date date,
+    update_date_nepali integer,
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX land_owner_certificate_historic_index_on_rowidentifier ON nep_system.land_owner_certificate_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON nep_system.land_owner_certificate CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON nep_system.land_owner_certificate FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table nep_system.moth ----
+DROP TABLE IF EXISTS nep_system.moth CASCADE;
+CREATE TABLE nep_system.moth(
+    moth_sid integer NOT NULL,
+    mothluj_no varchar(15),
+    vdc_sid integer,
+    ward_no integer,
+    moth_luj varchar(2),
+    financialyear integer,
+    lmocd integer,
+    transaction_no integer,
+    record_status varchar(10),
+    update_user varchar(15),
+    update_date date,
+    update_nepali_date integer,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT moth_pkey PRIMARY KEY (moth_sid)
+);
+
+
+CREATE INDEX moth_index_on_rowidentifier ON nep_system.moth (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON nep_system.moth CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON nep_system.moth FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table nep_system.moth_historic used for the history of data of table nep_system.moth ---
+DROP TABLE IF EXISTS nep_system.moth_historic CASCADE;
+CREATE TABLE nep_system.moth_historic
+(
+    moth_sid integer,
+    mothluj_no varchar(15),
+    vdc_sid integer,
+    ward_no integer,
+    moth_luj varchar(2),
+    financialyear integer,
+    lmocd integer,
+    transaction_no integer,
+    record_status varchar(10),
+    update_user varchar(15),
+    update_date date,
+    update_nepali_date integer,
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX moth_historic_index_on_rowidentifier ON nep_system.moth_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON nep_system.moth CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON nep_system.moth FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table nep_system.alpha_code ----
+DROP TABLE IF EXISTS nep_system.alpha_code CASCADE;
+CREATE TABLE nep_system.alpha_code(
+    code integer NOT NULL,
+    alpha_char varchar(10),
+
+    -- Internal constraints
+    
+    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.offices ----
+DROP TABLE IF EXISTS nep_system.offices CASCADE;
+CREATE TABLE nep_system.offices(
+    code integer NOT NULL,
+    office_name varchar(255) NOT NULL,
+    selected bool,
+
+    -- Internal constraints
+    
+    CONSTRAINT offices_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.financial_year ----
+DROP TABLE IF EXISTS nep_system.financial_year CASCADE;
+CREATE TABLE nep_system.financial_year(
+    code integer NOT NULL,
+    finyear integer,
+    selected bool,
+
+    -- Internal constraints
+    
+    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.land_mgmt_offices ----
+DROP TABLE IF EXISTS nep_system.land_mgmt_offices CASCADE;
+CREATE TABLE nep_system.land_mgmt_offices(
+    code integer NOT NULL,
+    district_code integer NOT NULL,
+    office_name varchar(50) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT land_mgmt_offices_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.map_sheets ----
+DROP TABLE IF EXISTS nep_system.map_sheets CASCADE;
+CREATE TABLE nep_system.map_sheets(
+    code integer NOT NULL,
+    map_number varchar(10) NOT NULL,
+    sheet_type integer,
+    map_alpha integer NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT map_sheets_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.vdcs ----
+DROP TABLE IF EXISTS nep_system.vdcs CASCADE;
+CREATE TABLE nep_system.vdcs(
+    code integer NOT NULL,
+    vdc_name integer NOT NULL,
+    district_code integer NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT vdcs_pkey PRIMARY KEY (code)
+);
+
+    
+--Table nep_system.districts ----
+DROP TABLE IF EXISTS nep_system.districts CASCADE;
+CREATE TABLE nep_system.districts(
+    code integer NOT NULL,
+    district_name varchar(50) NOT NULL,
+    zone_code integer,
+
+    -- Internal constraints
+    
+    CONSTRAINT districts_pkey PRIMARY KEY (code)
+);
+
     
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
@@ -4506,6 +5090,58 @@ CREATE INDEX ba_unit_target_ba_unit_id_fk121_ind ON administrative.ba_unit_targe
 ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_transaction_id_fk122 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX ba_unit_target_transaction_id_fk122_ind ON administrative.ba_unit_target (transaction_id);
+
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_id_fk123 
+            FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX segments_id_fk123_ind ON cadastre.segments (id);
+
+ALTER TABLE cadastre.verticalParcel ADD CONSTRAINT verticalParcel_id_fk124 
+            FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX verticalParcel_id_fk124_ind ON cadastre.verticalParcel (id);
+
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_id_fk125 
+            FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX construction_id_fk125_ind ON cadastre.construction (id);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_parcel_type_fk126 
+            FOREIGN KEY (parcel_type) REFERENCES cadastre.parcel_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_parcel_type_fk126_ind ON cadastre.cadastre_object (parcel_type);
+
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_constype_fk127 
+            FOREIGN KEY (constype) REFERENCES cadastre.construction_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX construction_constype_fk127_ind ON cadastre.construction (constype);
+
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_mbound_type_fk128 
+            FOREIGN KEY (mbound_type) REFERENCES cadastre.map_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX segments_mbound_type_fk128_ind ON cadastre.segments (mbound_type);
+
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_abound_type_fk129 
+            FOREIGN KEY (abound_type) REFERENCES cadastre.adminstrative_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX segments_abound_type_fk129_ind ON cadastre.segments (abound_type);
+
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk130 
+            FOREIGN KEY (bound_type) REFERENCES cadastre.boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX segments_bound_type_fk130_ind ON cadastre.segments (bound_type);
+
+ALTER TABLE nep_system.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_sid_fk131 
+            FOREIGN KEY (moth_sid) REFERENCES nep_system.moth(moth_sid) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX land_owner_certificate_moth_sid_fk131_ind ON nep_system.land_owner_certificate (moth_sid);
+
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_id_fk132 
+            FOREIGN KEY (id) REFERENCES nep_system.land_owner_certificate(loc_sid) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX ba_unit_id_fk132_ind ON administrative.ba_unit (id);
+
+ALTER TABLE nep_system.map_sheets ADD CONSTRAINT map_sheets_map_alpha_fk133 
+            FOREIGN KEY (map_alpha) REFERENCES nep_system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX map_sheets_map_alpha_fk133_ind ON nep_system.map_sheets (map_alpha);
+
+ALTER TABLE nep_system.land_mgmt_offices ADD CONSTRAINT land_mgmt_offices_district_code_fk134 
+            FOREIGN KEY (district_code) REFERENCES nep_system.districts(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX land_mgmt_offices_district_code_fk134_ind ON nep_system.land_mgmt_offices (district_code);
+
+ALTER TABLE nep_system.vdcs ADD CONSTRAINT vdcs_district_code_fk135 
+            FOREIGN KEY (district_code) REFERENCES nep_system.districts(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX vdcs_district_code_fk135_ind ON nep_system.vdcs (district_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
