@@ -1,5 +1,5 @@
 ﻿--first delete the srid.
-delete from sola.public.spatial_ref_sys where srid=97261
+delete from sola.public.spatial_ref_sys where srid=97261;
 --insert new data.
 INSERT into sola.public.spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) 
 values 
