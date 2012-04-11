@@ -290,10 +290,10 @@ RETURNS date AS
 $BODY$
 DECLARE
 constDate Date:='2007-04-14';
-nepYear integer[] := '{}';
-nepMonth integer[]:='{}';
-days integer[] := '{}';
-test varchar(50);
+nep_yr integer[] := '{}';
+nep_mth integer[]:='{}';
+dys integer[] := '{}';
+retDate Date;
 yr integer;
 mm integer;
 d integer;
@@ -311,42 +311,42 @@ SELECT into d EXTRACT(DAY FROM  dt);
 select count('nep_year') into cnt from nep_system.np_calendar;
 i:=0;
 for r in select "nep_year" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-nepYear[i]:=r;
+nep_yr[i]:=r;
 i=i+1;
 end loop;
 
 i:=0;
 for r in select "nep_month" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-nepMonth[i]:=r;
+nep_mth[i]:=r;
 i=i+1;
 end loop;
 
 i:=0;
 for r in select "dayss" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-days[i]:=r;
+dys[i]:=r;
 i=i+1;
 end loop;
 i:=0;
 WHILE i<= cnt LOOP
-    if nepYear[i]=yr and nepMonth[i]=mm then
+    if nep_yr[i]=yr and nep_mth[i]=mm then
 	Exit;
 	else
-	dd=dd+days[i];
+	dd=dd+dys[i];
     end if;
     i=i+1;
 end LOOP;
 dd=dd+d-1;
-test:=constDate+dd;
---test:=yr||'/'||mm||'/'||d;
---test:=to_date(test, 'yyyy/mm/dd');
-return test;
+retDate:=constDate+dd;
+--test:=yr||'-'||mm||'-'||d;
+--test:=to_date(test, 'yyyy-mm-dd');
+return retDate;
 
 END$BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
 ALTER FUNCTION nepali_to_englishdate(character varying)
   OWNER TO postgres;
-COMMENT ON FUNCTION nepali_to_englishdate(character varying) IS 'This function converts the given western date in the format "yyyy/MM/dd" to Nepali date';
+COMMENT ON FUNCTION nepali_to_englishdate(character varying) IS 'This function converts the given western date in the format "yyyy-MM-dd" to Nepali date';
 
 -- Function public.english_to_nepalidatestring -----
 CREATE OR REPLACE FUNCTION public.english_to_nepalidatestring(
@@ -355,10 +355,10 @@ RETURNS character varying AS
 $BODY$
 DECLARE
 constDate Date:='2007-04-14';
-nepYear integer[] := '{}';
-nepMonth integer[]:='{}';
-days integer[] := '{}';
-test varchar(50);
+nep_yr integer[] := '{}';
+nep_mth integer[]:='{}';
+dys integer[] := '{}';
+retDate varchar(50);
 yr integer:=0;
 mm integer:=0;
 d integer:=0;
@@ -371,48 +371,51 @@ dd integer:=0;
 dateDiff integer:=0;
 BEGIN
 --dt:=eng_date;
+if englishdate< constDate then
+RAISE EXCEPTION 'Invalid english date';
+end if;
 dateDiff=englishdate-constDate;
-select count('nep_year') into cnt from  nep_system.np_calendar;
+select count('nep_year') into cnt from nep_system.np_calendar;
 
 i=0;
-for r in select "nep_year" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-nepYear[i]:=r;
+for r in select "nep_year" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nep_yr[i]:=r;
 i=i+1;
 end loop;
 
 i:=0;
-for r in select "nep_month" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-nepMonth[i]:=r;
+for r in select "nep_month" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+nep_mth[i]:=r;
 i=i+1;
 end loop;
 
 i:=0;
-for r in select "dayss" from  nep_system.np_calendar order by "nep_year","nep_month" ASC loop
-days[i]:=r;
+for r in select "dayss" from nep_system.np_calendar order by "nep_year","nep_month" ASC loop
+dys[i]:=r;
 i=i+1;
 end loop;
 
 i:=0;
 WHILE i<= cnt LOOP
   if d<=dateDiff then
-	d=d+days[i];
-	yr=nepYear[i];
-	mm=nepMonth[i];
+	d=d+dys[i];
+	yr=nep_yr[i];
+	mm=nep_mth[i];
 	else
-	d=d-days[i-1];
+	d=d-dys[i-1];
 	exit;
    end if;
    i=i+1;
 end LOOP;
 
-test=yr||'-'||mm||'-'||dateDiff-d+1;
-return test ;
+retDate=yr||'-'||mm||'-'||dateDiff-d+1;
+return retDate ;
 END$BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
 ALTER FUNCTION english_to_nepalidatestring(date)
   OWNER TO postgres;
-COMMENT ON FUNCTION english_to_nepalidatestring(date) IS 'This function converts the given western date in the format "yyyy/MM/dd" to Nepali date';--Adding trigger function to track changes--
+COMMENT ON FUNCTION english_to_nepalidatestring(date) IS 'This function converts the given western date in the format "yyyy-MM-dd" to Nepali date';--Adding trigger function to track changes--
 
 CREATE OR REPLACE FUNCTION f_for_trg_track_changes() RETURNS TRIGGER 
 AS $$
