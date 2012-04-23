@@ -737,6 +737,8 @@ CREATE TABLE party.party(
     last_name varchar(50),
     fathers_name varchar(50),
     fathers_last_name varchar(50),
+    grandfather_name varchar(50),
+    grandfather_last_name varchar(50),
     alias varchar(50),
     gender_code varchar(20),
     address_id varchar(40),
@@ -780,6 +782,8 @@ CREATE TABLE party.party_historic
     last_name varchar(50),
     fathers_name varchar(50),
     fathers_last_name varchar(50),
+    grandfather_name varchar(50),
+    grandfather_last_name varchar(50),
     alias varchar(50),
     gender_code varchar(20),
     address_id varchar(40),
@@ -3266,6 +3270,8 @@ CREATE TABLE cadastre.cadastre_object_type(
 insert into cadastre.cadastre_object_type(code, display_value, description, status) values('parcel', 'Parcel::::ITALIANO', '', 'c');
 insert into cadastre.cadastre_object_type(code, display_value, description, status) values('buildingUnit', 'Building Unit::::ITALIANO', '', 'c');
 insert into cadastre.cadastre_object_type(code, display_value, description, status) values('utilityNetwork', 'Utility Network::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('segment', 'Segment::::Segment', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('construction', 'Construction::Construction', '', 'c');
 
 
 
@@ -4353,26 +4359,24 @@ CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geo
 --Table nep_system.np_calendar ----
 DROP TABLE IF EXISTS nep_system.np_calendar CASCADE;
 CREATE TABLE nep_system.np_calendar(
-    code integer NOT NULL,
     nep_year integer NOT NULL,
     nep_month integer NOT NULL,
     dayss integer,
 
     -- Internal constraints
     
-    CONSTRAINT np_calendar_code_unique UNIQUE (code),
     CONSTRAINT np_calendar_pkey PRIMARY KEY (nep_year,nep_month)
 );
 
     
  -- Data for the table nep_system.np_calendar -- 
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(1, 2064, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(2, 2065, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(3, 2066, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(4, 2067, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(5, 2068, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(6, 2069, 1, 31);
-insert into nep_system.np_calendar(code, nep_year, nep_month, dayss) values(7, 2070, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2064, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2065, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2066, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2067, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2068, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2069, 1, 31);
+insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
 
 
 
