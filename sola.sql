@@ -4604,6 +4604,19 @@ CREATE TABLE nep_system.districts(
 );
 
     
+--Table system.nepal_user_additional_info ----
+DROP TABLE IF EXISTS system.nepal_user_additional_info CASCADE;
+CREATE TABLE system.nepal_user_additional_info(
+    user_id varchar(40) NOT NULL,
+    district_code integer NOT NULL,
+    lmo_code varchar(25) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT nepal_user_additional_info_pkey PRIMARY KEY (user_id)
+);
+
+    
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5148,6 +5161,10 @@ CREATE INDEX land_mgmt_offices_district_code_fk134_ind ON nep_system.land_mgmt_o
 ALTER TABLE nep_system.vdcs ADD CONSTRAINT vdcs_district_code_fk135 
             FOREIGN KEY (district_code) REFERENCES nep_system.districts(code) ON UPDATE Cascade ON DELETE RESTRICT;
 CREATE INDEX vdcs_district_code_fk135_ind ON nep_system.vdcs (district_code);
+
+ALTER TABLE system.nepal_user_additional_info ADD CONSTRAINT nepal_user_additional_info_user_id_fk136 
+            FOREIGN KEY (user_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX nepal_user_additional_info_user_id_fk136_ind ON system.nepal_user_additional_info (user_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
