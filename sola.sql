@@ -749,6 +749,12 @@ CREATE TABLE party.party(
     phone varchar(15),
     fax varchar(15),
     preferred_communication_code varchar(20),
+    ward_no integer,
+    street varchar(50),
+    date_of_birth date,
+    vdc_code integer,
+    district_code integer,
+    remarks varchar(200),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -794,6 +800,12 @@ CREATE TABLE party.party_historic
     phone varchar(15),
     fax varchar(15),
     preferred_communication_code varchar(20),
+    ward_no integer,
+    street varchar(50),
+    date_of_birth date,
+    vdc_code integer,
+    district_code integer,
+    remarks varchar(200),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4384,7 +4396,7 @@ insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 3
 DROP TABLE IF EXISTS nep_system.land_owner_certificate CASCADE;
 CREATE TABLE nep_system.land_owner_certificate(
     loc_sid varchar(40) NOT NULL,
-    moth_sid integer NOT NULL,
+    moth_sid varchar(40) NOT NULL,
     pana_no integer,
     tmp_pana_no integer,
     property_type integer,
@@ -4420,7 +4432,7 @@ DROP TABLE IF EXISTS nep_system.land_owner_certificate_historic CASCADE;
 CREATE TABLE nep_system.land_owner_certificate_historic
 (
     loc_sid varchar(40),
-    moth_sid integer,
+    moth_sid varchar(40),
     pana_no integer,
     tmp_pana_no integer,
     property_type integer,
@@ -4449,7 +4461,7 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
 --Table nep_system.moth ----
 DROP TABLE IF EXISTS nep_system.moth CASCADE;
 CREATE TABLE nep_system.moth(
-    moth_sid integer NOT NULL,
+    moth_sid varchar(40) NOT NULL,
     mothluj_no varchar(15),
     vdc_sid integer,
     ward_no integer,
@@ -4486,7 +4498,7 @@ CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
 DROP TABLE IF EXISTS nep_system.moth_historic CASCADE;
 CREATE TABLE nep_system.moth_historic
 (
-    moth_sid integer,
+    moth_sid varchar(40),
     mothluj_no varchar(15),
     vdc_sid integer,
     ward_no integer,
@@ -4523,19 +4535,6 @@ CREATE TABLE nep_system.alpha_code(
     -- Internal constraints
     
     CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.offices ----
-DROP TABLE IF EXISTS nep_system.offices CASCADE;
-CREATE TABLE nep_system.offices(
-    code integer NOT NULL,
-    office_name varchar(255) NOT NULL,
-    selected bool,
-
-    -- Internal constraints
-    
-    CONSTRAINT offices_pkey PRIMARY KEY (code)
 );
 
     
