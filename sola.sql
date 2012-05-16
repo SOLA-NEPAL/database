@@ -47,11 +47,6 @@ DROP SCHEMA IF EXISTS transaction CASCADE;
         
 CREATE SCHEMA transaction;
 
---Create schema nep_system--
-DROP SCHEMA IF EXISTS nep_system CASCADE;
-        
-CREATE SCHEMA nep_system;
-
 --Adding handy common functions --
 
 -- Enable/disable all the triggers in database --
@@ -2453,6 +2448,7 @@ CREATE TABLE system.appuser(
     passwd varchar(100) NOT NULL DEFAULT (uuid_generate_v1()),
     active bool NOT NULL DEFAULT (true),
     description varchar(255),
+    department_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2486,6 +2482,7 @@ CREATE TABLE system.appuser_historic
     passwd varchar(100),
     active bool,
     description varchar(255),
+    department_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2503,7 +2500,7 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    EXECUTE PROCEDURE f_for_trg_track_history();
     
  -- Data for the table system.appuser -- 
-insert into system.appuser(id, username, first_name, last_name, passwd, active) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true);
+insert into system.appuser(id, username, first_name, last_name, passwd, active, department_id) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true, 'Lalitpur-001');
 
 
 
@@ -4368,9 +4365,9 @@ CREATE TABLE cadastre.segments(
 CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geom);
 
     
---Table nep_system.np_calendar ----
-DROP TABLE IF EXISTS nep_system.np_calendar CASCADE;
-CREATE TABLE nep_system.np_calendar(
+--Table system.np_calendar ----
+DROP TABLE IF EXISTS system.np_calendar CASCADE;
+CREATE TABLE system.np_calendar(
     nep_year integer NOT NULL,
     nep_month integer NOT NULL,
     dayss integer,
@@ -4381,20 +4378,164 @@ CREATE TABLE nep_system.np_calendar(
 );
 
     
- -- Data for the table nep_system.np_calendar -- 
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2064, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2065, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2066, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2067, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2068, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2069, 1, 31);
-insert into nep_system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
+ -- Data for the table system.np_calendar -- 
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2064, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2065, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2066, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2067, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2068, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2069, 1, 31);
+insert into system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
 
 
 
---Table nep_system.land_owner_certificate ----
-DROP TABLE IF EXISTS nep_system.land_owner_certificate CASCADE;
-CREATE TABLE nep_system.land_owner_certificate(
+--Table system.alpha_code ----
+DROP TABLE IF EXISTS system.alpha_code CASCADE;
+CREATE TABLE system.alpha_code(
+    code integer NOT NULL,
+    alpha_char varchar(10),
+
+    -- Internal constraints
+    
+    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.financial_year ----
+DROP TABLE IF EXISTS system.financial_year CASCADE;
+CREATE TABLE system.financial_year(
+    code integer NOT NULL,
+    finyear integer,
+    selected bool,
+
+    -- Internal constraints
+    
+    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.office ----
+DROP TABLE IF EXISTS system.office CASCADE;
+CREATE TABLE system.office(
+    code varchar(40) NOT NULL,
+    district_code integer NOT NULL,
+    office_name varchar(50) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT office_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.office -- 
+insert into system.office(code, district_code, office_name) values('7-25-003-001', 25, 'Lalitpur - LMO first section');
+
+
+
+--Table system.district ----
+DROP TABLE IF EXISTS system.district CASCADE;
+CREATE TABLE system.district(
+    code integer NOT NULL,
+    district_name varchar(50) NOT NULL,
+    zone_code integer,
+
+    -- Internal constraints
+    
+    CONSTRAINT district_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.district -- 
+insert into system.district(code, district_name, zone_code) values(25, 'Lalitpur', 7);
+
+
+
+--Table system.map_sheet ----
+DROP TABLE IF EXISTS system.map_sheet CASCADE;
+CREATE TABLE system.map_sheet(
+    code integer NOT NULL,
+    map_number varchar(10) NOT NULL,
+    sheet_type integer,
+    map_alpha integer NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT map_sheet_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.vdc ----
+DROP TABLE IF EXISTS system.vdc CASCADE;
+CREATE TABLE system.vdc(
+    code integer NOT NULL,
+    vdc_name integer NOT NULL,
+    district_code integer NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT vdc_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.department ----
+DROP TABLE IF EXISTS system.department CASCADE;
+CREATE TABLE system.department(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    office_code varchar(40) NOT NULL,
+    name varchar(255) NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT department_unique_department_name UNIQUE (office_code, name),
+    CONSTRAINT department_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX department_index_on_rowidentifier ON system.department (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON system.department CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON system.department FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table system.department_historic used for the history of data of table system.department ---
+DROP TABLE IF EXISTS system.department_historic CASCADE;
+CREATE TABLE system.department_historic
+(
+    id varchar(40),
+    office_code varchar(40),
+    name varchar(255),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX department_historic_index_on_rowidentifier ON system.department_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON system.department CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON system.department FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+ -- Data for the table system.department -- 
+insert into system.department(id, office_code, name) values('Lalitpur-001', '7-25-003-001', 'Section-001, Lalitpur LMO');
+
+
+
+--Table administrative.land_owner_certificate ----
+DROP TABLE IF EXISTS administrative.land_owner_certificate CASCADE;
+CREATE TABLE administrative.land_owner_certificate(
     loc_sid varchar(40) NOT NULL,
     moth_sid varchar(40) NOT NULL,
     pana_no integer,
@@ -4418,18 +4559,18 @@ CREATE TABLE nep_system.land_owner_certificate(
 );
 
 
-CREATE INDEX land_owner_certificate_index_on_rowidentifier ON nep_system.land_owner_certificate (rowidentifier);
+CREATE INDEX land_owner_certificate_index_on_rowidentifier ON administrative.land_owner_certificate (rowidentifier);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON nep_system.land_owner_certificate CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON administrative.land_owner_certificate CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON nep_system.land_owner_certificate FOR EACH ROW
+   ON administrative.land_owner_certificate FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table nep_system.land_owner_certificate_historic used for the history of data of table nep_system.land_owner_certificate ---
-DROP TABLE IF EXISTS nep_system.land_owner_certificate_historic CASCADE;
-CREATE TABLE nep_system.land_owner_certificate_historic
+----Table administrative.land_owner_certificate_historic used for the history of data of table administrative.land_owner_certificate ---
+DROP TABLE IF EXISTS administrative.land_owner_certificate_historic CASCADE;
+CREATE TABLE administrative.land_owner_certificate_historic
 (
     loc_sid varchar(40),
     moth_sid varchar(40),
@@ -4450,17 +4591,17 @@ CREATE TABLE nep_system.land_owner_certificate_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX land_owner_certificate_historic_index_on_rowidentifier ON nep_system.land_owner_certificate_historic (rowidentifier);
+CREATE INDEX land_owner_certificate_historic_index_on_rowidentifier ON administrative.land_owner_certificate_historic (rowidentifier);
 
 
-DROP TRIGGER IF EXISTS __track_history ON nep_system.land_owner_certificate CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON administrative.land_owner_certificate CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON nep_system.land_owner_certificate FOR EACH ROW
+   ON administrative.land_owner_certificate FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table nep_system.moth ----
-DROP TABLE IF EXISTS nep_system.moth CASCADE;
-CREATE TABLE nep_system.moth(
+--Table administrative.moth ----
+DROP TABLE IF EXISTS administrative.moth CASCADE;
+CREATE TABLE administrative.moth(
     moth_sid varchar(40) NOT NULL,
     mothluj_no varchar(15),
     vdc_sid integer,
@@ -4485,18 +4626,18 @@ CREATE TABLE nep_system.moth(
 );
 
 
-CREATE INDEX moth_index_on_rowidentifier ON nep_system.moth (rowidentifier);
+CREATE INDEX moth_index_on_rowidentifier ON administrative.moth (rowidentifier);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON nep_system.moth CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON administrative.moth CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON nep_system.moth FOR EACH ROW
+   ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table nep_system.moth_historic used for the history of data of table nep_system.moth ---
-DROP TABLE IF EXISTS nep_system.moth_historic CASCADE;
-CREATE TABLE nep_system.moth_historic
+----Table administrative.moth_historic used for the history of data of table administrative.moth ---
+DROP TABLE IF EXISTS administrative.moth_historic CASCADE;
+CREATE TABLE administrative.moth_historic
 (
     moth_sid varchar(40),
     mothluj_no varchar(15),
@@ -4518,104 +4659,13 @@ CREATE TABLE nep_system.moth_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX moth_historic_index_on_rowidentifier ON nep_system.moth_historic (rowidentifier);
+CREATE INDEX moth_historic_index_on_rowidentifier ON administrative.moth_historic (rowidentifier);
 
 
-DROP TRIGGER IF EXISTS __track_history ON nep_system.moth CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON administrative.moth CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON nep_system.moth FOR EACH ROW
+   ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table nep_system.alpha_code ----
-DROP TABLE IF EXISTS nep_system.alpha_code CASCADE;
-CREATE TABLE nep_system.alpha_code(
-    code integer NOT NULL,
-    alpha_char varchar(10),
-
-    -- Internal constraints
-    
-    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.financial_year ----
-DROP TABLE IF EXISTS nep_system.financial_year CASCADE;
-CREATE TABLE nep_system.financial_year(
-    code integer NOT NULL,
-    finyear integer,
-    selected bool,
-
-    -- Internal constraints
-    
-    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.land_mgmt_offices ----
-DROP TABLE IF EXISTS nep_system.land_mgmt_offices CASCADE;
-CREATE TABLE nep_system.land_mgmt_offices(
-    code integer NOT NULL,
-    district_code integer NOT NULL,
-    office_name varchar(50) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT land_mgmt_offices_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.map_sheets ----
-DROP TABLE IF EXISTS nep_system.map_sheets CASCADE;
-CREATE TABLE nep_system.map_sheets(
-    code integer NOT NULL,
-    map_number varchar(10) NOT NULL,
-    sheet_type integer,
-    map_alpha integer NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT map_sheets_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.vdcs ----
-DROP TABLE IF EXISTS nep_system.vdcs CASCADE;
-CREATE TABLE nep_system.vdcs(
-    code integer NOT NULL,
-    vdc_name integer NOT NULL,
-    district_code integer NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT vdcs_pkey PRIMARY KEY (code)
-);
-
-    
---Table nep_system.districts ----
-DROP TABLE IF EXISTS nep_system.districts CASCADE;
-CREATE TABLE nep_system.districts(
-    code integer NOT NULL,
-    district_name varchar(50) NOT NULL,
-    zone_code integer,
-
-    -- Internal constraints
-    
-    CONSTRAINT districts_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.nepal_user_additional_info ----
-DROP TABLE IF EXISTS system.nepal_user_additional_info CASCADE;
-CREATE TABLE system.nepal_user_additional_info(
-    user_id varchar(40) NOT NULL,
-    district_code integer NOT NULL,
-    lmo_code varchar(25) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT nepal_user_additional_info_pkey PRIMARY KEY (user_id)
-);
-
     
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
@@ -5142,29 +5192,45 @@ ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk130
             FOREIGN KEY (bound_type) REFERENCES cadastre.boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
 CREATE INDEX segments_bound_type_fk130_ind ON cadastre.segments (bound_type);
 
-ALTER TABLE nep_system.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_sid_fk131 
-            FOREIGN KEY (moth_sid) REFERENCES nep_system.moth(moth_sid) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX land_owner_certificate_moth_sid_fk131_ind ON nep_system.land_owner_certificate (moth_sid);
+ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_sid_fk131 
+            FOREIGN KEY (moth_sid) REFERENCES administrative.moth(moth_sid) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX land_owner_certificate_moth_sid_fk131_ind ON administrative.land_owner_certificate (moth_sid);
 
 ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_id_fk132 
-            FOREIGN KEY (id) REFERENCES nep_system.land_owner_certificate(loc_sid) ON UPDATE CASCADE ON DELETE CASCADE;
+            FOREIGN KEY (id) REFERENCES administrative.land_owner_certificate(loc_sid) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX ba_unit_id_fk132_ind ON administrative.ba_unit (id);
 
-ALTER TABLE nep_system.map_sheets ADD CONSTRAINT map_sheets_map_alpha_fk133 
-            FOREIGN KEY (map_alpha) REFERENCES nep_system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX map_sheets_map_alpha_fk133_ind ON nep_system.map_sheets (map_alpha);
+ALTER TABLE system.map_sheet ADD CONSTRAINT map_sheet_map_alpha_fk133 
+            FOREIGN KEY (map_alpha) REFERENCES system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX map_sheet_map_alpha_fk133_ind ON system.map_sheet (map_alpha);
 
-ALTER TABLE nep_system.land_mgmt_offices ADD CONSTRAINT land_mgmt_offices_district_code_fk134 
-            FOREIGN KEY (district_code) REFERENCES nep_system.districts(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX land_mgmt_offices_district_code_fk134_ind ON nep_system.land_mgmt_offices (district_code);
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk134 
+            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX office_district_code_fk134_ind ON system.office (district_code);
 
-ALTER TABLE nep_system.vdcs ADD CONSTRAINT vdcs_district_code_fk135 
-            FOREIGN KEY (district_code) REFERENCES nep_system.districts(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX vdcs_district_code_fk135_ind ON nep_system.vdcs (district_code);
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk135 
+            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
+CREATE INDEX vdc_district_code_fk135_ind ON system.vdc (district_code);
 
-ALTER TABLE system.nepal_user_additional_info ADD CONSTRAINT nepal_user_additional_info_user_id_fk136 
-            FOREIGN KEY (user_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX nepal_user_additional_info_user_id_fk136_ind ON system.nepal_user_additional_info (user_id);
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk136 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX department_office_code_fk136_ind ON system.department (office_code);
+
+ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_id_fk137 
+            FOREIGN KEY (department_id) REFERENCES system.department(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX appuser_department_id_fk137_ind ON system.appuser (department_id);
+
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk138 
+            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX vdc_district_code_fk138_ind ON system.vdc (district_code);
+
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk139 
+            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX office_district_code_fk139_ind ON system.office (district_code);
+
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk140 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX department_office_code_fk140_ind ON system.department (office_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
