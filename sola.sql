@@ -1212,7 +1212,7 @@ CREATE TABLE system.appuser(
     passwd varchar(100) NOT NULL DEFAULT (uuid_generate_v1()),
     active bool NOT NULL DEFAULT (true),
     description varchar(255),
-    department_id varchar(20) NOT NULL,
+    department_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1246,7 +1246,7 @@ CREATE TABLE system.appuser_historic
     passwd varchar(100),
     active bool,
     description varchar(255),
-    department_id varchar(20),
+    department_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1264,7 +1264,7 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    EXECUTE PROCEDURE f_for_trg_track_history();
     
  -- Data for the table system.appuser -- 
-insert into system.appuser(id, username, first_name, last_name, passwd, active, department_id) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true, 'Lalitpur-001');
+insert into system.appuser(id, username, first_name, last_name, passwd, active, department_code) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true, 'Lalitpur-001');
 
 
 
@@ -1361,6 +1361,7 @@ insert into application.application_action_type(code, display_value, status) val
 insert into application.application_action_type(code, display_value, status) values('unAssign', 'Unassign::::ITALIANO', 'c');
 insert into application.application_action_type(code, display_value, status_to_set, status) values('resubmit', 'Resubmit::::ITALIANO', 'lodged', 'c');
 insert into application.application_action_type(code, display_value, status, description) values('validate', 'Validate::::ITALIANO', 'c', 'The action validate does not leave a mark, because validateFailed and validateSucceded will be used instead when the validate is completed.');
+insert into application.application_action_type(code, display_value, status, description) values('transfer', 'Transfer application between departments', 'c', 'Application transfered to the given department');
 
 
 
@@ -1973,6 +1974,7 @@ insert into party.party_role_type(code, display_value, status, description) valu
 DROP TABLE IF EXISTS administrative.ba_unit CASCADE;
 CREATE TABLE administrative.ba_unit(
     id varchar(40) NOT NULL,
+    loc_id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL,
     name varchar(255),
     name_firstpart varchar(20) NOT NULL,
@@ -2005,6 +2007,7 @@ DROP TABLE IF EXISTS administrative.ba_unit_historic CASCADE;
 CREATE TABLE administrative.ba_unit_historic
 (
     id varchar(40),
+    loc_id varchar(40),
     type_code varchar(20),
     name varchar(255),
     name_firstpart varchar(20),
@@ -2030,17 +2033,14 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
 --Table administrative.land_owner_certificate ----
 DROP TABLE IF EXISTS administrative.land_owner_certificate CASCADE;
 CREATE TABLE administrative.land_owner_certificate(
-    loc_sid varchar(40) NOT NULL,
-    moth_sid varchar(40) NOT NULL,
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    moth_id varchar(40) NOT NULL,
     pana_no integer,
     tmp_pana_no integer,
     property_type integer,
     oshp_type integer,
     transaction_no integer,
     record_status varchar(10),
-    update_user varchar(15),
-    update_date date,
-    update_date_nepali integer,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2049,7 +2049,7 @@ CREATE TABLE administrative.land_owner_certificate(
 
     -- Internal constraints
     
-    CONSTRAINT land_owner_certificate_pkey PRIMARY KEY (loc_sid)
+    CONSTRAINT land_owner_certificate_pkey PRIMARY KEY (id)
 );
 
 
@@ -2066,17 +2066,14 @@ CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
 DROP TABLE IF EXISTS administrative.land_owner_certificate_historic CASCADE;
 CREATE TABLE administrative.land_owner_certificate_historic
 (
-    loc_sid varchar(40),
-    moth_sid varchar(40),
+    id varchar(40),
+    moth_id varchar(40),
     pana_no integer,
     tmp_pana_no integer,
     property_type integer,
     oshp_type integer,
     transaction_no integer,
     record_status varchar(10),
-    update_user varchar(15),
-    update_date date,
-    update_date_nepali integer,
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2096,18 +2093,15 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
 --Table administrative.moth ----
 DROP TABLE IF EXISTS administrative.moth CASCADE;
 CREATE TABLE administrative.moth(
-    moth_sid varchar(40) NOT NULL,
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     mothluj_no varchar(15),
-    vdc_sid integer,
+    vdc_code varchar(20),
     ward_no integer,
     moth_luj varchar(2),
     financialyear integer,
     lmocd integer,
     transaction_no integer,
     record_status varchar(10),
-    update_user varchar(15),
-    update_date date,
-    update_nepali_date integer,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2116,7 +2110,7 @@ CREATE TABLE administrative.moth(
 
     -- Internal constraints
     
-    CONSTRAINT moth_pkey PRIMARY KEY (moth_sid)
+    CONSTRAINT moth_pkey PRIMARY KEY (id)
 );
 
 
@@ -2133,18 +2127,15 @@ CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
 DROP TABLE IF EXISTS administrative.moth_historic CASCADE;
 CREATE TABLE administrative.moth_historic
 (
-    moth_sid varchar(40),
+    id varchar(40),
     mothluj_no varchar(15),
-    vdc_sid integer,
+    vdc_code varchar(20),
     ward_no integer,
     moth_luj varchar(2),
     financialyear integer,
     lmocd integer,
     transaction_no integer,
     record_status varchar(10),
-    update_user varchar(15),
-    update_date date,
-    update_nepali_date integer,
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4408,9 +4399,9 @@ insert into system.approle(code, display_value, status, description) values('Das
 insert into system.approle(code, display_value, status, description) values('ApplnView', 'Search and View Applications', 'c', 'Search and view applications');
 insert into system.approle(code, display_value, status, description) values('ApplnCreate', 'Lodge new Applications', 'c', 'Lodge new Applications');
 insert into system.approle(code, display_value, status, description) values('ApplnStatus', 'Generate and View Status Report', 'c', 'Generate and View Status Report');
-insert into system.approle(code, display_value, status, description) values('ApplnAssignSelf', 'Assign Applications to Self', 'c', 'Able to assign (unassigned) applications to yourself');
+insert into system.approle(code, display_value, status, description) values('ApplnAssignDeprt', 'Assign Applications to Department staff', 'c', 'Able to assign (unassigned) applications to department staff');
 insert into system.approle(code, display_value, status, description) values('ApplnUnassignSelf', 'Unassign Applications to Self', 'c', 'Able to unassign (assigned) applications from yourself');
-insert into system.approle(code, display_value, status, description) values('ApplnAssignOthers', 'Assign Applications to Other Users', 'c', 'Able to assign (unassigned) applications to other users');
+insert into system.approle(code, display_value, status, description) values('ApplnAssignAll', 'Assign Applications to all users in office', 'c', 'Able to assign (unassigned) applications to any user in office');
 insert into system.approle(code, display_value, status, description) values('ApplnUnassignOthers', 'Unassign Applications to Others', 'c', 'Able to unassign (assigned) applications to other users');
 insert into system.approle(code, display_value, status, description) values('StartService', 'Start Service', 'c', 'Start Service');
 insert into system.approle(code, display_value, status, description) values('CompleteService', 'Complete Service', 'c', 'Complete Service (prior to approval)');
@@ -4467,9 +4458,9 @@ insert into system.approle_appgroup(approle_code, appgroup_id) values('DashbrdVi
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnView', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCreate', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignSelf', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignSelf', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignOthers', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignOthers', 'super-group-id');
 
 
@@ -5163,12 +5154,12 @@ ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk130
             FOREIGN KEY (bound_type) REFERENCES cadastre.boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
 CREATE INDEX segments_bound_type_fk130_ind ON cadastre.segments (bound_type);
 
-ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_sid_fk131 
-            FOREIGN KEY (moth_sid) REFERENCES administrative.moth(moth_sid) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX land_owner_certificate_moth_sid_fk131_ind ON administrative.land_owner_certificate (moth_sid);
+ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_id_fk131 
+            FOREIGN KEY (moth_id) REFERENCES administrative.moth(id) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX land_owner_certificate_moth_id_fk131_ind ON administrative.land_owner_certificate (moth_id);
 
 ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_id_fk132 
-            FOREIGN KEY (id) REFERENCES administrative.land_owner_certificate(loc_sid) ON UPDATE CASCADE ON DELETE CASCADE;
+            FOREIGN KEY (id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX ba_unit_id_fk132_ind ON administrative.ba_unit (id);
 
 ALTER TABLE system.map_sheet ADD CONSTRAINT map_sheet_map_alpha_fk133 
@@ -5187,9 +5178,9 @@ ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk136
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX department_office_code_fk136_ind ON system.department (office_code);
 
-ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_id_fk137 
-            FOREIGN KEY (department_id) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX appuser_department_id_fk137_ind ON system.appuser (department_id);
+ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk137 
+            FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX appuser_department_code_fk137_ind ON system.appuser (department_code);
 
 ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk138 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5202,6 +5193,10 @@ CREATE INDEX office_district_code_fk139_ind ON system.office (district_code);
 ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk140 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX department_office_code_fk140_ind ON system.department (office_code);
+
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk141 
+            FOREIGN KEY (loc_id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX ba_unit_loc_id_fk141_ind ON administrative.ba_unit (loc_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
