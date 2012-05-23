@@ -992,8 +992,7 @@ CREATE TABLE party.party(
     ward_no integer,
     street varchar(50),
     date_of_birth date,
-    vdc_code integer,
-    district_code integer,
+    vdc_code varchar(20) NOT NULL,
     remarks varchar(200),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -1043,8 +1042,7 @@ CREATE TABLE party.party_historic
     ward_no integer,
     street varchar(50),
     date_of_birth date,
-    vdc_code integer,
-    district_code integer,
+    vdc_code varchar(20),
     remarks varchar(200),
     rowidentifier varchar(40),
     rowversion integer,
@@ -1202,6 +1200,41 @@ insert into party.gender_type(code, display_value, status) values('female', 'Fem
 
 
 
+--Table system.vdc ----
+DROP TABLE IF EXISTS system.vdc CASCADE;
+CREATE TABLE system.vdc(
+    code varchar(20) NOT NULL,
+    display_value varchar(50) NOT NULL,
+    district_code varchar(20) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT vdc_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.district ----
+DROP TABLE IF EXISTS system.district CASCADE;
+CREATE TABLE system.district(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    zone_code integer,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT district_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.district -- 
+insert into system.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
+
+
+
 --Table system.appuser ----
 DROP TABLE IF EXISTS system.appuser CASCADE;
 CREATE TABLE system.appuser(
@@ -1306,26 +1339,6 @@ CREATE TABLE system.office(
     
  -- Data for the table system.office -- 
 insert into system.office(code, display_value, district_code) values('7-25-003-001', 'Lalitpur - LMO first section', '25');
-
-
-
---Table system.district ----
-DROP TABLE IF EXISTS system.district CASCADE;
-CREATE TABLE system.district(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    zone_code integer,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT district_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.district -- 
-insert into system.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
 
 
 
@@ -2095,7 +2108,7 @@ DROP TABLE IF EXISTS administrative.moth CASCADE;
 CREATE TABLE administrative.moth(
     id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     mothluj_no varchar(15),
-    vdc_code varchar(20),
+    vdc_code varchar(20) NOT NULL,
     ward_no integer,
     moth_luj varchar(2),
     financialyear integer,
@@ -4614,21 +4627,6 @@ CREATE TABLE system.map_sheet(
 );
 
     
---Table system.vdc ----
-DROP TABLE IF EXISTS system.vdc CASCADE;
-CREATE TABLE system.vdc(
-    code varchar(20) NOT NULL,
-    display_value varchar(50) NOT NULL,
-    district_code varchar(20) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT vdc_pkey PRIMARY KEY (code)
-);
-
-    
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5197,6 +5195,14 @@ CREATE INDEX department_office_code_fk140_ind ON system.department (office_code)
 ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk141 
             FOREIGN KEY (loc_id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX ba_unit_loc_id_fk141_ind ON administrative.ba_unit (loc_id);
+
+ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk142 
+            FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX moth_vdc_code_fk142_ind ON administrative.moth (vdc_code);
+
+ALTER TABLE party.party ADD CONSTRAINT party_vdc_code_fk143 
+            FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX party_vdc_code_fk143_ind ON party.party (vdc_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
