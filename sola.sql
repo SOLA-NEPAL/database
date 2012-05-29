@@ -1307,7 +1307,7 @@ CREATE TABLE system.department(
     code varchar(20) NOT NULL,
     office_code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
-    description integer,
+    description varchar(500),
     status char(1) NOT NULL DEFAULT ('c'),
 
     -- Internal constraints
@@ -2043,6 +2043,30 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.ba_unit FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
+--Table administrative.ba_unit_type ----
+DROP TABLE IF EXISTS administrative.ba_unit_type CASCADE;
+CREATE TABLE administrative.ba_unit_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT ba_unit_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT ba_unit_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table administrative.ba_unit_type -- 
+insert into administrative.ba_unit_type(code, display_value, status) values('basicPropertyUnit', 'Basic Property Unit::::Unita base Proprieta', 'c');
+insert into administrative.ba_unit_type(code, display_value, status) values('leasedUnit', 'Leased Unit::::Unita Affitto', 'x');
+insert into administrative.ba_unit_type(code, display_value, status) values('propertyRightUnit', 'Property Right Unit::::Unita Diritto Proprieta', 'x');
+insert into administrative.ba_unit_type(code, display_value, description, status) values('administrativeUnit', 'Administrative Unit::::Unita Amministrativa', 'Extension to LADM', 'c');
+insert into administrative.ba_unit_type(code, display_value, description, status) values('basicParcel', 'Basic Parcel::::Particella Base', 'Extension to LADM', 'c');
+
+
+
 --Table administrative.land_owner_certificate ----
 DROP TABLE IF EXISTS administrative.land_owner_certificate CASCADE;
 CREATE TABLE administrative.land_owner_certificate(
@@ -2165,30 +2189,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table administrative.ba_unit_type ----
-DROP TABLE IF EXISTS administrative.ba_unit_type CASCADE;
-CREATE TABLE administrative.ba_unit_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT ba_unit_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT ba_unit_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table administrative.ba_unit_type -- 
-insert into administrative.ba_unit_type(code, display_value, status) values('basicPropertyUnit', 'Basic Property Unit::::Unita base Proprieta', 'c');
-insert into administrative.ba_unit_type(code, display_value, status) values('leasedUnit', 'Leased Unit::::Unita Affitto', 'x');
-insert into administrative.ba_unit_type(code, display_value, status) values('propertyRightUnit', 'Property Right Unit::::Unita Diritto Proprieta', 'x');
-insert into administrative.ba_unit_type(code, display_value, description, status) values('administrativeUnit', 'Administrative Unit::::Unita Amministrativa', 'Extension to LADM', 'c');
-insert into administrative.ba_unit_type(code, display_value, description, status) values('basicParcel', 'Basic Parcel::::Particella Base', 'Extension to LADM', 'c');
-
-
-
 --Table administrative.rrr ----
 DROP TABLE IF EXISTS administrative.rrr CASCADE;
 CREATE TABLE administrative.rrr(
@@ -5156,53 +5156,49 @@ ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_cert
             FOREIGN KEY (moth_id) REFERENCES administrative.moth(id) ON UPDATE Cascade ON DELETE Cascade;
 CREATE INDEX land_owner_certificate_moth_id_fk131_ind ON administrative.land_owner_certificate (moth_id);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_id_fk132 
-            FOREIGN KEY (id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_id_fk132_ind ON administrative.ba_unit (id);
-
-ALTER TABLE system.map_sheet ADD CONSTRAINT map_sheet_map_alpha_fk133 
+ALTER TABLE system.map_sheet ADD CONSTRAINT map_sheet_map_alpha_fk132 
             FOREIGN KEY (map_alpha) REFERENCES system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX map_sheet_map_alpha_fk133_ind ON system.map_sheet (map_alpha);
+CREATE INDEX map_sheet_map_alpha_fk132_ind ON system.map_sheet (map_alpha);
 
-ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk134 
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk133 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX office_district_code_fk134_ind ON system.office (district_code);
+CREATE INDEX office_district_code_fk133_ind ON system.office (district_code);
 
-ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk135 
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk134 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX vdc_district_code_fk135_ind ON system.vdc (district_code);
+CREATE INDEX vdc_district_code_fk134_ind ON system.vdc (district_code);
 
-ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk136 
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk135 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX department_office_code_fk136_ind ON system.department (office_code);
+CREATE INDEX department_office_code_fk135_ind ON system.department (office_code);
 
-ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk137 
+ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk136 
             FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX appuser_department_code_fk137_ind ON system.appuser (department_code);
+CREATE INDEX appuser_department_code_fk136_ind ON system.appuser (department_code);
 
-ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk138 
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk137 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX vdc_district_code_fk138_ind ON system.vdc (district_code);
+CREATE INDEX vdc_district_code_fk137_ind ON system.vdc (district_code);
 
-ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk139 
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk138 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX office_district_code_fk139_ind ON system.office (district_code);
+CREATE INDEX office_district_code_fk138_ind ON system.office (district_code);
 
-ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk140 
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk139 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX department_office_code_fk140_ind ON system.department (office_code);
+CREATE INDEX department_office_code_fk139_ind ON system.department (office_code);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk141 
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk140 
             FOREIGN KEY (loc_id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_loc_id_fk141_ind ON administrative.ba_unit (loc_id);
+CREATE INDEX ba_unit_loc_id_fk140_ind ON administrative.ba_unit (loc_id);
 
-ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk142 
+ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk141 
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX moth_vdc_code_fk142_ind ON administrative.moth (vdc_code);
+CREATE INDEX moth_vdc_code_fk141_ind ON administrative.moth (vdc_code);
 
-ALTER TABLE party.party ADD CONSTRAINT party_vdc_code_fk143 
+ALTER TABLE party.party ADD CONSTRAINT party_vdc_code_fk142 
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_vdc_code_fk143_ind ON party.party (vdc_code);
+CREATE INDEX party_vdc_code_fk142_ind ON party.party (vdc_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
