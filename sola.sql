@@ -2752,6 +2752,7 @@ DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
 CREATE TABLE cadastre.cadastre_object(
     id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL DEFAULT ('parcel'),
+    map_sheet_id varchar(40) NOT NULL,
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
@@ -2800,6 +2801,7 @@ CREATE TABLE cadastre.cadastre_object_historic
 (
     id varchar(40),
     type_code varchar(20),
+    map_sheet_id varchar(40),
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
@@ -2906,6 +2908,32 @@ insert into cadastre.parcel_type(code, description) values(50, 'Not Cultivatable
 
 
 
+--Table cadastre.map_sheet ----
+DROP TABLE IF EXISTS cadastre.map_sheet CASCADE;
+CREATE TABLE cadastre.map_sheet(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    map_number varchar(10) NOT NULL,
+    sheet_type integer,
+    alpha_code varchar(20) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT map_sheet_pkey PRIMARY KEY (id)
+);
+
+    
+--Table system.alpha_code ----
+DROP TABLE IF EXISTS system.alpha_code CASCADE;
+CREATE TABLE system.alpha_code(
+    code varchar(20) NOT NULL,
+    alpha_char varchar(10),
+
+    -- Internal constraints
+    
+    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
+);
+
+    
 --Table administrative.ba_unit_contains_spatial_unit ----
 DROP TABLE IF EXISTS administrative.ba_unit_contains_spatial_unit CASCADE;
 CREATE TABLE administrative.ba_unit_contains_spatial_unit(
@@ -4588,18 +4616,6 @@ insert into system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
 
 
 
---Table system.alpha_code ----
-DROP TABLE IF EXISTS system.alpha_code CASCADE;
-CREATE TABLE system.alpha_code(
-    code integer NOT NULL,
-    alpha_char varchar(10),
-
-    -- Internal constraints
-    
-    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
-);
-
-    
 --Table system.financial_year ----
 DROP TABLE IF EXISTS system.financial_year CASCADE;
 CREATE TABLE system.financial_year(
@@ -4610,20 +4626,6 @@ CREATE TABLE system.financial_year(
     -- Internal constraints
     
     CONSTRAINT financial_year_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.map_sheet ----
-DROP TABLE IF EXISTS system.map_sheet CASCADE;
-CREATE TABLE system.map_sheet(
-    code integer NOT NULL,
-    map_number varchar(10) NOT NULL,
-    sheet_type integer,
-    map_alpha integer NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT map_sheet_pkey PRIMARY KEY (code)
 );
 
     
@@ -5156,9 +5158,9 @@ ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_cert
             FOREIGN KEY (moth_id) REFERENCES administrative.moth(id) ON UPDATE Cascade ON DELETE Cascade;
 CREATE INDEX land_owner_certificate_moth_id_fk131_ind ON administrative.land_owner_certificate (moth_id);
 
-ALTER TABLE system.map_sheet ADD CONSTRAINT map_sheet_map_alpha_fk132 
-            FOREIGN KEY (map_alpha) REFERENCES system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX map_sheet_map_alpha_fk132_ind ON system.map_sheet (map_alpha);
+ALTER TABLE cadastre.map_sheet ADD CONSTRAINT map_sheet_alpha_code_fk132 
+            FOREIGN KEY (alpha_code) REFERENCES system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
+CREATE INDEX map_sheet_alpha_code_fk132_ind ON cadastre.map_sheet (alpha_code);
 
 ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk133 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
@@ -5199,6 +5201,10 @@ CREATE INDEX moth_vdc_code_fk141_ind ON administrative.moth (vdc_code);
 ALTER TABLE party.party ADD CONSTRAINT party_vdc_code_fk142 
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX party_vdc_code_fk142_ind ON party.party (vdc_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id_fk143 
+            FOREIGN KEY (map_sheet_id) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_map_sheet_id_fk143_ind ON cadastre.cadastre_object (map_sheet_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
