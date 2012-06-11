@@ -3292,7 +3292,7 @@ DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
 CREATE TABLE cadastre.cadastre_object(
     id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL DEFAULT ('parcel'),
-    map_sheet_id varchar(40) NOT NULL,
+    map_sheet_id varchar(40),
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
