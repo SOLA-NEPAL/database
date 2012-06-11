@@ -20,7 +20,8 @@ BEGIN
 	LOOP
 		INSERT INTO sola.cadastre.cadastre_object (id, transaction_id, parcel_no, district, vdc, wardno, grids1,parcel_type,geom_polygon,status_code
 		,name_firstpart,name_lastpart)
-		VALUES (rec.gid, transaction_id_vl, rec.parcelno, rec.district, rec.vdc,rec.wardno, rec.grids1,rec.parcelty,rec.the_geom, rec.parcel_status,'test','test');  
+		VALUES (rec.gid, transaction_id_vl, rec.parcelno, rec.district, rec.vdc,rec.wardno, rec.grids1,rec.parcelty,rec.the_geom, rec.parcel_status
+		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);  
 	END LOOP;
 	
     RETURN 'ok';
@@ -47,43 +48,13 @@ END;
 $BODY$
   LANGUAGE plpgsql;
   
-
-
---INSERT VALUES FOR THE PARCELS
-delete from sola.cadastre.level;
-INSERT INTO sola.cadastre.level (id, name, register_type_code, structure_code, type_code, change_user)
-                VALUES (uuid_generate_v1(), 'Parcels', 'all', 'polygon', 'primaryRight', 'test');
-
-				--remove any existing Test Data
-delete from sola.cadastre.spatial_unit;
-INSERT INTO sola.cadastre.spatial_unit (id, dimension_code, label, surface_relation_code, level_id, change_user) 
-	SELECT gid, '2D', ' ', 'onSurface',  
-	(SELECT id FROM sola.cadastre.level WHERE name='Parcels') As l_id, 'test' AS ch_user
-	FROM sola.testdata."mulpani_parcel" WHERE ST_GeometryN(the_geom, 1) IS NOT NULL;
-
 	--execute function to execute shapes.
 delete from sola.cadastre.cadastre_object;
 SELECT sola.test_etl.load_parcel();
 delete from sola.cadastre.construction;
 SELECT sola.test_etl.load_construction();
 
-UPDATE sola.cadastre.spatial_unit SET level_id = (SELECT id FROM cadastre.level WHERE name = 'Parcels') 
-			WHERE (level_id IS NULL);
 
-INSERT INTO sola.cadastre.spatial_value_area (spatial_unit_id, type_code, size, change_user)
-	SELECT 	gid, 'officialArea', shape_area, 'test' AS ch_user FROM sola.testdata."mulpani_parcel";
-
-INSERT INTO sola.cadastre.spatial_value_area (spatial_unit_id, type_code, size, change_user)
-	SELECT 	id, 'calculatedArea', st_area(geom_polygon), 'test' AS ch_user FROM sola.cadastre.cadastre_object;
-
-
-INSERT INTO sola.source.archive (id, name, change_user) VALUES ('archive-id', 'Land Information mulpani', 'test'); 
-
-INSERT INTO sola.source.source (id, archive_id, la_nr, submission, maintype, type_code, content, availability_status_code, change_user)
-VALUES (uuid_generate_v1(), 'archive-id', 'Landonline', '2012-04-05', 'mapDigital', 'cadastralMap', 'Land Information Mulpani', 'available', 'test');
-
--- enable triggers in the database
---select fn_triggerall(true);
 
 --COMMIT;
 

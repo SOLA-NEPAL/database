@@ -373,13 +373,13 @@ inner join administrative.ba_unit ba
 )');
 
 --------------Check there are survey points attached with the cadastre change (CRITICAL)
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('survey-points-present', 'sql', 'There are at least 3 survey points present::::ITALIANO',
- '#{id}(transaction_id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('survey-points-present', 'sql', 'There are at least 3 survey points present::::ITALIANO',
+-- '#{id}(transaction_id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('survey-points-present', now(), 'infinity', 
- 'select count (*) > 2  as vl from cadastre.survey_point where transaction_id= #{id}');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('survey-points-present', now(), 'infinity', 
+-- 'select count (*) > 2  as vl from cadastre.survey_point where transaction_id= #{id}');
 
 --------------Check there are target parcels attached with the cadastre change (CRITICAL)
 insert into system.br(id, technical_type_code, feedback, technical_description) 
@@ -1014,8 +1014,8 @@ insert into system.br_validation(br_id, severity_code, target_application_moment
 values('application-br6-check-new-title-service-is-needed', 'warning', 'validate', 'application', 8);
 
 --modified 1 November request_type from newTitle to newDigitalTitle-------------
-insert into system.br_validation(br_id, severity_code, target_service_moment, target_code, target_request_type_code, order_of_execution) 
-values('request-newfreehold-br1-check-title-source-not-old', 'critical', 'start', 'service', 'newDigitalTitle',  3);
+--insert into system.br_validation(br_id, severity_code, target_service_moment, target_code, target_request_type_code, order_of_execution) 
+--values('request-newfreehold-br1-check-title-source-not-old', 'critical', 'start', 'service', 'newDigitalTitle',  3);
 
 -- Business rules running before approval of application
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
@@ -1084,8 +1084,8 @@ insert into system.br_validation(br_id, severity_code, target_service_moment, ta
 values('application-baunit-check-area', 'warning', null, 'service', 'cadastreChange', 9);
 
 ---------------------------------CADASTRE CHANGE - PENDING -----------------------------------------
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('survey-points-present', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 1);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('survey-points-present', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 1);
 
 ----the union of target parcels is a polygon (not a multipolygon) (CRITICAL)
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
@@ -1110,8 +1110,8 @@ insert into system.br_validation(br_id, severity_code, target_reg_moment, target
 values('area-check-percentage-newareas-oldareas', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 12);
 
 ---------------------------------CADASTRE CHANGE - APPROVE -----------------------------------------
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('survey-points-present', 'critical', 'current', 'cadastre_object', 'cadastreChange', 1);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('survey-points-present', 'critical', 'current', 'cadastre_object', 'cadastreChange', 1);
 
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
 values('target-parcels-check-isapolygon', 'critical', 'current', 'cadastre_object', 'cadastreChange', 4);
