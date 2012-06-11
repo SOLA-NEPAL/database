@@ -747,7 +747,7 @@ CREATE TABLE party.party(
     street varchar(50),
     date_of_birth date,
     districtcode varchar(20),
-    vdc_code varchar(20) NOT NULL,
+    vdc_code varchar(20),
     ward_no integer,
     remarks varchar(200),
     id_provider_office_code varchar(20),
