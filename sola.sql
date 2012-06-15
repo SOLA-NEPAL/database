@@ -3288,7 +3288,274 @@ DROP TABLE IF EXISTS cadastre.spatial_value_area CASCADE;
 CREATE TABLE cadastre.spatial_value_area(
     spatial_unit_id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL,
+<<<<<<< HEAD
     size numeric(29, 2) NOT NULL,
+=======
+    wms_url varchar(500),
+    wms_layers varchar(500),
+    pojo_query_name varchar(100) NOT NULL,
+    pojo_structure varchar(500),
+    pojo_query_name_for_select varchar(100) NOT NULL,
+    shape_location varchar(500),
+    style varchar(4000),
+    active bool NOT NULL DEFAULT (true),
+    item_order integer NOT NULL DEFAULT (0),
+
+    -- Internal constraints
+    
+    CONSTRAINT config_map_layer_style_required CHECK (case when type_code = 'wms' then wms_url is not null and wms_layers is not null when type_code = 'pojo' then pojo_query_name is not null and pojo_structure is not null and style is not null when type_code = 'shape' then shape_location is not null and style is not null end),
+    CONSTRAINT config_map_layer_title_unique UNIQUE (title),
+    CONSTRAINT config_map_layer_pkey PRIMARY KEY (name)
+);
+
+    
+ -- Data for the table system.config_map_layer -- 
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('parcels', 'Parcels::::ITALIANO', 'pojo', 'SpatialResult.getParcels', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_parcel', 'parcel.xml', true, 1);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('pending-parcels', 'Pending parcels::::ITALIANO', 'pojo', 'SpatialResult.getParcelsPending', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_parcel_pending', 'pending_parcels.xml', true, 2);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('roads', 'Roads::::ITALIANO', 'pojo', 'SpatialResult.getRoads', 'theGeom:MultiPolygon,label:""', 'dynamic.informationtool.get_road', 'road.xml', true, 7);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('survey-controls', 'Survey controls::::ITALIANO', 'pojo', 'SpatialResult.getSurveyControls', 'theGeom:Point,label:""', 'dynamic.informationtool.get_survey_control', 'survey_control.xml', true, 8);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('place-names', 'Places names::::ITALIANO', 'pojo', 'SpatialResult.getPlaceNames', 'theGeom:Point,label:""', 'dynamic.informationtool.get_place_name', 'place_name.xml', true, 5);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('applications', 'Applications::::ITALIANO', 'pojo', 'SpatialResult.getApplications', 'theGeom:MultiPoint,label:""', 'dynamic.informationtool.get_application', 'application.xml', true, 6);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('constructions', 'constructions::::ITALIANO', 'pojo', 'SpatialResult.getconstructions', 'theGeom:Polygon,label:""', 'dynamic.informationtool.get_construction', 'construction.xml', true, 3);
+insert into system.config_map_layer(name, title, type_code, pojo_query_name, pojo_structure, pojo_query_name_for_select, style, active, item_order) values('segments', 'segments::::segments', 'pojo', 'SpatialResult.getsegments', 'theGeom:LineString,label:""', 'dynamic.informationtool.get_segment', 'segment.xml', true, 4);
+
+
+
+--Table system.config_map_layer_type ----
+DROP TABLE IF EXISTS system.config_map_layer_type CASCADE;
+CREATE TABLE system.config_map_layer_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL,
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT config_map_layer_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT config_map_layer_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.config_map_layer_type -- 
+insert into system.config_map_layer_type(code, display_value, status) values('wms', 'WMS server with layers::::Server WMS con layer', 'c');
+insert into system.config_map_layer_type(code, display_value, status) values('shape', 'Shapefile::::Shapefile', 'c');
+insert into system.config_map_layer_type(code, display_value, status) values('pojo', 'Pojo layer::::Pojo layer', 'c');
+
+
+
+--Table administrative.ba_unit_as_party ----
+DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
+CREATE TABLE administrative.ba_unit_as_party(
+    ba_unit_id varchar(40) NOT NULL,
+    party_id varchar(40) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT ba_unit_as_party_pkey PRIMARY KEY (ba_unit_id,party_id)
+);
+
+    
+--Table transaction.reg_status_type ----
+DROP TABLE IF EXISTS transaction.reg_status_type CASCADE;
+CREATE TABLE transaction.reg_status_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT reg_status_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT reg_status_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table transaction.reg_status_type -- 
+insert into transaction.reg_status_type(code, display_value, status) values('current', 'Current', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('pending', 'Pending', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('historic', 'Historic', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('previous', 'Previous', 'c');
+
+
+
+--Table system.br ----
+DROP TABLE IF EXISTS system.br CASCADE;
+CREATE TABLE system.br(
+    id varchar(100) NOT NULL,
+    display_name varchar(250) NOT NULL DEFAULT (uuid_generate_v1()),
+    technical_type_code varchar(20) NOT NULL,
+    feedback varchar(2000),
+    description varchar(1000),
+    technical_description varchar(1000),
+
+    -- Internal constraints
+    
+    CONSTRAINT br_display_name_unique UNIQUE (display_name),
+    CONSTRAINT br_pkey PRIMARY KEY (id)
+);
+
+    
+--Table system.br_technical_type ----
+DROP TABLE IF EXISTS system.br_technical_type CASCADE;
+CREATE TABLE system.br_technical_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL,
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT br_technical_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT br_technical_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.br_technical_type -- 
+insert into system.br_technical_type(code, display_value, status, description) values('sql', 'SQL::::SQL', 'c', 'The rule definition is based in sql and it is executed by the database engine.');
+insert into system.br_technical_type(code, display_value, status, description) values('drools', 'Drools::::Drools', 'c', 'The rule definition is based on Drools engine.');
+
+
+
+--Table system.br_validation ----
+DROP TABLE IF EXISTS system.br_validation CASCADE;
+CREATE TABLE system.br_validation(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    br_id varchar(100) NOT NULL,
+    target_code varchar(20) NOT NULL,
+    target_application_moment varchar(20),
+    target_service_moment varchar(20),
+    target_reg_moment varchar(20),
+    target_request_type_code varchar(20),
+    target_rrr_type_code varchar(20),
+    severity_code varchar(20) NOT NULL,
+    order_of_execution integer NOT NULL DEFAULT (0),
+
+    -- Internal constraints
+    
+    CONSTRAINT br_validation_service_request_type_valid CHECK (target_request_type_code is null or (target_request_type_code is not null and target_code != 'application')),
+    CONSTRAINT br_validation_rrr_rrr_type_valid CHECK (target_rrr_type_code is null or (target_rrr_type_code is not null and target_code = 'rrr')),
+    CONSTRAINT br_validation_app_moment_unique UNIQUE (br_id, target_code, target_application_moment),
+    CONSTRAINT br_validation_service_moment_unique UNIQUE (br_id, target_code, target_service_moment),
+    CONSTRAINT br_validation_reg_moment_unique UNIQUE (br_id, target_code, target_reg_moment),
+    CONSTRAINT br_validation_service_moment_valid CHECK (target_code!= 'service' or (target_code = 'service' and target_application_moment is null and target_reg_moment is null)),
+    CONSTRAINT br_validation_application_moment_valid CHECK (target_code!= 'application' or (target_code = 'application' and target_service_moment is null and target_reg_moment is null)),
+    CONSTRAINT br_validation_reg_moment_valid CHECK (target_code in ( 'application', 'service') or (target_code not in ( 'application', 'service') and target_service_moment is null and target_application_moment is null)),
+    CONSTRAINT br_validation_pkey PRIMARY KEY (id)
+);
+
+    
+--Table system.br_definition ----
+DROP TABLE IF EXISTS system.br_definition CASCADE;
+CREATE TABLE system.br_definition(
+    br_id varchar(100) NOT NULL,
+    active_from date NOT NULL,
+    active_until date NOT NULL DEFAULT ('infinity'),
+    body varchar(4000) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT br_definition_pkey PRIMARY KEY (br_id,active_from)
+);
+
+    
+--Table system.br_severity_type ----
+DROP TABLE IF EXISTS system.br_severity_type CASCADE;
+CREATE TABLE system.br_severity_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL,
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT br_severity_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT br_severity_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.br_severity_type -- 
+insert into system.br_severity_type(code, display_value, status) values('critical', 'Critical', 'c');
+insert into system.br_severity_type(code, display_value, status) values('medium', 'Medium', 'c');
+insert into system.br_severity_type(code, display_value, status) values('warning', 'Warning', 'c');
+
+
+
+--Table system.br_validation_target_type ----
+DROP TABLE IF EXISTS system.br_validation_target_type CASCADE;
+CREATE TABLE system.br_validation_target_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL,
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT br_validation_target_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT br_validation_target_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.br_validation_target_type -- 
+insert into system.br_validation_target_type(code, display_value, status, description) values('application', 'Application::::ITALIANO', 'c', 'The target of the validation is the application. It accepts one parameter {id} which is the application id.');
+insert into system.br_validation_target_type(code, display_value, status, description) values('service', 'Service::::ITALIANO', 'c', 'The target of the validation is the service. It accepts one parameter {id} which is the service id.');
+insert into system.br_validation_target_type(code, display_value, status, description) values('rrr', 'Right or Restriction::::ITALIANO', 'c', 'The target of the validation is the rrr. It accepts one parameter {id} which is the rrr id. ');
+insert into system.br_validation_target_type(code, display_value, status, description) values('ba_unit', 'Administrative Unit::::ITALIANO', 'c', 'The target of the validation is the ba_unit. It accepts one parameter {id} which is the ba_unit id.');
+insert into system.br_validation_target_type(code, display_value, status, description) values('source', 'Source::::ITALIANO', 'c', 'The target of the validation is the source. It accepts one parameter {id} which is the source id.');
+insert into system.br_validation_target_type(code, display_value, status, description) values('cadastre_object', 'Cadastre Object::::ITALIANO', 'c', 'The target of the validation is the transaction related with the cadastre change. It accepts one parameter {id} which is the transaction id.');
+
+
+
+--Table cadastre.cadastre_object_type ----
+DROP TABLE IF EXISTS cadastre.cadastre_object_type CASCADE;
+CREATE TABLE cadastre.cadastre_object_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT cadastre_object_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT cadastre_object_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.cadastre_object_type -- 
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('parcel', 'Parcel::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('buildingUnit', 'Building Unit::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('utilityNetwork', 'Utility Network::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('segment', 'Segment::::Segment', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('construction', 'Construction::Construction', '', 'c');
+
+
+
+--Table cadastre.cadastre_object ----
+DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
+CREATE TABLE cadastre.cadastre_object(
+    id varchar(40) NOT NULL,
+    type_code varchar(20) NOT NULL DEFAULT ('parcel'),
+    map_sheet_id varchar(40),
+    building_unit_type_code varchar(20),
+    approval_datetime timestamp,
+    historic_datetime timestamp,
+    source_reference varchar(100),
+    name_firstpart varchar(20),
+    name_lastpart varchar(50),
+    status_code varchar(20) NOT NULL DEFAULT ('pending'),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    transaction_id varchar(40) NOT NULL,
+    parcel_no integer,
+    district varchar(20),
+    vdc varchar(20),
+    wardno varchar(20),
+    grids1 varchar(20),
+    parcel_note varchar(255),
+    parcel_type integer NOT NULL,
+>>>>>>> dateTestBranch
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
