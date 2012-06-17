@@ -15,13 +15,16 @@ BEGIN
     delete from sola.transaction.transaction where id = transaction_id_vl;
     insert into sola.transaction.transaction(id, status_code, approval_datetime, change_user) values(transaction_id_vl, 'approved', now(), 'test-id');
 
-	FOR rec IN EXECUTE 'SELECT gid, parcelno, district, vdc, wardno, grids1,parcelty,
+	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
 		ST_GeometryN(the_geom, 1) AS the_geom,''current'' AS parcel_status FROM sola.testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
-		INSERT INTO sola.cadastre.cadastre_object (id, transaction_id, parcel_no, district, vdc, wardno, grids1,parcel_type,geom_polygon,status_code
-		,name_firstpart,name_lastpart)
-		VALUES (rec.gid, transaction_id_vl, rec.parcelno, rec.district, rec.vdc,rec.wardno, rec.grids1,rec.parcelty,rec.the_geom, rec.parcel_status
-		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);  
+		INSERT INTO sola.cadastre.cadastre_object (id, transaction_id, parcel_no, parcel_type,geom_polygon,status_code,name_firstpart,name_lastpart)
+		VALUES (rec.gid, transaction_id_vl, rec.parcelno,rec.parcelty,rec.the_geom, rec.parcel_status
+		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);
+		
+		INSERT INTO sola.address.address (id, districtcode, vdc_code, ward_no) 
+					VALUES (rec.objectid, cast(rec.district as text), cast(27009 as text) , cast(rec.wardno as text)); 
+		INSERT INTO sola.cadastre.spatial_unit_address (spatial_unit_id, address_id) VALUES (rec.gid, rec.objectid); 
 	END LOOP;
 	
     RETURN 'ok';

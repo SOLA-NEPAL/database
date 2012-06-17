@@ -480,6 +480,7 @@ CREATE TABLE source.source(
     content varchar(4000),
     status_code varchar(20),
     transaction_id varchar(40),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -520,6 +521,7 @@ CREATE TABLE source.source_historic
     content varchar(4000),
     status_code varchar(20),
     transaction_id varchar(40),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -744,14 +746,11 @@ CREATE TABLE party.party(
     phone varchar(15),
     fax varchar(15),
     preferred_communication_code varchar(20),
-    street varchar(50),
     date_of_birth date,
-    districtcode varchar(20),
-    vdc_code varchar(20),
-    ward_no integer,
     remarks varchar(200),
     id_provider_office_code varchar(20),
     id_issue_date date,
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -797,14 +796,11 @@ CREATE TABLE party.party_historic
     phone varchar(15),
     fax varchar(15),
     preferred_communication_code varchar(20),
-    street varchar(50),
     date_of_birth date,
-    districtcode varchar(20),
-    vdc_code varchar(20),
-    ward_no integer,
     remarks varchar(200),
     id_provider_office_code varchar(20),
     id_issue_date date,
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -976,6 +972,7 @@ CREATE TABLE administrative.ba_unit(
     name_lastpart varchar(50) NOT NULL,
     status_code varchar(20) NOT NULL,
     transaction_id varchar(40),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -984,7 +981,7 @@ CREATE TABLE administrative.ba_unit(
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_pkey PRIMARY KEY (id)
+    CONSTRAINT ba_unit_pkey PRIMARY KEY (id,loc_id)
 );
 
 
@@ -1009,6 +1006,7 @@ CREATE TABLE administrative.ba_unit_historic
     name_lastpart varchar(50),
     status_code varchar(20),
     transaction_id varchar(40),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1066,6 +1064,7 @@ CREATE TABLE administrative.rrr(
     mortgage_interest_rate numeric(5, 2),
     mortgage_ranking integer,
     mortgage_type_code varchar(20),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1105,6 +1104,7 @@ CREATE TABLE administrative.rrr_historic
     mortgage_interest_rate numeric(5, 2),
     mortgage_ranking integer,
     mortgage_type_code varchar(20),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1317,6 +1317,7 @@ DROP TABLE IF EXISTS administrative.source_describes_ba_unit CASCADE;
 CREATE TABLE administrative.source_describes_ba_unit(
     ba_unit_id varchar(40) NOT NULL,
     source_id varchar(40) NOT NULL,
+    ba_unitloc_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1325,7 +1326,7 @@ CREATE TABLE administrative.source_describes_ba_unit(
 
     -- Internal constraints
     
-    CONSTRAINT source_describes_ba_unit_pkey PRIMARY KEY (ba_unit_id,source_id)
+    CONSTRAINT source_describes_ba_unit_pkey PRIMARY KEY (ba_unit_id,source_id,ba_unitloc_id)
 );
 
 
@@ -1344,6 +1345,7 @@ CREATE TABLE administrative.source_describes_ba_unit_historic
 (
     ba_unit_id varchar(40),
     source_id varchar(40),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1366,6 +1368,8 @@ CREATE TABLE administrative.required_relationship_baunit(
     from_ba_unit_id varchar(40) NOT NULL,
     to_ba_unit_id varchar(40) NOT NULL,
     relation_code varchar(20) NOT NULL,
+    ba_unitloc_id varchar(40) NOT NULL,
+    ba_unitloc_id2 varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1374,7 +1378,7 @@ CREATE TABLE administrative.required_relationship_baunit(
 
     -- Internal constraints
     
-    CONSTRAINT required_relationship_baunit_pkey PRIMARY KEY (from_ba_unit_id,to_ba_unit_id)
+    CONSTRAINT required_relationship_baunit_pkey PRIMARY KEY (from_ba_unit_id,to_ba_unit_id,ba_unitloc_id,ba_unitloc_id2)
 );
 
 
@@ -1394,6 +1398,8 @@ CREATE TABLE administrative.required_relationship_baunit_historic
     from_ba_unit_id varchar(40),
     to_ba_unit_id varchar(40),
     relation_code varchar(20),
+    ba_unitloc_id varchar(40),
+    ba_unitloc_id2 varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1893,6 +1899,7 @@ DROP TABLE IF EXISTS administrative.ba_unit_contains_spatial_unit CASCADE;
 CREATE TABLE administrative.ba_unit_contains_spatial_unit(
     ba_unit_id varchar(40) NOT NULL,
     spatial_unit_id varchar(40) NOT NULL,
+    ba_unitloc_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1901,7 +1908,7 @@ CREATE TABLE administrative.ba_unit_contains_spatial_unit(
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_contains_spatial_unit_pkey PRIMARY KEY (ba_unit_id,spatial_unit_id)
+    CONSTRAINT ba_unit_contains_spatial_unit_pkey PRIMARY KEY (ba_unit_id,spatial_unit_id,ba_unitloc_id)
 );
 
 
@@ -1920,6 +1927,7 @@ CREATE TABLE administrative.ba_unit_contains_spatial_unit_historic
 (
     ba_unit_id varchar(40),
     spatial_unit_id varchar(40),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2091,6 +2099,7 @@ CREATE TABLE application.application(
     action_code varchar(20) NOT NULL DEFAULT ('lodge'),
     action_notes varchar(255),
     status_code varchar(20) NOT NULL DEFAULT ('lodged'),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2139,6 +2148,7 @@ CREATE TABLE application.application_historic
     action_code varchar(20),
     action_notes varchar(255),
     status_code varchar(20),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2396,6 +2406,10 @@ insert into party.party_role_type(code, display_value, status, description) valu
 DROP TABLE IF EXISTS address.address CASCADE;
 CREATE TABLE address.address(
     id varchar(40) NOT NULL,
+    districtcode varchar(20),
+    vdc_code varchar(20) NOT NULL,
+    ward_no varchar(20),
+    street varchar(50),
     description varchar(255),
     ext_address_id varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
@@ -2424,6 +2438,10 @@ DROP TABLE IF EXISTS address.address_historic CASCADE;
 CREATE TABLE address.address_historic
 (
     id varchar(40),
+    districtcode varchar(20),
+    vdc_code varchar(20),
+    ward_no varchar(20),
+    street varchar(50),
     description varchar(255),
     ext_address_id varchar(40),
     rowidentifier varchar(40),
@@ -2755,6 +2773,7 @@ CREATE TABLE application.application_property(
     verified_exists bool NOT NULL DEFAULT (false),
     verified_location bool NOT NULL DEFAULT (false),
     ba_unit_id varchar(40),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2790,6 +2809,7 @@ CREATE TABLE application.application_property_historic
     verified_exists bool,
     verified_location bool,
     ba_unit_id varchar(40),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2934,6 +2954,7 @@ CREATE TABLE document.document(
     extension varchar(5) NOT NULL,
     body bytea NOT NULL,
     description varchar(100),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2965,6 +2986,7 @@ CREATE TABLE document.document_historic
     extension varchar(5),
     body bytea,
     description varchar(100),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2988,6 +3010,7 @@ CREATE TABLE system.setting(
     vl varchar(2000) NOT NULL,
     active bool NOT NULL DEFAULT (true),
     description varchar(555) NOT NULL,
+    office_code varchar(20),
 
     -- Internal constraints
     
@@ -3106,10 +3129,11 @@ DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
 CREATE TABLE administrative.ba_unit_as_party(
     ba_unit_id varchar(40) NOT NULL,
     party_id varchar(40) NOT NULL,
+    ba_unitloc_id varchar(40) NOT NULL,
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_as_party_pkey PRIMARY KEY (ba_unit_id,party_id)
+    CONSTRAINT ba_unit_as_party_pkey PRIMARY KEY (ba_unit_id,party_id,ba_unitloc_id)
 );
 
     
@@ -3145,6 +3169,7 @@ CREATE TABLE system.br(
     feedback varchar(2000),
     description varchar(1000),
     technical_description varchar(1000),
+    office_code varchar(20),
 
     -- Internal constraints
     
@@ -3307,12 +3332,9 @@ CREATE TABLE cadastre.cadastre_object(
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40) NOT NULL,
     parcel_no integer,
-    district integer,
-    vdc integer,
-    wardno varchar(3),
-    grids1 varchar(20),
     parcel_note varchar(255),
     parcel_type integer NOT NULL,
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3356,12 +3378,9 @@ CREATE TABLE cadastre.cadastre_object_historic
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40),
     parcel_no integer,
-    district integer,
-    vdc integer,
-    wardno varchar(3),
-    grids1 varchar(20),
     parcel_note varchar(255),
     parcel_type integer,
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -3404,6 +3423,7 @@ CREATE TABLE administrative.notation(
     reference_nr varchar(15) NOT NULL,
     notation_text varchar(1000),
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3436,6 +3456,7 @@ CREATE TABLE administrative.notation_historic
     reference_nr varchar(15),
     notation_text varchar(1000),
     status_code varchar(20),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -3459,6 +3480,7 @@ CREATE TABLE administrative.ba_unit_area(
     ba_unit_id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL,
     size numeric(19, 2) NOT NULL,
+    ba_unitloc_id varchar(40),
 
     -- Internal constraints
     
@@ -3575,6 +3597,7 @@ CREATE TABLE transaction.transaction(
     from_service_id varchar(40),
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
     approval_datetime timestamp,
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3605,6 +3628,7 @@ CREATE TABLE transaction.transaction_historic
     from_service_id varchar(40),
     status_code varchar(20),
     approval_datetime timestamp,
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4141,6 +4165,7 @@ DROP TABLE IF EXISTS administrative.ba_unit_target CASCADE;
 CREATE TABLE administrative.ba_unit_target(
     ba_unit_id varchar(40) NOT NULL,
     transaction_id varchar(40) NOT NULL,
+    ba_unitloc_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -4149,7 +4174,7 @@ CREATE TABLE administrative.ba_unit_target(
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_target_pkey PRIMARY KEY (ba_unit_id,transaction_id)
+    CONSTRAINT ba_unit_target_pkey PRIMARY KEY (ba_unit_id,transaction_id,ba_unitloc_id)
 );
 
 
@@ -4168,6 +4193,7 @@ CREATE TABLE administrative.ba_unit_target_historic
 (
     ba_unit_id varchar(40),
     transaction_id varchar(40),
+    ba_unitloc_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4456,6 +4482,7 @@ CREATE TABLE system.district(
     
  -- Data for the table system.district -- 
 insert into system.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
+insert into system.district(code, display_value, zone_code) values('27', 'Bhaktpur', 7);
 
 
 
@@ -4465,7 +4492,7 @@ CREATE TABLE cadastre.map_sheet(
     id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     map_number varchar(10) NOT NULL,
     sheet_type integer,
-    alpha_code varchar(20) NOT NULL,
+    office_code varchar(20),
 
     -- Internal constraints
     
@@ -4490,6 +4517,7 @@ CREATE TABLE system.vdc(
     
  -- Data for the table system.vdc -- 
 insert into system.vdc(code, display_value, district_code, description, status) values('43055', 'Singana', '25', 'Test VDC', 'c');
+insert into system.vdc(code, display_value, district_code, description, status) values('27009', 'Mulpani', '27', 'Mulpani', 'c');
 
 
 
@@ -4525,6 +4553,7 @@ CREATE TABLE administrative.land_owner_certificate(
     oshp_type integer,
     transaction_no integer,
     record_status varchar(10),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -4558,6 +4587,7 @@ CREATE TABLE administrative.land_owner_certificate_historic
     oshp_type integer,
     transaction_no integer,
     record_status varchar(10),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4586,6 +4616,7 @@ CREATE TABLE administrative.moth(
     lmocd integer,
     transaction_no integer,
     record_status varchar(10),
+    office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -4620,6 +4651,7 @@ CREATE TABLE administrative.moth_historic
     lmocd integer,
     transaction_no integer,
     record_status varchar(10),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4635,6 +4667,43 @@ DROP TRIGGER IF EXISTS __track_history ON administrative.moth CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table application.service_details ----
+DROP TABLE IF EXISTS application.service_details CASCADE;
+CREATE TABLE application.service_details(
+    application_id varchar(40) NOT NULL,
+    service_id varchar(40) NOT NULL,
+    subject_name varchar(500),
+    giver_person_id varchar(40) NOT NULL,
+    taker_person_id varchar(40) NOT NULL,
+    token_number varchar(40) NOT NULL,
+    cadastreobject_id varchar(40) NOT NULL,
+    use_description varchar(500),
+    tenant_id varchar(40) NOT NULL,
+    remarks varchar(40),
+    parcel_splitting_person_id varchar(40) NOT NULL,
+    approving_person_id varchar(40) NOT NULL,
+    restriction_confirming_person_id varchar(40) NOT NULL,
+    parcel_auditing_person_id varchar(40) NOT NULL,
+    fee_receipt_no varchar(40),
+    fee_accepting_person_id varchar(40) NOT NULL,
+    officer1_id varchar(40) NOT NULL,
+    officer2_id varchar(40) NOT NULL,
+    officer3_id varchar(40) NOT NULL,
+    writer_id varchar(40) NOT NULL,
+    referee1_id varchar(40) NOT NULL,
+    referee2_id varchar(40) NOT NULL,
+    chief_officer_id varchar(40) NOT NULL,
+    taharir_id varchar(40) NOT NULL,
+    section_officer_id varchar(40) NOT NULL,
+    approval_date date,
+    service_registration_date date,
+
+    -- Internal constraints
+    
+    CONSTRAINT service_details_pkey PRIMARY KEY (application_id,service_id)
+);
+
     
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
@@ -4666,8 +4735,8 @@ ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_type_code_fk6
 CREATE INDEX ba_unit_type_code_fk6_ind ON administrative.ba_unit (type_code);
 
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_ba_unit_id_fk7 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX rrr_ba_unit_id_fk7_ind ON administrative.rrr (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE Cascade;
+CREATE INDEX rrr_ba_unit_id_fk7_ind ON administrative.rrr (ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE administrative.rrr_type ADD CONSTRAINT rrr_type_rrr_group_type_code_fk8 
             FOREIGN KEY (rrr_group_type_code) REFERENCES administrative.rrr_group_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -4690,16 +4759,16 @@ ALTER TABLE administrative.source_describes_rrr ADD CONSTRAINT source_describes_
 CREATE INDEX source_describes_rrr_rrr_id_fk12_ind ON administrative.source_describes_rrr (rrr_id);
 
 ALTER TABLE administrative.source_describes_ba_unit ADD CONSTRAINT source_describes_ba_unit_ba_unit_id_fk13 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX source_describes_ba_unit_ba_unit_id_fk13_ind ON administrative.source_describes_ba_unit (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX source_describes_ba_unit_ba_unit_id_fk13_ind ON administrative.source_describes_ba_unit (ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_from_ba_unit_id_fk14 
-            FOREIGN KEY (from_ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX required_relationship_baunit_from_ba_unit_id_fk14_ind ON administrative.required_relationship_baunit (from_ba_unit_id);
+            FOREIGN KEY (from_ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX required_relationship_baunit_from_ba_unit_id_fk14_ind ON administrative.required_relationship_baunit (from_ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_to_ba_unit_id_fk15 
-            FOREIGN KEY (to_ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX required_relationship_baunit_to_ba_unit_id_fk15_ind ON administrative.required_relationship_baunit (to_ba_unit_id);
+            FOREIGN KEY (to_ba_unit_id,ba_unitloc_id2) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX required_relationship_baunit_to_ba_unit_id_fk15_ind ON administrative.required_relationship_baunit (to_ba_unit_id,ba_unitloc_id2);
 
 ALTER TABLE cadastre.spatial_value_area ADD CONSTRAINT spatial_value_area_spatial_unit_id_fk16 
             FOREIGN KEY (spatial_unit_id) REFERENCES cadastre.spatial_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
@@ -4746,8 +4815,8 @@ ALTER TABLE cadastre.spatial_unit_in_group ADD CONSTRAINT spatial_unit_in_group_
 CREATE INDEX spatial_unit_in_group_spatial_unit_id_fk26_ind ON cadastre.spatial_unit_in_group (spatial_unit_id);
 
 ALTER TABLE administrative.ba_unit_contains_spatial_unit ADD CONSTRAINT ba_unit_contains_spatial_unit_ba_unit_id_fk27 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_contains_spatial_unit_ba_unit_id_fk27_ind ON administrative.ba_unit_contains_spatial_unit (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX ba_unit_contains_spatial_unit_ba_unit_id_fk27_ind ON administrative.ba_unit_contains_spatial_unit (ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE administrative.ba_unit_contains_spatial_unit ADD CONSTRAINT ba_unit_contains_spatial_unit_spatial_unit_id_fk28 
             FOREIGN KEY (spatial_unit_id) REFERENCES cadastre.spatial_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
@@ -4846,8 +4915,8 @@ ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request
 CREATE INDEX request_type_requires_source_type_request_type_code_fk51_ind ON application.request_type_requires_source_type (request_type_code);
 
 ALTER TABLE application.application_property ADD CONSTRAINT application_property_ba_unit_id_fk52 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_property_ba_unit_id_fk52_ind ON application.application_property (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX application_property_ba_unit_id_fk52_ind ON application.application_property (ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE application.application ADD CONSTRAINT application_assignee_id_fk53 
             FOREIGN KEY (assignee_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -4882,8 +4951,8 @@ ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_part
 CREATE INDEX ba_unit_as_party_party_id_fk60_ind ON administrative.ba_unit_as_party (party_id);
 
 ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_ba_unit_id_fk61 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_as_party_ba_unit_id_fk61_ind ON administrative.ba_unit_as_party (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX ba_unit_as_party_ba_unit_id_fk61_ind ON administrative.ba_unit_as_party (ba_unit_id,ba_unitloc_id);
 
 ALTER TABLE system.br ADD CONSTRAINT br_technical_type_code_fk62 
             FOREIGN KEY (technical_type_code) REFERENCES system.br_technical_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -4958,256 +5027,372 @@ ALTER TABLE administrative.notation ADD CONSTRAINT notation_status_code_fk79
 CREATE INDEX notation_status_code_fk79_ind ON administrative.notation (status_code);
 
 ALTER TABLE administrative.notation ADD CONSTRAINT notation_ba_unit_id_fk80 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_ba_unit_id_fk80_ind ON administrative.notation (ba_unit_id);
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE Cascade;
+CREATE INDEX notation_ba_unit_id_fk80_ind ON administrative.notation (ba_unit_id,ba_unitloc_id);
 
-ALTER TABLE administrative.ba_unit_area ADD CONSTRAINT ba_unit_area_type_code_fk81 
-            FOREIGN KEY (type_code) REFERENCES cadastre.area_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_area_type_code_fk81_ind ON administrative.ba_unit_area (type_code);
+ALTER TABLE administrative.ba_unit_area ADD CONSTRAINT ba_unit_area_ba_unit_id_fk81 
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX ba_unit_area_ba_unit_id_fk81_ind ON administrative.ba_unit_area (ba_unit_id,ba_unitloc_id);
 
-ALTER TABLE administrative.ba_unit_area ADD CONSTRAINT ba_unit_area_ba_unit_id_fk82 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_area_ba_unit_id_fk82_ind ON administrative.ba_unit_area (ba_unit_id);
-
-ALTER TABLE administrative.rrr_share ADD CONSTRAINT rrr_share_rrr_id_fk83 
+ALTER TABLE administrative.rrr_share ADD CONSTRAINT rrr_share_rrr_id_fk82 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX rrr_share_rrr_id_fk83_ind ON administrative.rrr_share (rrr_id);
+CREATE INDEX rrr_share_rrr_id_fk82_ind ON administrative.rrr_share (rrr_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk84 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk83 
             FOREIGN KEY (rrr_id,share_id) REFERENCES administrative.rrr_share(rrr_id,id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_rrr_id_fk84_ind ON administrative.party_for_rrr (rrr_id,share_id);
+CREATE INDEX party_for_rrr_rrr_id_fk83_ind ON administrative.party_for_rrr (rrr_id,share_id);
 
-ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_from_service_id_fk85 
+ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_from_service_id_fk84 
             FOREIGN KEY (from_service_id) REFERENCES application.service(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX transaction_from_service_id_fk85_ind ON transaction.transaction (from_service_id);
+CREATE INDEX transaction_from_service_id_fk84_ind ON transaction.transaction (from_service_id);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_transaction_id_fk86 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_transaction_id_fk85 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_transaction_id_fk86_ind ON administrative.notation (transaction_id);
+CREATE INDEX notation_transaction_id_fk85_ind ON administrative.notation (transaction_id);
 
-ALTER TABLE administrative.source_describes_rrr ADD CONSTRAINT source_describes_rrr_source_id_fk87 
+ALTER TABLE administrative.source_describes_rrr ADD CONSTRAINT source_describes_rrr_source_id_fk86 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX source_describes_rrr_source_id_fk87_ind ON administrative.source_describes_rrr (source_id);
+CREATE INDEX source_describes_rrr_source_id_fk86_ind ON administrative.source_describes_rrr (source_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_party_id_fk88 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_party_id_fk87 
             FOREIGN KEY (party_id) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_party_id_fk88_ind ON administrative.party_for_rrr (party_id);
+CREATE INDEX party_for_rrr_party_id_fk87_ind ON administrative.party_for_rrr (party_id);
 
-ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_status_code_fk89 
+ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_status_code_fk88 
             FOREIGN KEY (status_code) REFERENCES transaction.transaction_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX transaction_status_code_fk89_ind ON transaction.transaction (status_code);
+CREATE INDEX transaction_status_code_fk88_ind ON transaction.transaction (status_code);
 
-ALTER TABLE application.request_type ADD CONSTRAINT request_type_rrr_type_code_fk90 
+ALTER TABLE application.request_type ADD CONSTRAINT request_type_rrr_type_code_fk89 
             FOREIGN KEY (rrr_type_code) REFERENCES administrative.rrr_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX request_type_rrr_type_code_fk90_ind ON application.request_type (rrr_type_code);
+CREATE INDEX request_type_rrr_type_code_fk89_ind ON application.request_type (rrr_type_code);
 
-ALTER TABLE application.request_type ADD CONSTRAINT request_type_type_action_code_fk91 
+ALTER TABLE application.request_type ADD CONSTRAINT request_type_type_action_code_fk90 
             FOREIGN KEY (type_action_code) REFERENCES application.type_action(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX request_type_type_action_code_fk91_ind ON application.request_type (type_action_code);
+CREATE INDEX request_type_type_action_code_fk90_ind ON application.request_type (type_action_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_mortgage_type_code_fk92 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_mortgage_type_code_fk91 
             FOREIGN KEY (mortgage_type_code) REFERENCES administrative.mortgage_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_mortgage_type_code_fk92_ind ON administrative.rrr (mortgage_type_code);
+CREATE INDEX rrr_mortgage_type_code_fk91_ind ON administrative.rrr (mortgage_type_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_transaction_id_fk93 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_transaction_id_fk92 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX rrr_transaction_id_fk93_ind ON administrative.rrr (transaction_id);
+CREATE INDEX rrr_transaction_id_fk92_ind ON administrative.rrr (transaction_id);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_transaction_id_fk94 
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_transaction_id_fk93 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX ba_unit_transaction_id_fk94_ind ON administrative.ba_unit (transaction_id);
+CREATE INDEX ba_unit_transaction_id_fk93_ind ON administrative.ba_unit (transaction_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk95 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk94 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_rrr_id_fk95_ind ON administrative.party_for_rrr (rrr_id);
+CREATE INDEX party_for_rrr_rrr_id_fk94_ind ON administrative.party_for_rrr (rrr_id);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_rrr_id_fk96 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_rrr_id_fk95 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_rrr_id_fk96_ind ON administrative.notation (rrr_id);
+CREATE INDEX notation_rrr_id_fk95_ind ON administrative.notation (rrr_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_transaction_id_fk97 
+ALTER TABLE source.source ADD CONSTRAINT source_transaction_id_fk96 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX source_transaction_id_fk97_ind ON source.source (transaction_id);
+CREATE INDEX source_transaction_id_fk96_ind ON source.source (transaction_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_status_code_fk98 
+ALTER TABLE source.source ADD CONSTRAINT source_status_code_fk97 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_status_code_fk98_ind ON source.source (status_code);
+CREATE INDEX source_status_code_fk97_ind ON source.source (status_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_building_unit_type_code_fk99 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_building_unit_type_code_fk98 
             FOREIGN KEY (building_unit_type_code) REFERENCES cadastre.building_unit_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_building_unit_type_code_fk99_ind ON cadastre.cadastre_object (building_unit_type_code);
+CREATE INDEX cadastre_object_building_unit_type_code_fk98_ind ON cadastre.cadastre_object (building_unit_type_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_transaction_id_fk100 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_transaction_id_fk99 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX cadastre_object_transaction_id_fk100_ind ON cadastre.cadastre_object (transaction_id);
+CREATE INDEX cadastre_object_transaction_id_fk99_ind ON cadastre.cadastre_object (transaction_id);
 
-ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_cadastre_object_id_fk101 
+ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_cadastre_object_id_fk100 
             FOREIGN KEY (cadastre_object_id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_target_cadastre_object_id_fk101_ind ON cadastre.cadastre_object_target (cadastre_object_id);
+CREATE INDEX cadastre_object_target_cadastre_object_id_fk100_ind ON cadastre.cadastre_object_target (cadastre_object_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_gender_code_fk102 
+ALTER TABLE party.party ADD CONSTRAINT party_gender_code_fk101 
             FOREIGN KEY (gender_code) REFERENCES party.gender_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_gender_code_fk102_ind ON party.party (gender_code);
+CREATE INDEX party_gender_code_fk101_ind ON party.party (gender_code);
 
-ALTER TABLE cadastre.survey_point ADD CONSTRAINT survey_point_transaction_id_fk103 
+ALTER TABLE cadastre.survey_point ADD CONSTRAINT survey_point_transaction_id_fk102 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX survey_point_transaction_id_fk103_ind ON cadastre.survey_point (transaction_id);
+CREATE INDEX survey_point_transaction_id_fk102_ind ON cadastre.survey_point (transaction_id);
 
-ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_transaction_id_fk104 
+ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_transaction_id_fk103 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_target_transaction_id_fk104_ind ON cadastre.cadastre_object_target (transaction_id);
+CREATE INDEX cadastre_object_target_transaction_id_fk103_ind ON cadastre.cadastre_object_target (transaction_id);
 
-ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_transaction_id_fk105 
+ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_transaction_id_fk104 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX transaction_source_transaction_id_fk105_ind ON transaction.transaction_source (transaction_id);
+CREATE INDEX transaction_source_transaction_id_fk104_ind ON transaction.transaction_source (transaction_id);
 
-ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_source_id_fk106 
+ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_source_id_fk105 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX transaction_source_source_id_fk106_ind ON transaction.transaction_source (source_id);
+CREATE INDEX transaction_source_source_id_fk105_ind ON transaction.transaction_source (source_id);
 
-ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appuser_id_fk107 
+ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appuser_id_fk106 
             FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX appuser_appgroup_appuser_id_fk107_ind ON system.appuser_appgroup (appuser_id);
+CREATE INDEX appuser_appgroup_appuser_id_fk106_ind ON system.appuser_appgroup (appuser_id);
 
-ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appgroup_id_fk108 
+ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appgroup_id_fk107 
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX appuser_appgroup_appgroup_id_fk108_ind ON system.appuser_appgroup (appgroup_id);
+CREATE INDEX appuser_appgroup_appgroup_id_fk107_ind ON system.appuser_appgroup (appgroup_id);
 
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk109 
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk108 
             FOREIGN KEY (approle_code) REFERENCES system.approle(code) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_approle_code_fk109_ind ON system.approle_appgroup (approle_code);
+CREATE INDEX approle_appgroup_approle_code_fk108_ind ON system.approle_appgroup (approle_code);
 
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk110 
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk109 
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_appgroup_id_fk110_ind ON system.approle_appgroup (appgroup_id);
+CREATE INDEX approle_appgroup_appgroup_id_fk109_ind ON system.approle_appgroup (appgroup_id);
 
-ALTER TABLE application.service_action_type ADD CONSTRAINT service_action_type_status_to_set_fk111 
+ALTER TABLE application.service_action_type ADD CONSTRAINT service_action_type_status_to_set_fk110 
             FOREIGN KEY (status_to_set) REFERENCES application.service_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_action_type_status_to_set_fk111_ind ON application.service_action_type (status_to_set);
+CREATE INDEX service_action_type_status_to_set_fk110_ind ON application.service_action_type (status_to_set);
 
-ALTER TABLE application.application_action_type ADD CONSTRAINT application_action_type_status_to_set_fk112 
+ALTER TABLE application.application_action_type ADD CONSTRAINT application_action_type_status_to_set_fk111 
             FOREIGN KEY (status_to_set) REFERENCES application.application_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_action_type_status_to_set_fk112_ind ON application.application_action_type (status_to_set);
+CREATE INDEX application_action_type_status_to_set_fk111_ind ON application.application_action_type (status_to_set);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_application_moment_fk113 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_application_moment_fk112 
             FOREIGN KEY (target_application_moment) REFERENCES application.application_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_application_moment_fk113_ind ON system.br_validation (target_application_moment);
+CREATE INDEX br_validation_target_application_moment_fk112_ind ON system.br_validation (target_application_moment);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_service_moment_fk114 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_service_moment_fk113 
             FOREIGN KEY (target_service_moment) REFERENCES application.service_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_service_moment_fk114_ind ON system.br_validation (target_service_moment);
+CREATE INDEX br_validation_target_service_moment_fk113_ind ON system.br_validation (target_service_moment);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_reg_moment_fk115 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_reg_moment_fk114 
             FOREIGN KEY (target_reg_moment) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_reg_moment_fk115_ind ON system.br_validation (target_reg_moment);
+CREATE INDEX br_validation_target_reg_moment_fk114_ind ON system.br_validation (target_reg_moment);
 
-ALTER TABLE system.query_field ADD CONSTRAINT query_field_query_name_fk116 
+ALTER TABLE system.query_field ADD CONSTRAINT query_field_query_name_fk115 
             FOREIGN KEY (query_name) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX query_field_query_name_fk116_ind ON system.query_field (query_name);
+CREATE INDEX query_field_query_name_fk115_ind ON system.query_field (query_name);
 
-ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_fk117 
+ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_fk116 
             FOREIGN KEY (pojo_query_name) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX config_map_layer_pojo_query_name_fk117_ind ON system.config_map_layer (pojo_query_name);
+CREATE INDEX config_map_layer_pojo_query_name_fk116_ind ON system.config_map_layer (pojo_query_name);
 
-ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_for_select_fk118 
+ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_for_select_fk117 
             FOREIGN KEY (pojo_query_name_for_select) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX config_map_layer_pojo_query_name_for_select_fk118_ind ON system.config_map_layer (pojo_query_name_for_select);
+CREATE INDEX config_map_layer_pojo_query_name_for_select_fk117_ind ON system.config_map_layer (pojo_query_name_for_select);
 
-ALTER TABLE cadastre.cadastre_object_node_target ADD CONSTRAINT cadastre_object_node_target_transaction_id_fk119 
+ALTER TABLE cadastre.cadastre_object_node_target ADD CONSTRAINT cadastre_object_node_target_transaction_id_fk118 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_node_target_transaction_id_fk119_ind ON cadastre.cadastre_object_node_target (transaction_id);
+CREATE INDEX cadastre_object_node_target_transaction_id_fk118_ind ON cadastre.cadastre_object_node_target (transaction_id);
 
-ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_ba_unit_id_fk120 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_target_ba_unit_id_fk120_ind ON administrative.ba_unit_target (ba_unit_id);
+ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_ba_unit_id_fk119 
+            FOREIGN KEY (ba_unit_id,ba_unitloc_id) REFERENCES administrative.ba_unit(id,loc_id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX ba_unit_target_ba_unit_id_fk119_ind ON administrative.ba_unit_target (ba_unit_id,ba_unitloc_id);
 
-ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_transaction_id_fk121 
+ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_transaction_id_fk120 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_target_transaction_id_fk121_ind ON administrative.ba_unit_target (transaction_id);
+CREATE INDEX ba_unit_target_transaction_id_fk120_ind ON administrative.ba_unit_target (transaction_id);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_id_fk122 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_id_fk121 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX segments_id_fk122_ind ON cadastre.segments (id);
+CREATE INDEX segments_id_fk121_ind ON cadastre.segments (id);
 
-ALTER TABLE cadastre.verticalParcel ADD CONSTRAINT verticalParcel_id_fk123 
+ALTER TABLE cadastre.verticalParcel ADD CONSTRAINT verticalParcel_id_fk122 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX verticalParcel_id_fk123_ind ON cadastre.verticalParcel (id);
+CREATE INDEX verticalParcel_id_fk122_ind ON cadastre.verticalParcel (id);
 
-ALTER TABLE cadastre.construction ADD CONSTRAINT construction_id_fk124 
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_id_fk123 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX construction_id_fk124_ind ON cadastre.construction (id);
+CREATE INDEX construction_id_fk123_ind ON cadastre.construction (id);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_parcel_type_fk125 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_parcel_type_fk124 
             FOREIGN KEY (parcel_type) REFERENCES cadastre.parcel_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_parcel_type_fk125_ind ON cadastre.cadastre_object (parcel_type);
+CREATE INDEX cadastre_object_parcel_type_fk124_ind ON cadastre.cadastre_object (parcel_type);
 
-ALTER TABLE cadastre.construction ADD CONSTRAINT construction_constype_fk126 
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_constype_fk125 
             FOREIGN KEY (constype) REFERENCES cadastre.construction_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX construction_constype_fk126_ind ON cadastre.construction (constype);
+CREATE INDEX construction_constype_fk125_ind ON cadastre.construction (constype);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_mbound_type_fk127 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_mbound_type_fk126 
             FOREIGN KEY (mbound_type) REFERENCES cadastre.map_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_mbound_type_fk127_ind ON cadastre.segments (mbound_type);
+CREATE INDEX segments_mbound_type_fk126_ind ON cadastre.segments (mbound_type);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_abound_type_fk128 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_abound_type_fk127 
             FOREIGN KEY (abound_type) REFERENCES cadastre.adminstrative_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_abound_type_fk128_ind ON cadastre.segments (abound_type);
+CREATE INDEX segments_abound_type_fk127_ind ON cadastre.segments (abound_type);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk129 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk128 
             FOREIGN KEY (bound_type) REFERENCES cadastre.boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_bound_type_fk129_ind ON cadastre.segments (bound_type);
+CREATE INDEX segments_bound_type_fk128_ind ON cadastre.segments (bound_type);
 
-ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_id_fk130 
+ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_moth_id_fk129 
             FOREIGN KEY (moth_id) REFERENCES administrative.moth(id) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX land_owner_certificate_moth_id_fk130_ind ON administrative.land_owner_certificate (moth_id);
+CREATE INDEX land_owner_certificate_moth_id_fk129_ind ON administrative.land_owner_certificate (moth_id);
 
-ALTER TABLE cadastre.map_sheet ADD CONSTRAINT map_sheet_alpha_code_fk131 
-            FOREIGN KEY (alpha_code) REFERENCES system.alpha_code(code) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX map_sheet_alpha_code_fk131_ind ON cadastre.map_sheet (alpha_code);
-
-ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk132 
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk130 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX office_district_code_fk132_ind ON system.office (district_code);
+CREATE INDEX office_district_code_fk130_ind ON system.office (district_code);
 
-ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk133 
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk131 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX vdc_district_code_fk133_ind ON system.vdc (district_code);
+CREATE INDEX vdc_district_code_fk131_ind ON system.vdc (district_code);
+
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk132 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX department_office_code_fk132_ind ON system.department (office_code);
+
+ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk133 
+            FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX appuser_department_code_fk133_ind ON system.appuser (department_code);
 
 ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk134 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX department_office_code_fk134_ind ON system.department (office_code);
 
-ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk135 
-            FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX appuser_department_code_fk135_ind ON system.appuser (department_code);
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk135 
+            FOREIGN KEY (loc_id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX ba_unit_loc_id_fk135_ind ON administrative.ba_unit (loc_id);
 
-ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk136 
-            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX vdc_district_code_fk136_ind ON system.vdc (district_code);
-
-ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk137 
-            FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX office_district_code_fk137_ind ON system.office (district_code);
-
-ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk138 
-            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX department_office_code_fk138_ind ON system.department (office_code);
-
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_loc_id_fk139 
-            FOREIGN KEY (loc_id) REFERENCES administrative.land_owner_certificate(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_loc_id_fk139_ind ON administrative.ba_unit (loc_id);
-
-ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk140 
+ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk136 
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX moth_vdc_code_fk140_ind ON administrative.moth (vdc_code);
+CREATE INDEX moth_vdc_code_fk136_ind ON administrative.moth (vdc_code);
 
-ALTER TABLE party.party ADD CONSTRAINT party_vdc_code_fk141 
-            FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_vdc_code_fk141_ind ON party.party (vdc_code);
-
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id_fk142 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id_fk137 
             FOREIGN KEY (map_sheet_id) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_map_sheet_id_fk142_ind ON cadastre.cadastre_object (map_sheet_id);
+CREATE INDEX cadastre_object_map_sheet_id_fk137_ind ON cadastre.cadastre_object (map_sheet_id);
+
+ALTER TABLE source.source ADD CONSTRAINT source_office_code_fk138 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX source_office_code_fk138_ind ON source.source (office_code);
+
+ALTER TABLE document.document ADD CONSTRAINT document_office_code_fk139 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX document_office_code_fk139_ind ON document.document (office_code);
+
+ALTER TABLE party.party ADD CONSTRAINT party_office_code_fk140 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX party_office_code_fk140_ind ON party.party (office_code);
+
+ALTER TABLE administrative.ba_unit_area ADD CONSTRAINT ba_unit_area_type_code_fk141 
+            FOREIGN KEY (type_code) REFERENCES cadastre.area_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX ba_unit_area_type_code_fk141_ind ON administrative.ba_unit_area (type_code);
+
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_office_code_fk142 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX ba_unit_office_code_fk142_ind ON administrative.ba_unit (office_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_office_code_fk143 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_office_code_fk143_ind ON cadastre.cadastre_object (office_code);
+
+ALTER TABLE application.application ADD CONSTRAINT application_office_code_fk144 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX application_office_code_fk144_ind ON application.application (office_code);
+
+ALTER TABLE system.br ADD CONSTRAINT br_office_code_fk145 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX br_office_code_fk145_ind ON system.br (office_code);
+
+ALTER TABLE system.setting ADD CONSTRAINT setting_office_code_fk146 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX setting_office_code_fk146_ind ON system.setting (office_code);
+
+ALTER TABLE administrative.moth ADD CONSTRAINT moth_office_code_fk147 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX moth_office_code_fk147_ind ON administrative.moth (office_code);
+
+ALTER TABLE administrative.land_owner_certificate ADD CONSTRAINT land_owner_certificate_office_code_fk148 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX land_owner_certificate_office_code_fk148_ind ON administrative.land_owner_certificate (office_code);
+
+ALTER TABLE cadastre.map_sheet ADD CONSTRAINT map_sheet_office_code_fk149 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX map_sheet_office_code_fk149_ind ON cadastre.map_sheet (office_code);
+
+ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_office_code_fk150 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX transaction_office_code_fk150_ind ON transaction.transaction (office_code);
+
+ALTER TABLE address.address ADD CONSTRAINT address_vdc_code_fk151 
+            FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX address_vdc_code_fk151_ind ON address.address (vdc_code);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_service_id_fk152 
+            FOREIGN KEY (service_id) REFERENCES application.service(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX service_details_service_id_fk152_ind ON application.service_details (service_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_application_id_fk153 
+            FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX service_details_application_id_fk153_ind ON application.service_details (application_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_giver_person_id_fk154 
+            FOREIGN KEY (giver_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_giver_person_id_fk154_ind ON application.service_details (giver_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_taker_person_id_fk155 
+            FOREIGN KEY (taker_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_taker_person_id_fk155_ind ON application.service_details (taker_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_tenant_id_fk156 
+            FOREIGN KEY (tenant_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_tenant_id_fk156_ind ON application.service_details (tenant_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_parcel_splitting_person_id_fk157 
+            FOREIGN KEY (parcel_splitting_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_parcel_splitting_person_id_fk157_ind ON application.service_details (parcel_splitting_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_approving_person_id_fk158 
+            FOREIGN KEY (approving_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_approving_person_id_fk158_ind ON application.service_details (approving_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_restriction_confirming_person_id_fk159 
+            FOREIGN KEY (restriction_confirming_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_restriction_confirming_person_id_fk159_ind ON application.service_details (restriction_confirming_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_parcel_auditing_person_id_fk160 
+            FOREIGN KEY (parcel_auditing_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_parcel_auditing_person_id_fk160_ind ON application.service_details (parcel_auditing_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_fee_accepting_person_id_fk161 
+            FOREIGN KEY (fee_accepting_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_fee_accepting_person_id_fk161_ind ON application.service_details (fee_accepting_person_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer1_id_fk162 
+            FOREIGN KEY (officer1_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_officer1_id_fk162_ind ON application.service_details (officer1_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer2_id_fk163 
+            FOREIGN KEY (officer2_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_officer2_id_fk163_ind ON application.service_details (officer2_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer3_id_fk164 
+            FOREIGN KEY (officer3_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_officer3_id_fk164_ind ON application.service_details (officer3_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_writer_id_fk165 
+            FOREIGN KEY (writer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_writer_id_fk165_ind ON application.service_details (writer_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_referee1_id_fk166 
+            FOREIGN KEY (referee1_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_referee1_id_fk166_ind ON application.service_details (referee1_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_referee2_id_fk167 
+            FOREIGN KEY (referee2_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_referee2_id_fk167_ind ON application.service_details (referee2_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_chief_officer_id_fk168 
+            FOREIGN KEY (chief_officer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_chief_officer_id_fk168_ind ON application.service_details (chief_officer_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_taharir_id_fk169 
+            FOREIGN KEY (taharir_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_taharir_id_fk169_ind ON application.service_details (taharir_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_section_officer_id_fk170 
+            FOREIGN KEY (section_officer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_section_officer_id_fk170_ind ON application.service_details (section_officer_id);
+
+ALTER TABLE application.service_details ADD CONSTRAINT service_details_cadastreobject_id_fk171 
+            FOREIGN KEY (cadastreobject_id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX service_details_cadastreobject_id_fk171_ind ON application.service_details (cadastreobject_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
