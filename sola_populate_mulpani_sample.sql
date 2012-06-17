@@ -22,6 +22,10 @@ BEGIN
 		,name_firstpart,name_lastpart)
 		VALUES (rec.gid, transaction_id_vl, rec.parcelno, rec.district, rec.vdc,rec.wardno, rec.grids1,rec.parcelty,rec.the_geom, rec.parcel_status
 		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);  
+		
+		INSERT INTO address.address (id, districtcode, vdc_code, ward_no) 
+					VALUES (rec.objectid, cast(rec.district as text), cast(27009 as text) , cast(rec.wardno as text)); 
+		INSERT INTO cadastre.spatial_unit_address (spatial_unit_id, address_id) VALUES (rec.gid, rec.objectid); 
 	END LOOP;
 	
     RETURN 'ok';
