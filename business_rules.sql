@@ -10,6 +10,13 @@ values('generate-application-nr', now(), 'infinity',
 'SELECT to_char(now(), ''yymm'') || trim(to_char(nextval(''application.application_nr_seq''), ''0000'')) AS vl');
 
 ----------------------------------------------------------------------------------------------------
+insert into system.br(id, technical_type_code) values('generate-document-nr', 'sql');
+
+insert into system.br_definition(br_id, active_from, active_until, body) 
+values('generate-document-nr', now(), 'infinity', 
+'SELECT to_char(now(), ''yymm'') || trim(to_char(nextval(''document.document_nr_seq''), ''0000'')) AS vl');
+
+----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code) values('generate-notation-reference-nr', 'sql');
 
 insert into system.br_definition(br_id, active_from, active_until, body) 

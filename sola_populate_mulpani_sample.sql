@@ -9,12 +9,22 @@ CREATE OR REPLACE FUNCTION sola.test_etl.load_parcel() RETURNS varchar
 $BODY$
 DECLARE 
     rec record;
+    rec1 record;
     transaction_id_vl varchar;
+	address_id_vl varchar;
 BEGIN
     transaction_id_vl = 'cadastre-transaction';
     delete from sola.transaction.transaction where id = transaction_id_vl;
     insert into sola.transaction.transaction(id, status_code, approval_datetime, change_user) values(transaction_id_vl, 'approved', now(), 'test-id');
 
+	FOR rec1 IN EXECUTE 'SELECT district,wardno,vdc FROM sola.testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
+	LOOP
+		 address_id_vl=cast(rec1.district as text) || '-' || cast(rec1.vdc as text) || '-' || cast(rec1.wardno as text);
+		 INSERT INTO sola.address.address (id, districtcode, vdc_code, ward_no) 
+					VALUES (address_id_vl, cast(rec1.district as text), cast(27009 as text) , cast(rec1.wardno as text)); 
+		 exit;
+	END LOOP;
+	
 	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
 		ST_GeometryN(the_geom, 1) AS the_geom,''current'' AS parcel_status FROM sola.testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
@@ -22,9 +32,7 @@ BEGIN
 		VALUES (rec.gid, transaction_id_vl, rec.parcelno,rec.parcelty,rec.the_geom, rec.parcel_status
 		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);
 		
-		INSERT INTO sola.address.address (id, districtcode, vdc_code, ward_no) 
-					VALUES (rec.objectid, cast(rec.district as text), cast(27009 as text) , cast(rec.wardno as text)); 
-		INSERT INTO sola.cadastre.spatial_unit_address (spatial_unit_id, address_id) VALUES (rec.gid, rec.objectid); 
+		INSERT INTO sola.cadastre.spatial_unit_address (spatial_unit_id, address_id) VALUES (rec.gid, address_id_vl); 
 	END LOOP;
 	
     RETURN 'ok';
