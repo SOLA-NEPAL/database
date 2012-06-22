@@ -4656,43 +4656,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table application.service_details ----
-DROP TABLE IF EXISTS application.service_details CASCADE;
-CREATE TABLE application.service_details(
-    application_id varchar(40) NOT NULL,
-    service_id varchar(40) NOT NULL,
-    subject_name varchar(500),
-    giver_person_id varchar(40) NOT NULL,
-    taker_person_id varchar(40) NOT NULL,
-    token_number varchar(40) NOT NULL,
-    cadastreobject_id varchar(40) NOT NULL,
-    use_description varchar(500),
-    tenant_id varchar(40) NOT NULL,
-    remarks varchar(40),
-    parcel_splitting_person_id varchar(40) NOT NULL,
-    approving_person_id varchar(40) NOT NULL,
-    restriction_confirming_person_id varchar(40) NOT NULL,
-    parcel_auditing_person_id varchar(40) NOT NULL,
-    fee_receipt_no varchar(40),
-    fee_accepting_person_id varchar(40) NOT NULL,
-    officer1_id varchar(40) NOT NULL,
-    officer2_id varchar(40) NOT NULL,
-    officer3_id varchar(40) NOT NULL,
-    writer_id varchar(40) NOT NULL,
-    referee1_id varchar(40) NOT NULL,
-    referee2_id varchar(40) NOT NULL,
-    chief_officer_id varchar(40) NOT NULL,
-    taharir_id varchar(40) NOT NULL,
-    section_officer_id varchar(40) NOT NULL,
-    approval_date date,
-    service_registration_date date,
-
-    -- Internal constraints
-    
-    CONSTRAINT service_details_pkey PRIMARY KEY (application_id,service_id)
-);
-
-    
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5302,101 +5265,21 @@ ALTER TABLE address.address ADD CONSTRAINT address_vdc_code_fk151
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX address_vdc_code_fk151_ind ON address.address (vdc_code);
 
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_service_id_fk152 
-            FOREIGN KEY (service_id) REFERENCES application.service(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX service_details_service_id_fk152_ind ON application.service_details (service_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_application_id_fk153 
-            FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX service_details_application_id_fk153_ind ON application.service_details (application_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_giver_person_id_fk154 
-            FOREIGN KEY (giver_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_giver_person_id_fk154_ind ON application.service_details (giver_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_taker_person_id_fk155 
-            FOREIGN KEY (taker_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_taker_person_id_fk155_ind ON application.service_details (taker_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_tenant_id_fk156 
-            FOREIGN KEY (tenant_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_tenant_id_fk156_ind ON application.service_details (tenant_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_parcel_splitting_person_id_fk157 
-            FOREIGN KEY (parcel_splitting_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_parcel_splitting_person_id_fk157_ind ON application.service_details (parcel_splitting_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_approving_person_id_fk158 
-            FOREIGN KEY (approving_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_approving_person_id_fk158_ind ON application.service_details (approving_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_restriction_confirming_person_id_fk159 
-            FOREIGN KEY (restriction_confirming_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_restriction_confirming_person_id_fk159_ind ON application.service_details (restriction_confirming_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_parcel_auditing_person_id_fk160 
-            FOREIGN KEY (parcel_auditing_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_parcel_auditing_person_id_fk160_ind ON application.service_details (parcel_auditing_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_fee_accepting_person_id_fk161 
-            FOREIGN KEY (fee_accepting_person_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_fee_accepting_person_id_fk161_ind ON application.service_details (fee_accepting_person_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer1_id_fk162 
-            FOREIGN KEY (officer1_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_officer1_id_fk162_ind ON application.service_details (officer1_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer2_id_fk163 
-            FOREIGN KEY (officer2_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_officer2_id_fk163_ind ON application.service_details (officer2_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_officer3_id_fk164 
-            FOREIGN KEY (officer3_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_officer3_id_fk164_ind ON application.service_details (officer3_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_writer_id_fk165 
-            FOREIGN KEY (writer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_writer_id_fk165_ind ON application.service_details (writer_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_referee1_id_fk166 
-            FOREIGN KEY (referee1_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_referee1_id_fk166_ind ON application.service_details (referee1_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_referee2_id_fk167 
-            FOREIGN KEY (referee2_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_referee2_id_fk167_ind ON application.service_details (referee2_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_chief_officer_id_fk168 
-            FOREIGN KEY (chief_officer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_chief_officer_id_fk168_ind ON application.service_details (chief_officer_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_taharir_id_fk169 
-            FOREIGN KEY (taharir_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_taharir_id_fk169_ind ON application.service_details (taharir_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_section_officer_id_fk170 
-            FOREIGN KEY (section_officer_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_section_officer_id_fk170_ind ON application.service_details (section_officer_id);
-
-ALTER TABLE application.service_details ADD CONSTRAINT service_details_cadastreobject_id_fk171 
-            FOREIGN KEY (cadastreobject_id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_details_cadastreobject_id_fk171_ind ON application.service_details (cadastreobject_id);
-
-ALTER TABLE party.party ADD CONSTRAINT party_photo_id_fk172 
+ALTER TABLE party.party ADD CONSTRAINT party_photo_id_fk152 
             FOREIGN KEY (photo_id) REFERENCES document.document(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_photo_id_fk172_ind ON party.party (photo_id);
+CREATE INDEX party_photo_id_fk152_ind ON party.party (photo_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_left_finger_id_fk173 
+ALTER TABLE party.party ADD CONSTRAINT party_left_finger_id_fk153 
             FOREIGN KEY (left_finger_id) REFERENCES document.document(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_left_finger_id_fk173_ind ON party.party (left_finger_id);
+CREATE INDEX party_left_finger_id_fk153_ind ON party.party (left_finger_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_right_finger_id_fk174 
+ALTER TABLE party.party ADD CONSTRAINT party_right_finger_id_fk154 
             FOREIGN KEY (right_finger_id) REFERENCES document.document(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_right_finger_id_fk174_ind ON party.party (right_finger_id);
+CREATE INDEX party_right_finger_id_fk154_ind ON party.party (right_finger_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_signature_id_fk175 
+ALTER TABLE party.party ADD CONSTRAINT party_signature_id_fk155 
             FOREIGN KEY (signature_id) REFERENCES document.document(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_signature_id_fk175_ind ON party.party (signature_id);
+CREATE INDEX party_signature_id_fk155_ind ON party.party (signature_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
