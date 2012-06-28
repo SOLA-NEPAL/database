@@ -3694,6 +3694,7 @@ CREATE TABLE cadastre.cadastre_object_target(
     
             CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    office_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3727,6 +3728,7 @@ CREATE TABLE cadastre.cadastre_object_target_historic
     
             CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4656,6 +4658,62 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
+--Table system.restriction_type ----
+DROP TABLE IF EXISTS system.restriction_type CASCADE;
+CREATE TABLE system.restriction_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(255) NOT NULL,
+    description varchar(255),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_type_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.restriction_reason ----
+DROP TABLE IF EXISTS system.restriction_reason CASCADE;
+CREATE TABLE system.restriction_reason(
+    code varchar(20) NOT NULL,
+    display_value varchar(255) NOT NULL,
+    description varchar(255),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_reason_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.restriction_release_reason ----
+DROP TABLE IF EXISTS system.restriction_release_reason CASCADE;
+CREATE TABLE system.restriction_release_reason(
+    code varchar(20) NOT NULL,
+    display_value varchar(255) NOT NULL,
+    description varchar(255),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.restriction_office ----
+DROP TABLE IF EXISTS system.restriction_office CASCADE;
+CREATE TABLE system.restriction_office(
+    code varchar(20) NOT NULL,
+    display_value varchar(255) NOT NULL,
+    description varchar(255),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_office_pkey PRIMARY KEY (code)
+);
+
+    
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5280,6 +5338,10 @@ CREATE INDEX party_right_finger_id_fk154_ind ON party.party (right_finger_id);
 ALTER TABLE party.party ADD CONSTRAINT party_signature_id_fk155 
             FOREIGN KEY (signature_id) REFERENCES document.document(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX party_signature_id_fk155_ind ON party.party (signature_id);
+
+ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_office_code_fk156 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_target_office_code_fk156_ind ON cadastre.cadastre_object_target (office_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
@@ -5421,11 +5483,11 @@ DROP SEQUENCE IF EXISTS document.document_nr_seq;
 CREATE SEQUENCE document.document_nr_seq
 INCREMENT 1
 MINVALUE 1
-MAXVALUE 9999
+MAXVALUE 99999999
 START 1
 CACHE 1
 CYCLE;
-COMMENT ON SEQUENCE "document".document_nr_seq IS 'Allocates numbers 1 to 9999 for document number';
+COMMENT ON SEQUENCE "document".document_nr_seq IS 'Allocates numbers 1 to 99999999 for document number';
 
 DROP SEQUENCE IF EXISTS administrative.rrr_nr_seq;
 
