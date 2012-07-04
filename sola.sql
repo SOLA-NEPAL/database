@@ -4672,6 +4672,14 @@ CREATE TABLE system.restriction_type(
 );
 
     
+ -- Data for the table system.restriction_type -- 
+insert into system.restriction_type(code, display_value, description, status) values('1', 'Likhat Parit', '', 'c');
+insert into system.restriction_type(code, display_value, status) values('2', 'Bt Letter', 'c');
+insert into system.restriction_type(code, display_value, status) values('3', 'Bt Application', 'c');
+insert into system.restriction_type(code, display_value, status) values('4', 'unknown', 'c');
+
+
+
 --Table system.restriction_reason ----
 DROP TABLE IF EXISTS system.restriction_reason CASCADE;
 CREATE TABLE system.restriction_reason(
@@ -4686,6 +4694,14 @@ CREATE TABLE system.restriction_reason(
 );
 
     
+ -- Data for the table system.restriction_reason -- 
+insert into system.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
+insert into system.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
+insert into system.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
+insert into system.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
+
+
+
 --Table system.restriction_release_reason ----
 DROP TABLE IF EXISTS system.restriction_release_reason CASCADE;
 CREATE TABLE system.restriction_release_reason(
@@ -4700,6 +4716,13 @@ CREATE TABLE system.restriction_release_reason(
 );
 
     
+ -- Data for the table system.restriction_release_reason -- 
+insert into system.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
+insert into system.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
+insert into system.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
+
+
+
 --Table system.restriction_office ----
 DROP TABLE IF EXISTS system.restriction_office CASCADE;
 CREATE TABLE system.restriction_office(
@@ -4711,6 +4734,21 @@ CREATE TABLE system.restriction_office(
     -- Internal constraints
     
     CONSTRAINT restriction_office_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.restriction_office -- 
+insert into system.restriction_office(code, display_value, status) values('1', 'Household and Development', 'c');
+insert into system.restriction_office(code, display_value, status) values('2', 'Development Credit Bank', 'c');
+insert into system.restriction_office(code, display_value, status) values('3', 'Ramesh Kumar Sainju', 'c');
+
+
+
+--Table cadastre.cadastre_contains_party ----
+DROP TABLE IF EXISTS cadastre.cadastre_contains_party CASCADE;
+CREATE TABLE cadastre.cadastre_contains_party(
+    partyid varchar(40) NOT NULL,
+    cadastre_objectid varchar(40) NOT NULL
 );
 
     
@@ -5342,6 +5380,14 @@ CREATE INDEX party_signature_id_fk155_ind ON party.party (signature_id);
 ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_office_code_fk156 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_target_office_code_fk156_ind ON cadastre.cadastre_object_target (office_code);
+
+ALTER TABLE cadastre.cadastre_contains_party ADD CONSTRAINT cadastre_contains_party_partyid_fk157 
+            FOREIGN KEY (partyid) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_contains_party_partyid_fk157_ind ON cadastre.cadastre_contains_party (partyid);
+
+ALTER TABLE cadastre.cadastre_contains_party ADD CONSTRAINT cadastre_contains_party_cadastre_objectid_fk158 
+            FOREIGN KEY (cadastre_objectid) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_contains_party_cadastre_objectid_fk158_ind ON cadastre.cadastre_contains_party (cadastre_objectid);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
