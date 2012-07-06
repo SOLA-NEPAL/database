@@ -4487,6 +4487,7 @@ CREATE TABLE cadastre.map_sheet(
     map_number varchar(10) NOT NULL,
     sheet_type integer,
     office_code varchar(20),
+    srid_code integer,
 
     -- Internal constraints
     
