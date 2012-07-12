@@ -8,9 +8,9 @@ $BODY$
 DECLARE 
     rec record;
 BEGIN
-	FOR rec IN EXECUTE 'SELECT min(xmin(the_geom)) as x_min,max(xmax(the_geom)) as x_max,
-		 min(ymin(the_geom)) as y_min,max(ymax(the_geom)) as y_max
-		 FROM testdata.mulpani_parcel WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
+	FOR rec IN EXECUTE 'SELECT min(xmin(geom_polygon)) as x_min,max(xmax(geom_polygon)) as x_max,
+		 min(ymin(geom_polygon)) as y_min,max(ymax(geom_polygon)) as y_max
+		 FROM cadastre.cadastre_object WHERE (geom_polygon IS NOT NULL)'
 	LOOP
 		update system.setting set vl=rec.x_min where "name"='map-west';
 		update system.setting set vl=rec.x_max where "name"='map-east';
