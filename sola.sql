@@ -3330,7 +3330,7 @@ CREATE TABLE cadastre.cadastre_object(
     transaction_id varchar(40) NOT NULL,
     parcel_no integer,
     parcel_note varchar(255),
-    parcel_type integer NOT NULL,
+    parcel_type varchar(20) NOT NULL,
     office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -3376,7 +3376,7 @@ CREATE TABLE cadastre.cadastre_object_historic
     transaction_id varchar(40),
     parcel_no integer,
     parcel_note varchar(255),
-    parcel_type integer,
+    parcel_type varchar(20),
     office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
@@ -4279,24 +4279,27 @@ insert into cadastre.boundary_type(code, description) values(58, 'Line Canal and
 --Table cadastre.parcel_type ----
 DROP TABLE IF EXISTS cadastre.parcel_type CASCADE;
 CREATE TABLE cadastre.parcel_type(
-    code integer NOT NULL,
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
     description varchar(255),
+    status varchar(1) NOT NULL,
 
     -- Internal constraints
     
+    CONSTRAINT parcel_type_display_value_unique UNIQUE (display_value),
     CONSTRAINT parcel_type_pkey PRIMARY KEY (code)
 );
 
     
  -- Data for the table cadastre.parcel_type -- 
-insert into cadastre.parcel_type(code, description) values(0, 'Private::::Private');
-insert into cadastre.parcel_type(code, description) values(20, 'River::::River');
-insert into cadastre.parcel_type(code, description) values(30, 'Forest::::Forest');
-insert into cadastre.parcel_type(code, description) values(60, 'Government::::Government');
-insert into cadastre.parcel_type(code, description) values(70, 'Institutional::::Institutional');
-insert into cadastre.parcel_type(code, description) values(10, 'Public::::Public');
-insert into cadastre.parcel_type(code, description) values(40, 'Cultivatable::::Cultivatable');
-insert into cadastre.parcel_type(code, description) values(50, 'Not Cultivatable::::Not Cultivatable');
+insert into cadastre.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
 
 
 
