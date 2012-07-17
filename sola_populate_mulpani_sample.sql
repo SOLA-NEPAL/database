@@ -25,6 +25,12 @@ BEGIN
 		 exit;
 	END LOOP;
 	
+	FOR rec2 IN EXECUTE 'SELECT distinct grids1 FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
+	LOOP
+		 INSERT INTO cadastre.map_sheet (id, map_number,srid_code) 
+					VALUES (rec2.grids1, rec2.grids1,97261); 
+	END LOOP;
+	
 	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
 		ST_GeometryN(the_geom, 1) AS the_geom,''current'' AS parcel_status FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP

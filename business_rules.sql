@@ -224,17 +224,17 @@ and (select count(*) from administrative.party_for_rrr where rrr_id= r.id) = 0')
 -----------Cadastre Change [Floss 634 (subtask of Floss 555)]-----------------------------------------------------------------------------------------
 
 --------------Check the union of target parcels is a polygon (not a multipolygon) (CRITICAL)
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('target-parcels-check-isapolygon', 'sql', 'The union of target parcels must be a polygon::::La unione di Particelle deve essere un poligono unico',
- '#{id}(cadastre.cadastre_object.transaction_id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('target-parcels-check-isapolygon', 'sql', 'The union of target parcels must be a polygon::::La unione di Particelle deve essere un poligono unico',
+--'#{id}(cadastre.cadastre_object.transaction_id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('target-parcels-check-isapolygon', now(), 'infinity', 
-'select coalesce(St_GeometryType(ST_Union(co.geom_polygon)), ''ST_Polygon'') = ''ST_Polygon'' as vl
- from cadastre.cadastre_object co 
-  inner join cadastre.cadastre_object_target co_target
-   on co.id = co_target.cadastre_object_id
-    where co_target.transaction_id = #{id}');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('target-parcels-check-isapolygon', now(), 'infinity', 
+--'select coalesce(St_GeometryType(ST_Union(co.geom_polygon)), ''ST_Polygon'') = ''ST_Polygon'' as vl
+-- from cadastre.cadastre_object co 
+--  inner join cadastre.cadastre_object_target co_target
+--   on co.id = co_target.cadastre_object_id
+--    where co_target.transaction_id = #{id}');
 
 --------------Check there are no pending changes that overlap the union of the target parcels (CRITICAL)
 insert into system.br(id, technical_type_code, feedback, technical_description) 
@@ -253,81 +253,81 @@ and co_target_also.transaction_id  in (select id from transaction.transaction
  ');
 
 --------------Check the union of target co is the same as the union of the new co
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('target-and-new-union-the-same', 'sql', 'The union of new cadastral objects is the same with the union of target cadastral objects::::ITALIANO',
- '#{id}(transaction_id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('target-and-new-union-the-same', 'sql', 'The union of new cadastral objects is the same with the union of target cadastral objects::::ITALIANO',
+--'#{id}(transaction_id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('target-and-new-union-the-same', now(), 'infinity', 
- 'select coalesce(st_equals(geom_to_snap,target_geom), true) as vl
-from snap_geometry_to_geometry(
-(select st_union(co.geom_polygon) 
-from cadastre.cadastre_object co where transaction_id = #{id})
-, (select st_union(co.geom_polygon)
-from cadastre.cadastre_object co 
-where id in (select cadastre_object_id 
-  from cadastre.cadastre_object_target  where transaction_id = #{id})), 
-  coalesce((select cast(vl as float) from system.setting where name=''map-tolerance''), 0.01), true)
- ');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('target-and-new-union-the-same', now(), 'infinity', 
+--'select coalesce(st_equals(geom_to_snap,target_geom), true) as vl
+--from snap_geometry_to_geometry(
+--(select st_union(co.geom_polygon) 
+--from cadastre.cadastre_object co where transaction_id = #{id})
+--, (select st_union(co.geom_polygon)
+--from cadastre.cadastre_object co 
+--where id in (select cadastre_object_id 
+--from cadastre.cadastre_object_target  where transaction_id = #{id})), 
+--coalesce((select cast(vl as float) from system.setting where name=''map-tolerance''), 0.01), true)
+--');
 
 --------------Check the union of new co has the same area as the sum of all areas of new co-s, which means the new co-s don't overlap
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('new-cadastre-objects-dont-overlap', 'sql', 'The new cadastral objects don''t overlap::::ITALIANO',
- '#{id}(transaction_id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('new-cadastre-objects-dont-overlap', 'sql', 'The new cadastral objects don''t overlap::::ITALIANO',
+-- '#{id}(transaction_id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('new-cadastre-objects-dont-overlap', now(), 'infinity', 
- 'select coalesce(st_area(st_union(co.geom_polygon)) = sum(st_area(co.geom_polygon)), true) as vl
-from cadastre.cadastre_object co where transaction_id = #{id}
- ');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('new-cadastre-objects-dont-overlap', now(), 'infinity', 
+-- 'select coalesce(st_area(st_union(co.geom_polygon)) = sum(st_area(co.geom_polygon)), true) as vl
+--from cadastre.cadastre_object co where transaction_id = #{id}
+-- ');
 
 --------------Check new official areas - old official areas / old official areas in percentage (Give WARNING if percentage > 0%)
-insert into system.br(id, technical_type_code, feedback) 
-values('area-check-percentage-newareas-oldareas', 'sql', 'New official areas - old official areas / old official areas in percentage should not be > 0.1%::::Il valore delle nuove aree ufficiali -  quello delle vecchie / 
-il valore delle vecchie aree ufficiali in percentuale non dovrebbe essere superiore allo 0.1%');
+--insert into system.br(id, technical_type_code, feedback) 
+--values('area-check-percentage-newareas-oldareas', 'sql', 'New official areas - old official areas / old official areas in percentage should not be > 0.1%::::Il valore delle nuove aree ufficiali -  quello delle vecchie / 
+--il valore delle vecchie aree ufficiali in percentuale non dovrebbe essere superiore allo 0.1%');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('area-check-percentage-newareas-oldareas', now(), 'infinity', 
-'select abs((select coalesce(cast(sum(a.size)as float),0)
-	from cadastre.spatial_value_area a
-	where a.type_code = ''officialArea''
-        and a.spatial_unit_id in (
-	   select co_new.id
-		from cadastre.cadastre_object co_new 
-		where co_new.transaction_id = #{id}))
- -
-   (select coalesce(cast(sum(a.size)as float),0)
-	from cadastre.spatial_value_area a
-	where a.type_code = ''officialArea''
-	and a.spatial_unit_id in ( 
-	      select co_target.cadastre_object_id
-		from cadastre.cadastre_object_target co_target
-		    where co_target.transaction_id = #{id})) 
- ) /(select coalesce(cast(sum(a.size)as float),1)
-	from cadastre.spatial_value_area a
-	where a.type_code = ''officialArea''
-	and a.spatial_unit_id in ( 
-	      select co_target.cadastre_object_id
-		from cadastre.cadastre_object_target co_target
-		    where co_target.transaction_id = #{id})) 
- < 0.001 as vl');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('area-check-percentage-newareas-oldareas', now(), 'infinity', 
+--'select abs((select coalesce(cast(sum(a.size)as float),0)
+--	from cadastre.spatial_value_area a
+--	where a.type_code = ''officialArea''
+--        and a.spatial_unit_id in (
+--	   select co_new.id
+--		from cadastre.cadastre_object co_new 
+--		where co_new.transaction_id = #{id}))
+-- -
+--   (select coalesce(cast(sum(a.size)as float),0)
+--	from cadastre.spatial_value_area a
+--	where a.type_code = ''officialArea''
+--	and a.spatial_unit_id in ( 
+--	      select co_target.cadastre_object_id
+--		from cadastre.cadastre_object_target co_target
+--		    where co_target.transaction_id = #{id})) 
+ --) /(select coalesce(cast(sum(a.size)as float),1)
+--	from cadastre.spatial_value_area a
+--	where a.type_code = ''officialArea''
+--	and a.spatial_unit_id in ( 
+--	      select co_target.cadastre_object_id
+--		from cadastre.cadastre_object_target co_target
+--		    where co_target.transaction_id = #{id})) 
+--< 0.001 as vl');
 
 --------------Check new official area - calculated new area / new official area in percentage (Give in WARNING description, percentage & parcel if percentage > 1%)
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('area-check-percentage-newofficialarea-calculatednewarea', 'sql', 'New official area - calculated new area / new official area in percentage should not be > 1%::::Il valore della nuova area ufficiale -  quello CALCOLATO della nuova area / 
-il valore della nuova area ufficiale in percentuale non dovrebbe essere superiore all 1%',
- '#{id}(cadastre.cadastre_object.id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('area-check-percentage-newofficialarea-calculatednewarea', 'sql', 'New official area - calculated new area / new official area in percentage should not be > 1%::::Il valore della nuova area ufficiale -  quello CALCOLATO della nuova area / 
+--il valore della nuova area ufficiale in percentuale non dovrebbe essere superiore all 1%',
+-- '#{id}(cadastre.cadastre_object.id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('area-check-percentage-newofficialarea-calculatednewarea', now(), 'infinity', 
-'select count(*) = 0 as vl
-from cadastre.cadastre_object co 
-  left join cadastre.spatial_value_area sa_calc on (co.id= sa_calc.spatial_unit_id and sa_calc.type_code =''calculatedArea'')
-  left join cadastre.spatial_value_area sa_official on (co.id= sa_official.spatial_unit_id and sa_official.type_code =''officialArea'')
-where co.transaction_id = #{id} and
-(abs(coalesce(sa_official.size, 0) - coalesce(sa_calc.size, 0)) 
-/ 
-(case when sa_official.size is null or sa_official.size = 0 then 1 else sa_official.size end)) > 0.01');
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('area-check-percentage-newofficialarea-calculatednewarea', now(), 'infinity', 
+--'select count(*) = 0 as vl
+--from cadastre.cadastre_object co 
+--  left join cadastre.spatial_value_area sa_calc on (co.id= sa_calc.spatial_unit_id and sa_calc.type_code =''calculatedArea'')
+--  left join cadastre.spatial_value_area sa_official on (co.id= sa_official.spatial_unit_id and sa_official.type_code =''officialArea'')
+--where co.transaction_id = #{id} and
+--(abs(coalesce(sa_official.size, 0) - coalesce(sa_calc.size, 0)) 
+--/ 
+--(case when sa_official.size is null or sa_official.size = 0 then 1 else sa_official.size end)) > 0.01');
 
 --------------Check BA Unit area != Official Parcels Area (WARNING)---------------------
 insert into system.br(id, technical_type_code, feedback, technical_description) 
@@ -661,19 +661,19 @@ WHERE administrative.ba_unit.id = #{id}
 	AND administrative.rrr.type_code = ''ownership''
 	AND cadastre.cadastre_object.type_code = ''parcel''');	
 ----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('cadastre-object-check-name', 'sql', 'Invalid identifier for parcel (cadastre object)::::ITALIANO',
- '#{id}(cadastre.cadastre_object.id) is requested');
+--insert into system.br(id, technical_type_code, feedback, technical_description) 
+--values('cadastre-object-check-name', 'sql', 'Invalid identifier for parcel (cadastre object)::::ITALIANO',
+-- '#{id}(cadastre.cadastre_object.id) is requested');
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('cadastre-object-check-name', now(), 'infinity', 
-'Select Count(*) = 1 as vl 
-FROM cadastre.cadastre_object
-WHERE transaction_id = #{id} and type_code = ''parcel''
-	AND ((SUBSTRING(name_firstpart from 1 for 4) = ''Lot ''))
-	AND (SUBSTRING(name_lastpart from 1 for 3) = ''DP '') 
-	AND TO_NUMBER(SUBSTRING(name_firstpart from 5 for (CHAR_LENGTH(name_firstpart) - 4)), ''999'') > 0
-	AND TO_NUMBER(SUBSTRING(name_lastpart from 4 for POSITION('' '' IN SUBSTRING(name_lastpart from 4 for (CHAR_LENGTH(name_lastpart) - 4)))), ''9999'') > 0');	   		   
+--insert into system.br_definition(br_id, active_from, active_until, body) 
+--values('cadastre-object-check-name', now(), 'infinity', 
+--'Select Count(*) = 1 as vl 
+--FROM cadastre.cadastre_object
+--WHERE transaction_id = #{id} and type_code = ''parcel''
+--	AND ((SUBSTRING(name_firstpart from 1 for 4) = ''Lot ''))
+--	AND (SUBSTRING(name_lastpart from 1 for 3) = ''DP '') 
+--	AND TO_NUMBER(SUBSTRING(name_firstpart from 5 for (CHAR_LENGTH(name_firstpart) - 4)), ''999'') > 0
+--	AND TO_NUMBER(SUBSTRING(name_lastpart from 4 for POSITION('' '' IN SUBSTRING(name_lastpart from 4 for (CHAR_LENGTH(name_lastpart) - 4)))), ''9999'') > 0');	   		   
 -------------End ba_unit and other business rules - Neil 01 November 2011-------------------------
 ----------------------------------------------------------------------------------------------------
 -------------Start application business rules - Neil 18 November 2011-------------------------
@@ -1095,51 +1095,51 @@ values('application-baunit-check-area', 'warning', null, 'service', 'cadastreCha
 --values('survey-points-present', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 1);
 
 ----the union of target parcels is a polygon (not a multipolygon) (CRITICAL)
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('target-parcels-check-isapolygon', 'critical', 'pending', 'cadastre_object', 'cadastreChange', 4);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('target-parcels-check-isapolygon', 'critical', 'pending', 'cadastre_object', 'cadastreChange', 4);
 
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
 values('new-cadastre-objects-present', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 6);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('target-and-new-union-the-same', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 7);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('target-and-new-union-the-same', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 7);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('new-cadastre-objects-dont-overlap', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 8);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('new-cadastre-objects-dont-overlap', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 8);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('area-check-percentage-newofficialarea-calculatednewarea', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 10);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('area-check-percentage-newofficialarea-calculatednewarea', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 10);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('cadastre-object-check-name', 'medium', 'pending', 'cadastre_object', 'cadastreChange', 11);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('cadastre-object-check-name', 'medium', 'pending', 'cadastre_object', 'cadastreChange', 11);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('area-check-percentage-newareas-oldareas', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 12);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('area-check-percentage-newareas-oldareas', 'warning', 'pending', 'cadastre_object', 'cadastreChange', 12);
 
 ---------------------------------CADASTRE CHANGE - APPROVE -----------------------------------------
 --insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
 --values('survey-points-present', 'critical', 'current', 'cadastre_object', 'cadastreChange', 1);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('target-parcels-check-isapolygon', 'critical', 'current', 'cadastre_object', 'cadastreChange', 4);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('target-parcels-check-isapolygon', 'critical', 'current', 'cadastre_object', 'cadastreChange', 4);
 
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
 values('new-cadastre-objects-present', 'critical', 'current', 'cadastre_object', 'cadastreChange', 6);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('target-and-new-union-the-same', 'warning', 'current', 'cadastre_object', 'cadastreChange', 7);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('target-and-new-union-the-same', 'warning', 'current', 'cadastre_object', 'cadastreChange', 7);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('new-cadastre-objects-dont-overlap', 'critical', 'current', 'cadastre_object', 'cadastreChange', 8);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('new-cadastre-objects-dont-overlap', 'critical', 'current', 'cadastre_object', 'cadastreChange', 8);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('area-check-percentage-newofficialarea-calculatednewarea', 'warning', 'current', 'cadastre_object', 'cadastreChange', 10);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('area-check-percentage-newofficialarea-calculatednewarea', 'warning', 'current', 'cadastre_object', 'cadastreChange', 10);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('cadastre-object-check-name', 'medium', 'current', 'cadastre_object', 'cadastreChange', 11);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('cadastre-object-check-name', 'medium', 'current', 'cadastre_object', 'cadastreChange', 11);
 
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
-values('area-check-percentage-newareas-oldareas', 'warning', 'current', 'cadastre_object', 'cadastreChange', 12);
+--insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, target_request_type_code, order_of_execution) 
+--values('area-check-percentage-newareas-oldareas', 'warning', 'current', 'cadastre_object', 'cadastreChange', 12);
 
 -----------END  Cadastre Change [Floss 634 (subtask of Floss 555)]-----------------------------------------------------------------------------------------
 -------------Start ba_unit and other business Validation Rules - Neil 01 November 2011-------------------------
