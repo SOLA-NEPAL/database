@@ -1075,7 +1075,7 @@ CREATE TABLE administrative.rrr(
     mortgage_ranking integer,
     mortgage_type_code varchar(20),
     loc_id varchar(40),
-    is_terminating bool NOT NULL DEFAULT (0),
+    is_terminating bool NOT NULL DEFAULT (false),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
