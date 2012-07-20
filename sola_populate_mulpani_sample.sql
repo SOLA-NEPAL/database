@@ -1,4 +1,4 @@
-﻿--TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
+--TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
 --INTO LADM RELATED TABLES
 DROP SCHEMA IF EXISTS test_etl CASCADE;
 CREATE SCHEMA test_etl;
@@ -10,6 +10,7 @@ $BODY$
 DECLARE 
     rec record;
     rec1 record;
+    rec2 record;
     transaction_id_vl varchar;
 	address_id_vl varchar;
 BEGIN

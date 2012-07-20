@@ -1076,6 +1076,8 @@ CREATE TABLE administrative.rrr(
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool NOT NULL DEFAULT (false),
+    restriction_officecode varchar(20),
+    restriction_reasoncode varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1117,6 +1119,8 @@ CREATE TABLE administrative.rrr_historic
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool,
+    restriction_officecode varchar(20),
+    restriction_reasoncode varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -5345,6 +5349,14 @@ CREATE INDEX ba_unit_cadastre_object_id_fk153_ind ON administrative.ba_unit (cad
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_loc_id_fk154 
             FOREIGN KEY (loc_id) REFERENCES administrative.loc(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_loc_id_fk154_ind ON administrative.rrr (loc_id);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_officecode_fk155 
+            FOREIGN KEY (restriction_officecode) REFERENCES system.restriction_office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_officecode_fk155_ind ON administrative.rrr (restriction_officecode);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_reasoncode_fk156 
+            FOREIGN KEY (restriction_reasoncode) REFERENCES system.restriction_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_reasoncode_fk156_ind ON administrative.rrr (restriction_reasoncode);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
