@@ -1,4 +1,4 @@
-﻿--TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
+--TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
 --INTO LADM RELATED TABLES
 DROP SCHEMA IF EXISTS test_etl CASCADE;
 CREATE SCHEMA test_etl;
@@ -10,6 +10,7 @@ $BODY$
 DECLARE 
     rec record;
     rec1 record;
+    rec2 record;
     transaction_id_vl varchar;
 	address_id_vl varchar;
 BEGIN
@@ -27,8 +28,8 @@ BEGIN
 	
 	FOR rec2 IN EXECUTE 'SELECT distinct grids1 FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
-		 INSERT INTO cadastre.map_sheet (id, map_number,srid_code) 
-					VALUES (rec2.grids1, rec2.grids1,97261); 
+		 INSERT INTO cadastre.map_sheet (id, map_number,sheet_type,office_code,srid) 
+					VALUES (rec2.grids1, rec2.grids1,0,'7-25-003-001',97261); 
 	END LOOP;
 	
 	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
