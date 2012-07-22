@@ -10,6 +10,7 @@ $BODY$
 DECLARE 
     rec record;
     rec1 record;
+    rec2 record;
     transaction_id_vl varchar;
 	address_id_vl varchar;
 BEGIN
