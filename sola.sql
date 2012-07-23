@@ -1076,8 +1076,8 @@ CREATE TABLE administrative.rrr(
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool NOT NULL DEFAULT (false),
-    restriction_reasoncode varchar(20) NOT NULL,
-    restriction_officecode varchar(20) NOT NULL,
+    restriction_officecode varchar(20),
+    restriction_reasoncode varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1119,8 +1119,8 @@ CREATE TABLE administrative.rrr_historic
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool,
-    restriction_reasoncode varchar(20),
     restriction_officecode varchar(20),
+    restriction_reasoncode varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2152,41 +2152,41 @@ CREATE TABLE application.request_type(
 
     
  -- Data for the table application.request_type -- 
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'registrationServices', 'Change to Cadastre::::किता काट�?', 'c', 30, 25.00, 0.10, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'registrationServices', 'Change to Cadastre::::किता काट्', 'c', 30, 25.00, 0.10, 0, 1);
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('redefineCadastre', 'registrationServices', 'Redefine Cadastre::::किता संसोधन', 'c', 30, 25.00, 0.10, 0, 1);
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('registrationDismiss', 'registrationServices', 'Registration Dismissal::::दाखिला खारेज', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('missingLandRegister', 'registrationServices', 'Missing Land Registration::::छ�?ट जग�?गा दर�?ता', 'x', 1, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('missingLandRegister', 'registrationServices', 'Missing Land Registration::::छुट जग्गा दर्ता', 'x', 1, 5.00, 0.00, 0, 1, '');
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownershipClearance', 'registrationServices', 'Ownership Clearance::::हकसफि', 'c', 5, 5.00, 0.00, 0, 1, '');
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('Guthi', 'informationServices', 'Guthi::::गूठी', 'c', 1, 0.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnDeeds', 'registrationServices', 'Deed Registration::::लिखट रजिष�?टेसन', 'x', 3, 1.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnDeeds', 'registrationServices', 'Deed Registration::::लिखट रजिष्टेसन', 'x', 3, 1.00, 0.00, 0, 0);
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('resignation', 'registrationServices', 'Resignation::::राजिनामा', 'c', 5, 5.00, 0.00, 0.01, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnPowerOfAttorney', 'registrationServices', 'Willingness Letter::::बकस पत�?र', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('propertyDivision', 'registrationServices', 'Property Division::::अंशवण�?डा', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('exchange', 'informationServices', 'Exchange::::सट�?टा पट�?टा', 'x', 1, 5.00, 0.00, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('leaveNotice', 'informationServices', 'Leave Notice::::छोड पत�?र', 'x', 1, 1.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnPowerOfAttorney', 'registrationServices', 'Willingness Letter::::बकस पत्र', 'c', 3, 5.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('propertyDivision', 'registrationServices', 'Property Division::::अंशवण्डा', 'c', 3, 5.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('exchange', 'informationServices', 'Exchange::::सट्टा पट्टा', 'x', 1, 5.00, 0.00, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('leaveNotice', 'informationServices', 'Leave Notice::::छोड पत्र', 'x', 1, 1.00, 0.00, 0, 0);
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('multipleOwner', 'registrationServices', 'Multiple Ownership Registration::::सगोलनामा', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('locMerging', 'registrationServices', 'LOC Merging::::श�?रेष�?ता �?किकरण', 'x', 1, 0.00, 0.10, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('oldSurvey', 'registrationServices', 'Old Survey::::प�?रानो नापी', 'x', 5, 5.00, 0.10, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('locMerging', 'registrationServices', 'LOC Merging::::श्रेष्ता एकिकरण', 'x', 1, 0.00, 0.10, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('oldSurvey', 'registrationServices', 'Old Survey::::पुरानो नापी', 'x', 5, 5.00, 0.10, 0, 0);
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newSurvey', 'registrationServices', 'New Survey::::नयां नापी', 'c', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('manuJodiako', 'registrationServices', 'Manu Jodiako::::मान�? जोडि�?को', 'x', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newOwnership', 'registrationServices', 'Register New Ownership::::जग�?गा नामसारी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('removeDuplicate', 'registrationServices', 'Duplication Registration Removal::::दोहोरो दर�?ता हटाइ�?को', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('afterDeathWilling', 'registrationServices', 'After Death Willingness Letter::::शेष पछिको बकसपत�?र', 'c', 5, 5.00, 0.01, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('shresthaAdhyabadhik', 'registrationServices', 'Shresta Adhyabadhik::::श�?रेष�?ता अध�?यावधिक', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('guthiRaitani', 'registrationServices', 'Guthi Raitani Numberi::::ग�?ठि रैतानी नम�?बरी', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('manuJodiako', 'registrationServices', 'Manu Jodiako::::मानु जोडिएको', 'x', 5, 5.00, 0.00, 0.01, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newOwnership', 'registrationServices', 'Register New Ownership::::जग्गा नामसारी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('removeDuplicate', 'registrationServices', 'Duplication Registration Removal::::दोहोरो दर्ता हटाइएको', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('afterDeathWilling', 'registrationServices', 'After Death Willingness Letter::::शेष पछिको बकसपत्र', 'c', 5, 5.00, 0.01, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('shresthaAdhyabadhik', 'registrationServices', 'Shresta Adhyabadhik::::श्रेष्ता अध्यावधिक', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('guthiRaitani', 'registrationServices', 'Guthi Raitani Numberi::::गुठि रैतानी नम्बरी', 'c', 5, 5.00, 0.00, 0, 1, '');
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownerCancellation', 'registrationServices', 'Ownership Registration Cancellation::::मोही दाखिल खारेज', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('chakalaBandhi', 'registrationServices', 'Chakala Bandhi::::चकला बन�?धी', 'x', 5, 5.00, 0.00, 0.02, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('chakalaBandhi', 'registrationServices', 'Chakala Bandhi::::चकला बन्धी', 'x', 5, 5.00, 0.00, 0.02, 1, '');
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newApartment', 'registrationServices', 'Building Development::::बिकसित घडेरी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
 insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('stayCurrent', 'registrationServices', 'Validate Current Condition::::हा. सा.', 'x', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('lakhaBandhaki', 'registrationServices', 'Lakha Bandhaki::::लख बन�?धकी', 'c', 5, 50.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('distriBandhaki', 'registrationServices', 'Dristi Bandahaki::::दृषटी बन�?धकी', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('agreement', 'registrationServices', 'Aggrement::::मिला पत�?र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('donationLetter', 'registrationServices', 'Donation Letter:::: दान पत�?र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('rightReceived', 'registrationServices', 'Right Receiving Recipt::::अंश ब�?�?ेको भरपाई', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('threeGeneration', 'registrationServices', 'Three Generation Donation Letter::::तिनप�?स�?ते बकस पत�?र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('decisionBased', 'registrationServices', 'Decision Letter::::निर�?णय अन�?सार', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('memoBased', 'registrationServices', 'Memo Based::::टिप�?पणी अन�?सार', 'c', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('cancelProperty', 'registrationServices', 'Registration Cancellation::::दर�?ता फारी', 'c', 5, 5, 0, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('lakhaBandhaki', 'registrationServices', 'Lakha Bandhaki::::लख बन्धकी', 'c', 5, 50.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('distriBandhaki', 'registrationServices', 'Dristi Bandahaki::::दृषटी बन्धकी', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('agreement', 'registrationServices', 'Aggrement::::मिला पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('donationLetter', 'registrationServices', 'Donation Letter:::: दान पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('rightReceived', 'registrationServices', 'Right Receiving Recipt::::अंश बुझेको भरपाई', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('threeGeneration', 'registrationServices', 'Three Generation Donation Letter::::तिनपुस्ते बकस पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('decisionBased', 'registrationServices', 'Decision Letter::::निर्णय अनुसार', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('memoBased', 'registrationServices', 'Memo Based::::टिप्पणी अनुसार', 'c', 5, 0.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('cancelProperty', 'registrationServices', 'Registration Cancellation::::दर्ता फारी', 'c', 5, 5, 0, 0, 1, '');
 
 
 
@@ -2284,18 +2284,6 @@ DROP TABLE IF EXISTS party.party_role CASCADE;
 CREATE TABLE party.party_role(
     party_id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL,
-    status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    is_primary bool NOT NULL DEFAULT (false),
-    transaction_id varchar(40) NOT NULL,
-    registration_date timestamp,
-    expiration_date timestamp,
-    share double precision,
-    mortgage_amount numeric(29, 2),
-    mortgage_interest_rate numeric(5, 2),
-    mortgage_ranking integer,
-    mortgage_type_code varchar(20),
-    loc_id varchar(40),
-    is_terminating bool NOT NULL DEFAULT (false),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2680,8 +2668,8 @@ CREATE TABLE application.service_status_type(
 
     
  -- Data for the table application.service_status_type -- 
-insert into application.service_status_type(code, display_value, status, description) values('lodged', 'Lodged::::रेजि�?ष�?टर', 'c', 'Application for a service has been lodged and officially received by land office::::La pratica per un servizio, registrata e formalmente ricevuta da ufficio territoriale');
-insert into application.service_status_type(code, display_value, status) values('completed', 'Completed::::प�?र�?ण', 'c');
+insert into application.service_status_type(code, display_value, status, description) values('lodged', 'Lodged::::रेजि्ष्टर', 'c', 'Application for a service has been lodged and officially received by land office::::La pratica per un servizio, registrata e formalmente ricevuta da ufficio territoriale');
+insert into application.service_status_type(code, display_value, status) values('completed', 'Completed::::पुर्ण', 'c');
 insert into application.service_status_type(code, display_value, status) values('pending', 'Pending::::बाकि', 'c');
 insert into application.service_status_type(code, display_value, status) values('cancelled', 'Cancelled::::खारेज', 'c');
 
@@ -2726,11 +2714,11 @@ CREATE TABLE application.service_action_type(
 
     
  -- Data for the table application.service_action_type -- 
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodge::::रेजि�?ष�?टर', 'lodged', 'c', 'Application for service(s) is officially received by land office (action is automatically logged when application is saved for the first time)::::La pratica per i servizi formalmente ricevuta da ufficio territoriale');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('start', 'Start::::स�?र�?', 'pending', 'c', 'Provisional RRR Changes Made to Database as a result of application (action is automatically logged when a change is made to a rrr object)::::Apportate Modifiche Provvisorie di tipo RRR al Database come risultato della pratica');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodge::::रेजि्ष्टर', 'lodged', 'c', 'Application for service(s) is officially received by land office (action is automatically logged when application is saved for the first time)::::La pratica per i servizi formalmente ricevuta da ufficio territoriale');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('start', 'Start::::सुरु', 'pending', 'c', 'Provisional RRR Changes Made to Database as a result of application (action is automatically logged when a change is made to a rrr object)::::Apportate Modifiche Provvisorie di tipo RRR al Database come risultato della pratica');
 insert into application.service_action_type(code, display_value, status_to_set, status, description) values('cancel', 'Cancel::::खारेज', 'cancelled', 'c', 'Service is cancelled by Land Office (action is automatically logged when a service is cancelled)::::Pratica cancellata da Ufficio Territoriale');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('complete', 'Complete::::प�?र�?ण', 'completed', 'c', 'Application is ready for approval (action is automatically logged when service is marked as complete::::Pratica pronta per approvazione');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('revert', 'Revert::::उल�?टाउन�?', 'pending', 'c', 'The status of the service has been reverted to pending from being completed (action is automatically logged when a service is reverted back for further work)::::ITALIANO');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('complete', 'Complete::::पुर्ण', 'completed', 'c', 'Application is ready for approval (action is automatically logged when service is marked as complete::::Pratica pronta per approvazione');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('revert', 'Revert::::उल्टाउनु', 'pending', 'c', 'The status of the service has been reverted to pending from being completed (action is automatically logged when a service is reverted back for further work)::::ITALIANO');
 
 
 
@@ -3305,7 +3293,7 @@ CREATE TABLE cadastre.cadastre_object(
     transaction_id varchar(40) NOT NULL,
     parcel_no integer,
     parcel_note varchar(255),
-    parcel_type varchar(20) NOT NULL,
+    parcel_type integer NOT NULL,
     office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -3351,7 +3339,7 @@ CREATE TABLE cadastre.cadastre_object_historic
     transaction_id varchar(40),
     parcel_no integer,
     parcel_note varchar(255),
-    parcel_type varchar(20),
+    parcel_type integer,
     office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
@@ -4240,7 +4228,7 @@ insert into cadastre.boundary_type(code, description) values(58, 'Line Canal and
 --Table cadastre.parcel_type ----
 DROP TABLE IF EXISTS cadastre.parcel_type CASCADE;
 CREATE TABLE cadastre.parcel_type(
-    code varchar(20) NOT NULL,
+    code integer NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
     status char(1) NOT NULL,
@@ -4253,14 +4241,14 @@ CREATE TABLE cadastre.parcel_type(
 
     
  -- Data for the table cadastre.parcel_type -- 
-insert into cadastre.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
-insert into cadastre.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(0, 'Private::::Private', 'Private::::Private', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(20, 'River::::River', 'River::::River', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(30, 'Forest::::Forest', 'Forest::::Forest', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(60, 'Government::::Government', 'Government::::Government', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(70, 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(10, 'Public::::Public', 'Public::::Public', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(40, 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values(50, 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
 
 
 
@@ -4460,9 +4448,7 @@ CREATE TABLE cadastre.map_sheet(
 
     
  -- Data for the table cadastre.map_sheet -- 
-insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '1', 1, '7-25-003-001', 97260);
-insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('2', '2', 0, '7-25-003-001', 97261);
-insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('3', '3', 1, '7-25-003-001', 97262);
+insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '010', 0, '7-25-003-001', 97260);
 
 
 
@@ -5321,13 +5307,13 @@ ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_loc_id_fk152
             FOREIGN KEY (loc_id) REFERENCES administrative.loc(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_loc_id_fk152_ind ON administrative.rrr (loc_id);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_reasoncode_fk153 
-            FOREIGN KEY (restriction_reasoncode) REFERENCES system.restriction_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_restriction_reasoncode_fk153_ind ON administrative.rrr (restriction_reasoncode);
-
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_officecode_fk154 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_officecode_fk153 
             FOREIGN KEY (restriction_officecode) REFERENCES system.restriction_office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_restriction_officecode_fk154_ind ON administrative.rrr (restriction_officecode);
+CREATE INDEX rrr_restriction_officecode_fk153_ind ON administrative.rrr (restriction_officecode);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_reasoncode_fk154 
+            FOREIGN KEY (restriction_reasoncode) REFERENCES system.restriction_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_reasoncode_fk154_ind ON administrative.rrr (restriction_reasoncode);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
