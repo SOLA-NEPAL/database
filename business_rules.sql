@@ -603,35 +603,7 @@ values('baunit-has-several-mortgages-with-same-rank', now(), 'infinity',
  AND    rrr2.status_code = ''pending''
  AND    rrr2.mortgage_ranking = rrr1.mortgage_ranking
  AND    rrr2.id != rrr1.id');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('baunit-has-primary-right', 'sql', 'Title must have a primary right::::ITALIANO',
- '#{id}(administrative.ba_unit.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('baunit-has-primary-right', now(), 'infinity', 
-'SELECT COUNT(*) = 1 as vl FROM administrative.rrr 
-WHERE ba_unit_id = #{id}
-	AND is_primary
-	AND status_code != ''cancelled''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('baunit-area-compares-to-related-parcel-area', 'sql', 'Title area differs from parcel area(s) by more than 1%::::ITALIANO',
- '#{id}(administrative.ba_unit.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('baunit-area-compares-to-related-parcel-area', now(), 'infinity', 
-'SELECT coalesce((abs(sum(administrative.ba_unit_area.size) - sum(cadastre.spatial_value_area.size))/sum(administrative.ba_unit_area.size)) < 0.01, true) as vl
-FROM administrative.ba_unit_area 
-	 INNER JOIN administrative.ba_unit ON ba_unit_id = administrative.ba_unit.id
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.spatial_value_area ON cadastre.spatial_unit.id = cadastre.spatial_value_area.spatial_unit_id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-WHERE administrative.ba_unit.id = #{id}
-	AND cadastre.cadastre_object.type_code = ''parcel''
-	AND administrative.ba_unit_area.type_code = ''officialArea''
-	AND cadastre.spatial_value_area.type_code = ''officialArea''');		   
+	   
 ----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code, feedback, technical_description) 
 values('baunit-has-cadastre-object-check', 'sql', 'Title must have an associated parcel (or cadastre object)::::ITALIANO',
@@ -639,44 +611,9 @@ values('baunit-has-cadastre-object-check', 'sql', 'Title must have an associated
 
 insert into system.br_definition(br_id, active_from, active_until, body) 
 values('baunit-has-cadastre-object-check', now(), 'infinity', 
-'SELECT count(*) != 0 as vl FROM administrative.ba_unit 
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-WHERE administrative.ba_unit.id = #{id}');		   
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('baunit-has-compatible-cadastre-object', 'sql', 'Title appears to have incompatible parcel (or cadastre object)::::ITALIANO',
- '#{id}(administrative.ba_unit.id) is requested');
+'SELECT count(*) != 0 as vl FROM administrative.ba_unit
+WHERE id = #{id} and cadastre_object_id is not null');		   
 
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('baunit-has-compatible-cadastre-object', now(), 'infinity', 
-'SELECT count(*) != 0 as vl FROM administrative.ba_unit 
-	 INNER JOIN administrative.rrr ON administrative.ba_unit.id = administrative.rrr.ba_unit_id
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-WHERE administrative.ba_unit.id = #{id}
-	AND administrative.ba_unit.type_code = ''basicPropertyUnit''
-	AND administrative.rrr.type_code = ''ownership''
-	AND cadastre.cadastre_object.type_code = ''parcel''');	
-----------------------------------------------------------------------------------------------------
---insert into system.br(id, technical_type_code, feedback, technical_description) 
---values('cadastre-object-check-name', 'sql', 'Invalid identifier for parcel (cadastre object)::::ITALIANO',
--- '#{id}(cadastre.cadastre_object.id) is requested');
-
---insert into system.br_definition(br_id, active_from, active_until, body) 
---values('cadastre-object-check-name', now(), 'infinity', 
---'Select Count(*) = 1 as vl 
---FROM cadastre.cadastre_object
---WHERE transaction_id = #{id} and type_code = ''parcel''
---	AND ((SUBSTRING(name_firstpart from 1 for 4) = ''Lot ''))
---	AND (SUBSTRING(name_lastpart from 1 for 3) = ''DP '') 
---	AND TO_NUMBER(SUBSTRING(name_firstpart from 5 for (CHAR_LENGTH(name_firstpart) - 4)), ''999'') > 0
---	AND TO_NUMBER(SUBSTRING(name_lastpart from 4 for POSITION('' '' IN SUBSTRING(name_lastpart from 4 for (CHAR_LENGTH(name_lastpart) - 4)))), ''9999'') > 0');	   		   
--------------End ba_unit and other business rules - Neil 01 November 2011-------------------------
-----------------------------------------------------------------------------------------------------
--------------Start application business rules - Neil 18 November 2011-------------------------
 ----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code, feedback, technical_description) 
 values('app-baunit-name-check', 'sql', 'Invalid identifier for title::::ITALIANO',
@@ -781,75 +718,6 @@ INNER JOIN application.application_property ap ON ba_unit.name_firstpart = ap.na
 WHERE application_id = #{id}
 	AND rrr.is_primary
 	AND rrr.status_code != ''historic''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('app-area-comparison', 'sql', 'Title area differs from parcel area(s) by more than 1%::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('app-area-comparison', now(), 'infinity', 
-'SELECT (abs(sum(administrative.ba_unit_area.size) - sum(cadastre.spatial_value_area.size))/sum(administrative.ba_unit_area.size)) < 0.01 as vl 
-FROM administrative.ba_unit_area 
-	 INNER JOIN administrative.ba_unit ON administrative.ba_unit_area.ba_unit_id = administrative.ba_unit.id
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.spatial_value_area ON cadastre.spatial_unit.id = cadastre.spatial_value_area.spatial_unit_id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-	 INNER JOIN application.application_property ON administrative.ba_unit.id = application.application_property.ba_unit_id
-WHERE application.application_property.application_id = #{id}
-	AND cadastre.cadastre_object.type_code = ''parcel''
-	AND administrative.ba_unit_area.type_code = ''officialArea''
-	AND cadastre.spatial_value_area.type_code = ''officialArea''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('app-title-has-cadastre-object', 'sql', 'Title must have an associated parcel (or cadastre object)::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('app-title-has-cadastre-object', now(), 'infinity', 
-'SELECT count(*) != 0 as vl 
-FROM administrative.ba_unit 
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-	 INNER JOIN application.application_property ON administrative.ba_unit.id = application.application_property.ba_unit_id
-WHERE application.application_property.application_id = #{id}');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('app-title-has-compatible-cadastre-object', 'sql', 'Title appears to have incompatible parcel (or cadastre object)::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('app-title-has-compatible-cadastre-object', now(), 'infinity', 
-'SELECT count(*) != 0 as vl 
-FROM administrative.ba_unit 
-	 INNER JOIN administrative.rrr ON administrative.ba_unit.id = administrative.rrr.ba_unit_id
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit.id = administrative.ba_unit_contains_spatial_unit.ba_unit_id
-	 INNER JOIN cadastre.spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.spatial_unit.id
-	 INNER JOIN cadastre.cadastre_object ON cadastre.spatial_unit.id = cadastre.cadastre_object.id
-	 INNER JOIN application.application_property ON administrative.ba_unit.id = application.application_property.ba_unit_id
-WHERE application.application_property.application_id = #{id}
-	AND administrative.ba_unit.type_code = ''basicPropertyUnit''
-	AND administrative.rrr.type_code = ''ownership''
-	AND cadastre.cadastre_object.type_code = ''parcel''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('app-cadastre-object-name', 'sql', 'Invalid identifier for parcel (cadastre object)::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('app-cadastre-object-name', now(), 'infinity', 
-'SELECT Count(*) = 1 as vl 
-FROM cadastre.cadastre_object
-	 INNER JOIN administrative.ba_unit_contains_spatial_unit ON administrative.ba_unit_contains_spatial_unit.spatial_unit_id = cadastre.cadastre_object.id
-	 INNER JOIN application.application_property ON administrative.ba_unit_contains_spatial_unit.ba_unit_id = application.application_property.ba_unit_id
-WHERE application.application_property.application_id = #{id}
-	AND cadastre.cadastre_object.type_code = ''parcel''
-	AND ((SUBSTRING(cadastre.cadastre_object.name_firstpart from 1 for 4) = ''Lot ''))
-	AND (SUBSTRING(cadastre.cadastre_object.name_lastpart from 1 for 3) = ''DP '') 
-	AND TO_NUMBER(SUBSTRING(cadastre.cadastre_object.name_firstpart from 5 for (CHAR_LENGTH(cadastre.cadastre_object.name_firstpart) - 4)), ''999'') > 0
-	AND TO_NUMBER(SUBSTRING(cadastre.cadastre_object.name_lastpart from 4 for POSITION('' '' IN SUBSTRING(cadastre.cadastre_object.name_lastpart from 4 for (CHAR_LENGTH(cadastre.cadastre_object.name_lastpart) - 4)))), ''9999'') > 0');	   		   
--------------End application business rules - Neil 18 November 2011-------------------------
 
 ----Business rules that are used for the cadastre redefinition--------------------------------------
 ----------------------------------------------------------------------------------------------------
@@ -951,49 +819,6 @@ select ABS(
         (Select count (distinct(id)) from all_property_ownership) -
          (Select SUM(share) from all_property_ownership)
       )<0.01 as vl');
-
---------------Check rrr transferred to new titles/properties (Critical if > 0)
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('newtitle-br24-check-rrr-accounted', 'sql', 'Not all rights and restrictions have been accounted for the new title/property::::non tutti i diritti e le restrizioni sono stati trasferiti al nuovo titolo', '#{id}(baunit_id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('newtitle-br24-check-rrr-accounted', now(), 'infinity', 
-'
-with prior_property_rrr as (
-select ro.id
-from administrative.rrr ro
-where ro.ba_unit_id = #{id}
-AND ro.status_code != ''cancelled'')
-select (
- (select count (id) from prior_property_rrr)
--
-  (select count (rn.id) 
-    from administrative.rrr rn
-    where rn.ba_unit_id in
-	(select administrative.required_relationship_baunit.to_ba_unit_id
-	 from   administrative.required_relationship_baunit
-	 where  administrative.required_relationship_baunit.from_ba_unit_id = #{id})
-     and
-        rn.id in (select id from prior_property_rrr)
-  )      
-
-) = 0 as vl
-');
-
---------------Check there is only one pending transaction per property/title [ba_unit_id] (Critical if > 0)
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('newtitle-brNew-check-pending-transaction', 'sql', 'property/title should have only one pending transaction::::per ogni titolo/proprieta deve esserci solo una transazione in corso', '#{id}(baunit_id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('newtitle-brNew-check-pending-transaction', now(), 'infinity', 
-'
-select count (*) > 1 as vl
-from administrative.ba_unit_target,
-transaction.transaction
-where administrative.ba_unit_target.transaction_id = transaction.transaction.id
-and transaction.transaction.status_code=''pending''
-and administrative.ba_unit_target.ba_unit_id  = #{id}
-');
 
 ----------------------------------------------------------------------------------------------------
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
@@ -1177,16 +1002,7 @@ insert into system.br_validation(br_id, severity_code, target_reg_moment, target
 values('baunit-has-several-mortgages-with-same-rank', 'critical', 'current', 'ba_unit', 1);
 
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
-values('baunit-has-primary-right', 'critical', 'current', 'ba_unit', 6);
-
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
-values('baunit-area-compares-to-related-parcel-area', 'medium', 'current', 'ba_unit', 5);
-
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
 values('baunit-has-cadastre-object-check', 'medium', 'current', 'ba_unit', 3);
-
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
-values('baunit-has-compatible-cadastre-object', 'medium', 'current', 'ba_unit', 4);
 
 -------------End ba_unit and other business Validation Rules - Neil 01 November 2011-------------------------
 -------------Start application Validation Rules - Neil 18 November 2011-------------------------
@@ -1211,18 +1027,6 @@ values('app-has-title-several-mortgages-with-same-rank', 'critical', null, 'appl
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 values('app-title-has-primary-right', 'critical', null, 'application', 1);
 
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('app-area-comparison', 'medium', 'validate', 'application', 25);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('app-title-has-cadastre-object', 'medium', 'validate', 'application', 3);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('app-title-has-compatible-cadastre-object', 'medium', 'validate', 'application', 23);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('app-cadastre-object-name', 'medium', 'validate', 'application', 5);
-
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
 values('newtitle-br22-check-different-owners', 'warning', 'current', 'ba_unit', 2);
 
@@ -1230,16 +1034,6 @@ values('newtitle-br22-check-different-owners', 'warning', 'current', 'ba_unit', 
 insert into system.br_validation(br_id, severity_code,   target_application_moment, target_code, order_of_execution) 
 values('newtitle-br23-check-share-100%', 'critical', 'validate', 'application', 26);
 --- ########################################################## ----------
-
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
-values('newtitle-br24-check-rrr-accounted', 'critical', 'current', 'ba_unit', 10);
-
-insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
-values('newtitle-brNew-check-pending-transaction', 'critical', 'current', 'ba_unit', 18);
-
----insert into system.br_validation(br_id, severity_code,   target_application_moment, target_code, order_of_execution) 
----values('newtitle-brNew-check-pending-transaction', 'critical', 'validate', 'application', 31);
-
 
 -------------End application Validation Rules - Neil 18 November 2011-------------------------
 
