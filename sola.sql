@@ -2034,6 +2034,7 @@ CREATE TABLE administrative.ba_unit(
 
     -- Internal constraints
     
+    CONSTRAINT ba_unit_unique_cadastre_object UNIQUE (cadastre_object_id, status_code),
     CONSTRAINT ba_unit_pkey PRIMARY KEY (id)
 );
 
@@ -5341,6 +5342,33 @@ CREATE TRIGGER trg_change_of_status before update
    ON source.source FOR EACH ROW
    EXECUTE PROCEDURE source.f_for_tbl_source_trg_change_of_status();
     
+-- triggers for table administrative.ba_unit -- 
+
+ 
+
+CREATE OR REPLACE FUNCTION administrative.f_for_tbl_ba_unit_trg_check_cadastre_object() RETURNS TRIGGER 
+AS $$
+DECLARE cadastre_object record;
+BEGIN
+
+if new.cadastre_object_id is not null then
+  select id, name_firstpart, name_lastpart into cadastre_object from cadastre.cadastre_object where id = new.cadastre_object_id;
+  if cadastre_object.id is not null then
+    if new.name_firstpart != cadastre_object.name_firstpart or new.name_lastpart != cadastre_object.name_lastpart then
+      RAISE EXCEPTION 'Cadastre object name first/last part doesn''t match name first/last part on the BaUnit';
+    end if;
+  end if;
+end if;
+
+RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_check_cadastre_object ON administrative.ba_unit CASCADE;
+CREATE TRIGGER trg_check_cadastre_object before insert or update
+   ON administrative.ba_unit FOR EACH ROW
+   EXECUTE PROCEDURE administrative.f_for_tbl_ba_unit_trg_check_cadastre_object();
+    
 -- triggers for table cadastre.cadastre_object -- 
 
  
@@ -5412,6 +5440,67 @@ CREATE TRIGGER trg_geommodify before insert or update
 -- triggers for table administrative.rrr -- 
 
  
+
+CREATE OR REPLACE FUNCTION administrative.f_for_tbl_rrr_trg_check_ownership_rrr() RETURNS TRIGGER 
+AS $$
+DECLARE group_type varchar;
+BEGIN
+
+if new.loc_id is not null then
+  select rrr_group_type_code into group_type from administrative.rrr_type where code = new.type_code;
+  if group_type != 'ownership' then
+    RAISE EXCEPTION 'Only RRRs of ownership type can have LOC_ID';
+  end if;
+end if;
+
+if new.loc_id is null then
+  select rrr_group_type_code into group_type from administrative.rrr_type where code = new.type_code;
+  if group_type = 'ownership' then
+    RAISE EXCEPTION 'RRR of ownership type must have LOC_ID';
+  end if;
+end if;
+
+RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_check_ownership_rrr ON administrative.rrr CASCADE;
+CREATE TRIGGER trg_check_ownership_rrr before insert or update
+   ON administrative.rrr FOR EACH ROW
+   EXECUTE PROCEDURE administrative.f_for_tbl_rrr_trg_check_ownership_rrr();
+    
+
+CREATE OR REPLACE FUNCTION administrative.f_for_tbl_rrr_trg_check_loc_id_unique_per_ba_unit() RETURNS TRIGGER 
+AS $$
+DECLARE cnt int;
+BEGIN
+
+if new.loc_id is not null then
+  if new.status_code='pending' then
+    select count(1) into cnt from administrative.rrr where id != new.id and ba_unit_id = new.ba_unit_id and status_code = 'pending' and 
+loc_id is not null;
+    if cnt>0 then
+      RAISE EXCEPTION 'There should be only 1 pending RRR with LOC_ID';
+    end if;
+  end if;
+  if new.status_code='current' then
+    select count(1) into cnt from administrative.rrr where id != new.id and ba_unit_id = new.ba_unit_id and status_code = 'current' and 
+loc_id is not null;
+    if cnt>0 then
+      RAISE EXCEPTION 'There should be only 1 current RRR with LOC_ID';
+    end if;
+  end if;
+end if;
+
+RETURN NEW;
+
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_check_loc_id_unique_per_ba_unit ON administrative.rrr CASCADE;
+CREATE TRIGGER trg_check_loc_id_unique_per_ba_unit before insert or update
+   ON administrative.rrr FOR EACH ROW
+   EXECUTE PROCEDURE administrative.f_for_tbl_rrr_trg_check_loc_id_unique_per_ba_unit();
+    
 
 CREATE OR REPLACE FUNCTION administrative.f_for_tbl_rrr_trg_change_from_pending() RETURNS TRIGGER 
 AS $$
@@ -5761,6 +5850,39 @@ END;
 $BODY$
   LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(text, text) 
+RETURNS TABLE(loc_id character varying(40), type_code character varying(20), registration_date timestamp without time zone, 
+status_code character varying(20))
+AS $$ 
+BEGIN
+	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.registration_date, r.status_code
+	FROM administrative.rrr r
+	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.office_code = $2 AND (r.status_code='pending' OR r.status_code='current');
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION administrative.get_loc_source_ids(_loc_id text, _status text) 
+RETURNS TABLE(id character varying(40))
+AS $$ 
+BEGIN
+	RETURN QUERY SELECT DISTINCT s.source_id
+	FROM administrative.rrr r INNER JOIN administrative.source_describes_rrr s ON r.id = s.rrr_id
+	WHERE r.is_terminating = 'f' AND r.loc_id = _loc_id AND r.status_code=_status;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION administrative.get_loc_party_ids(_loc_id text, _status text) 
+RETURNS TABLE(id character varying(40))
+AS $$ 
+BEGIN
+	RETURN QUERY SELECT DISTINCT p.party_id
+	FROM administrative.rrr r INNER JOIN administrative.party_for_rrr p ON r.id = p.rrr_id
+	WHERE r.is_terminating = 'f' AND r.loc_id = _loc_id AND r.status_code=_status;
+END;
+$$
+LANGUAGE plpgsql;
 
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 
