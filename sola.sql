@@ -3017,6 +3017,13 @@ CREATE TABLE administrative.ba_unit_rel_type(
 );
 
     
+ -- Data for the table administrative.ba_unit_rel_type -- 
+insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('amalgamation', 'Amalgamation', 'Amalgamation', 'c');
+insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('prior', 'Prior property', 'Prior property', 'c');
+insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('subdivision', 'Subdivision', 'Subdivision', 'c');
+
+
+
 --Table administrative.ba_unit_as_party ----
 DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
 CREATE TABLE administrative.ba_unit_as_party(
