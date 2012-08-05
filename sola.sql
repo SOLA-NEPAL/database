@@ -1086,6 +1086,8 @@ CREATE TABLE administrative.rrr(
     reference_number varchar(15),
     serial_number varchar(15),
     price varchar(15),
+    ownership_typecode varchar(20),
+    share_typecode varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1136,6 +1138,8 @@ CREATE TABLE administrative.rrr_historic
     reference_number varchar(15),
     serial_number varchar(15),
     price varchar(15),
+    ownership_typecode varchar(20),
+    share_typecode varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -5375,6 +5379,14 @@ CREATE INDEX rrr_restriction_reasoncode_fk154_ind ON administrative.rrr (restric
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_office_code_fk155 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_office_code_fk155_ind ON administrative.rrr (office_code);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_ownership_typecode_fk156 
+            FOREIGN KEY (ownership_typecode) REFERENCES system.ownership_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_ownership_typecode_fk156_ind ON administrative.rrr (ownership_typecode);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_share_typecode_fk157 
+            FOREIGN KEY (share_typecode) REFERENCES system.share_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_share_typecode_fk157_ind ON administrative.rrr (share_typecode);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
