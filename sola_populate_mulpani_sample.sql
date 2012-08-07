@@ -35,7 +35,7 @@ BEGIN
 	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
 		ST_GeometryN(the_geom, 1) AS the_geom,''current'' AS parcel_status FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
-		INSERT INTO cadastre.cadastre_object (id, transaction_id, parcel_no, parcel_type,geom_polygon,map_sheet_id,status_code,name_firstpart,name_lastpart)
+		INSERT INTO cadastre.cadastre_object (id, transaction_id, parcel_no, parcel_typecode,geom_polygon,map_sheet_id,status_code,name_firstpart,name_lastpart)
 		VALUES (rec.gid, transaction_id_vl, rec.parcelno,rec.parcelty,rec.the_geom, rec.grids1, rec.parcel_status
 		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);
 		
