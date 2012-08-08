@@ -2514,9 +2514,9 @@ insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) va
 
 
 
---Table system.parcel_type ----
-DROP TABLE IF EXISTS system.parcel_type CASCADE;
-CREATE TABLE system.parcel_type(
+--Table cadastre.parcel_type ----
+DROP TABLE IF EXISTS cadastre.parcel_type CASCADE;
+CREATE TABLE cadastre.parcel_type(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2528,21 +2528,21 @@ CREATE TABLE system.parcel_type(
 );
 
     
- -- Data for the table system.parcel_type -- 
-insert into system.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
+ -- Data for the table cadastre.parcel_type -- 
+insert into cadastre.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
+insert into cadastre.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
 
 
 
---Table system.land_use ----
-DROP TABLE IF EXISTS system.land_use CASCADE;
-CREATE TABLE system.land_use(
+--Table cadastre.land_use ----
+DROP TABLE IF EXISTS cadastre.land_use CASCADE;
+CREATE TABLE cadastre.land_use(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2554,9 +2554,9 @@ CREATE TABLE system.land_use(
 );
 
     
---Table system.land_class ----
-DROP TABLE IF EXISTS system.land_class CASCADE;
-CREATE TABLE system.land_class(
+--Table cadastre.land_class ----
+DROP TABLE IF EXISTS cadastre.land_class CASCADE;
+CREATE TABLE cadastre.land_class(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2601,8 +2601,8 @@ CREATE TABLE administrative.rrr(
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool NOT NULL DEFAULT (false),
-    restriction_officecode varchar(20),
-    restriction_reasoncode varchar(20),
+    restriction_office_code varchar(20),
+    restriction_reason_code varchar(20),
     office_code varchar(20) NOT NULL,
     bundle_number varchar(15),
     pana_number varchar(15),
@@ -2610,8 +2610,8 @@ CREATE TABLE administrative.rrr(
     reference_number varchar(15),
     serial_number varchar(15),
     price varchar(15),
-    ownership_typecode varchar(20),
-    share_typecode varchar(20),
+    owner_type_code varchar(20),
+    share_type_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2653,8 +2653,8 @@ CREATE TABLE administrative.rrr_historic
     mortgage_type_code varchar(20),
     loc_id varchar(40),
     is_terminating bool,
-    restriction_officecode varchar(20),
-    restriction_reasoncode varchar(20),
+    restriction_office_code varchar(20),
+    restriction_reason_code varchar(20),
     office_code varchar(20),
     bundle_number varchar(15),
     pana_number varchar(15),
@@ -2662,8 +2662,8 @@ CREATE TABLE administrative.rrr_historic
     reference_number varchar(15),
     serial_number varchar(15),
     price varchar(15),
-    ownership_typecode varchar(20),
-    share_typecode varchar(20),
+    owner_type_code varchar(20),
+    share_type_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2816,9 +2816,9 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.moth FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table system.restriction_office ----
-DROP TABLE IF EXISTS system.restriction_office CASCADE;
-CREATE TABLE system.restriction_office(
+--Table administrative.restriction_office ----
+DROP TABLE IF EXISTS administrative.restriction_office CASCADE;
+CREATE TABLE administrative.restriction_office(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2830,16 +2830,16 @@ CREATE TABLE system.restriction_office(
 );
 
     
- -- Data for the table system.restriction_office -- 
-insert into system.restriction_office(code, display_value, status) values('1', 'Household and Development', 'c');
-insert into system.restriction_office(code, display_value, status) values('2', 'Development Credit Bank', 'c');
-insert into system.restriction_office(code, display_value, status) values('3', 'Ramesh Kumar Sainju', 'c');
+ -- Data for the table administrative.restriction_office -- 
+insert into administrative.restriction_office(code, display_value, status) values('1', 'Household and Development', 'c');
+insert into administrative.restriction_office(code, display_value, status) values('2', 'Development Credit Bank', 'c');
+insert into administrative.restriction_office(code, display_value, status) values('3', 'Ramesh Kumar Sainju', 'c');
 
 
 
---Table system.restriction_reason ----
-DROP TABLE IF EXISTS system.restriction_reason CASCADE;
-CREATE TABLE system.restriction_reason(
+--Table administrative.restriction_reason ----
+DROP TABLE IF EXISTS administrative.restriction_reason CASCADE;
+CREATE TABLE administrative.restriction_reason(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2851,17 +2851,17 @@ CREATE TABLE system.restriction_reason(
 );
 
     
- -- Data for the table system.restriction_reason -- 
-insert into system.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
-insert into system.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
-insert into system.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
-insert into system.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
+ -- Data for the table administrative.restriction_reason -- 
+insert into administrative.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
 
 
 
---Table system.ownership_type ----
-DROP TABLE IF EXISTS system.ownership_type CASCADE;
-CREATE TABLE system.ownership_type(
+--Table administrative.owner_type ----
+DROP TABLE IF EXISTS administrative.owner_type CASCADE;
+CREATE TABLE administrative.owner_type(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -2869,13 +2869,13 @@ CREATE TABLE system.ownership_type(
 
     -- Internal constraints
     
-    CONSTRAINT ownership_type_pkey PRIMARY KEY (code)
+    CONSTRAINT owner_type_pkey PRIMARY KEY (code)
 );
 
     
---Table system.share_type ----
-DROP TABLE IF EXISTS system.share_type CASCADE;
-CREATE TABLE system.share_type(
+--Table administrative.share_type ----
+DROP TABLE IF EXISTS administrative.share_type CASCADE;
+CREATE TABLE administrative.share_type(
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -3316,6 +3316,41 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.ba_unit_target FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
+--Table administrative.tenant_type ----
+DROP TABLE IF EXISTS administrative.tenant_type CASCADE;
+CREATE TABLE administrative.tenant_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT tenant_type_pkey PRIMARY KEY (code)
+);
+
+    
+--Table administrative.restriction_release_reason ----
+DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
+CREATE TABLE administrative.restriction_release_reason(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table administrative.restriction_release_reason -- 
+insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
+
+
+
 --Table cadastre.spatial_value_area ----
 DROP TABLE IF EXISTS cadastre.spatial_value_area CASCADE;
 CREATE TABLE cadastre.spatial_value_area(
@@ -4767,41 +4802,6 @@ insert into system.restriction_type(code, display_value, status) values('4', 'un
 
 
 
---Table system.restriction_release_reason ----
-DROP TABLE IF EXISTS system.restriction_release_reason CASCADE;
-CREATE TABLE system.restriction_release_reason(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.restriction_release_reason -- 
-insert into system.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
-insert into system.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
-insert into system.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
-
-
-
---Table system.tenant_type ----
-DROP TABLE IF EXISTS system.tenant_type CASCADE;
-CREATE TABLE system.tenant_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT tenant_type_pkey PRIMARY KEY (code)
-);
-
-    
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5411,36 +5411,36 @@ ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_loc_id_fk151
             FOREIGN KEY (loc_id) REFERENCES administrative.loc(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_loc_id_fk151_ind ON administrative.rrr (loc_id);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_officecode_fk152 
-            FOREIGN KEY (restriction_officecode) REFERENCES system.restriction_office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_restriction_officecode_fk152_ind ON administrative.rrr (restriction_officecode);
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_office_code_fk152 
+            FOREIGN KEY (restriction_office_code) REFERENCES administrative.restriction_office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_office_code_fk152_ind ON administrative.rrr (restriction_office_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_reasoncode_fk153 
-            FOREIGN KEY (restriction_reasoncode) REFERENCES system.restriction_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_restriction_reasoncode_fk153_ind ON administrative.rrr (restriction_reasoncode);
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_reason_code_fk153 
+            FOREIGN KEY (restriction_reason_code) REFERENCES administrative.restriction_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_reason_code_fk153_ind ON administrative.rrr (restriction_reason_code);
 
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_office_code_fk154 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_office_code_fk154_ind ON administrative.rrr (office_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_ownership_typecode_fk155 
-            FOREIGN KEY (ownership_typecode) REFERENCES system.ownership_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_ownership_typecode_fk155_ind ON administrative.rrr (ownership_typecode);
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_owner_type_code_fk155 
+            FOREIGN KEY (owner_type_code) REFERENCES administrative.owner_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_owner_type_code_fk155_ind ON administrative.rrr (owner_type_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_share_typecode_fk156 
-            FOREIGN KEY (share_typecode) REFERENCES system.share_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_share_typecode_fk156_ind ON administrative.rrr (share_typecode);
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_share_type_code_fk156 
+            FOREIGN KEY (share_type_code) REFERENCES administrative.share_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_share_type_code_fk156_ind ON administrative.rrr (share_type_code);
 
 ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_parcel_typecode_fk157 
-            FOREIGN KEY (parcel_typecode) REFERENCES system.parcel_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (parcel_typecode) REFERENCES cadastre.parcel_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_parcel_typecode_fk157_ind ON cadastre.cadastre_object (parcel_typecode);
 
 ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_land_usecode_fk158 
-            FOREIGN KEY (land_usecode) REFERENCES system.land_use(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (land_usecode) REFERENCES cadastre.land_use(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_land_usecode_fk158_ind ON cadastre.cadastre_object (land_usecode);
 
 ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_land_classcode_fk159 
-            FOREIGN KEY (land_classcode) REFERENCES system.land_class(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (land_classcode) REFERENCES cadastre.land_class(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_land_classcode_fk159_ind ON cadastre.cadastre_object (land_classcode);
 
 ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_guthi_namecode_fk160 
