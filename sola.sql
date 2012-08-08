@@ -2,15 +2,40 @@
 -- Starting up the database script generation
 ALTER DATABASE sola SET bytea_output TO 'escape';
     
+--Create schema document--
+DROP SCHEMA IF EXISTS document CASCADE;
+        
+CREATE SCHEMA document;
+
+--Create schema system--
+DROP SCHEMA IF EXISTS system CASCADE;
+        
+CREATE SCHEMA system;
+
 --Create schema source--
 DROP SCHEMA IF EXISTS source CASCADE;
         
 CREATE SCHEMA source;
 
+--Create schema transaction--
+DROP SCHEMA IF EXISTS transaction CASCADE;
+        
+CREATE SCHEMA transaction;
+
+--Create schema application--
+DROP SCHEMA IF EXISTS application CASCADE;
+        
+CREATE SCHEMA application;
+
 --Create schema party--
 DROP SCHEMA IF EXISTS party CASCADE;
         
 CREATE SCHEMA party;
+
+--Create schema address--
+DROP SCHEMA IF EXISTS address CASCADE;
+        
+CREATE SCHEMA address;
 
 --Create schema administrative--
 DROP SCHEMA IF EXISTS administrative CASCADE;
@@ -21,31 +46,6 @@ CREATE SCHEMA administrative;
 DROP SCHEMA IF EXISTS cadastre CASCADE;
         
 CREATE SCHEMA cadastre;
-
---Create schema application--
-DROP SCHEMA IF EXISTS application CASCADE;
-        
-CREATE SCHEMA application;
-
---Create schema address--
-DROP SCHEMA IF EXISTS address CASCADE;
-        
-CREATE SCHEMA address;
-
---Create schema system--
-DROP SCHEMA IF EXISTS system CASCADE;
-        
-CREATE SCHEMA system;
-
---Create schema document--
-DROP SCHEMA IF EXISTS document CASCADE;
-        
-CREATE SCHEMA document;
-
---Create schema transaction--
-DROP SCHEMA IF EXISTS transaction CASCADE;
-        
-CREATE SCHEMA transaction;
 
 --Adding handy common functions --
 
@@ -462,6 +462,104 @@ $$ LANGUAGE plpgsql;
 select clean_db('public');
     
     
+--Table document.document ----
+DROP TABLE IF EXISTS document.document CASCADE;
+CREATE TABLE document.document(
+    id varchar(40) NOT NULL,
+    nr varchar(15) NOT NULL,
+    extension varchar(5) NOT NULL,
+    body bytea NOT NULL,
+    description varchar(100),
+    office_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT document_nr_unique UNIQUE (nr),
+    CONSTRAINT document_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX document_index_on_rowidentifier ON document.document (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON document.document CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON document.document FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table document.document_historic used for the history of data of table document.document ---
+DROP TABLE IF EXISTS document.document_historic CASCADE;
+CREATE TABLE document.document_historic
+(
+    id varchar(40),
+    nr varchar(15),
+    extension varchar(5),
+    body bytea,
+    description varchar(100),
+    office_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX document_historic_index_on_rowidentifier ON document.document_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON document.document CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON document.document FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table system.office ----
+DROP TABLE IF EXISTS system.office CASCADE;
+CREATE TABLE system.office(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    district_code varchar(20) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT office_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.office -- 
+insert into system.office(code, display_value, district_code) values('7-25-003-001', 'Lalitpur - LMO first section', '25');
+
+
+
+--Table system.district ----
+DROP TABLE IF EXISTS system.district CASCADE;
+CREATE TABLE system.district(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    zone_code integer,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT district_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.district -- 
+insert into system.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
+insert into system.district(code, display_value, zone_code) values('27', 'Bhaktpur', 7);
+
+
+
 --Table source.source ----
 DROP TABLE IF EXISTS source.source CASCADE;
 CREATE TABLE source.source(
@@ -538,6 +636,87 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON source.source FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
+--Table source.archive ----
+DROP TABLE IF EXISTS source.archive CASCADE;
+CREATE TABLE source.archive(
+    id varchar(40) NOT NULL,
+    name varchar(50) NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT archive_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX archive_index_on_rowidentifier ON source.archive (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON source.archive CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON source.archive FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table source.archive_historic used for the history of data of table source.archive ---
+DROP TABLE IF EXISTS source.archive_historic CASCADE;
+CREATE TABLE source.archive_historic
+(
+    id varchar(40),
+    name varchar(50),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX archive_historic_index_on_rowidentifier ON source.archive_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON source.archive CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON source.archive FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table source.presentation_form_type ----
+DROP TABLE IF EXISTS source.presentation_form_type CASCADE;
+CREATE TABLE source.presentation_form_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT presentation_form_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT presentation_form_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table source.presentation_form_type -- 
+insert into source.presentation_form_type(code, display_value, status) values('documentDigital', 'Digital Document::::Documento Digitale', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('documentHardcopy', 'Hardcopy Document::::Documento in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('imageDigital', 'Digital Image::::Immagine Digitale', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('imageHardcopy', 'Hardcopy Image::::Immagine in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('mapDigital', 'Digital Map::::Mappa Digitale', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('mapHardcopy', 'Hardcopy Map::::Mappa in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('modelDigital', 'Digital Model::::Modello Digitale'',', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('modelHarcopy', 'Hardcopy Model::::Modello in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('profileDigital', 'Digital Profile::::Profilo Digitale', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('profileHardcopy', 'Hardcopy Profile::::Profilo in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('tableDigital', 'Digital Table::::Tabella Digitale', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('tableHardcopy', 'Hardcopy Table::::Tabella in Hardcopy', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('videoDigital', 'Digital Video::::Video Digitale'',', 'c');
+insert into source.presentation_form_type(code, display_value, status) values('videoHardcopy', 'Hardcopy Video::::Video in Hardcopy', 'c');
+
+
+
 --Table source.availability_status_type ----
 DROP TABLE IF EXISTS source.availability_status_type CASCADE;
 CREATE TABLE source.availability_status_type(
@@ -597,6 +776,911 @@ insert into source.administrative_source_type(code, display_value, status, has_s
 insert into source.administrative_source_type(code, display_value, status, has_status, description) values('cadastralSurvey', 'Cadastral Survey::::Rilevamento Catastale', 'c', false, 'Extension to LADM');
 insert into source.administrative_source_type(code, display_value, status, has_status, description) values('waiver', 'Waiver to Caveat or other requirement', 'c', false, 'Extension to LADM');
 insert into source.administrative_source_type(code, display_value, status, has_status, description) values('idVerification', 'Form of Identification including Personal ID', 'c', false, 'Extension to LADM');
+
+
+
+--Table transaction.reg_status_type ----
+DROP TABLE IF EXISTS transaction.reg_status_type CASCADE;
+CREATE TABLE transaction.reg_status_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT reg_status_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT reg_status_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table transaction.reg_status_type -- 
+insert into transaction.reg_status_type(code, display_value, status) values('current', 'Current', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('pending', 'Pending', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('historic', 'Historic', 'c');
+insert into transaction.reg_status_type(code, display_value, status) values('previous', 'Previous', 'c');
+
+
+
+--Table transaction.transaction ----
+DROP TABLE IF EXISTS transaction.transaction CASCADE;
+CREATE TABLE transaction.transaction(
+    id varchar(40) NOT NULL,
+    from_service_id varchar(40),
+    status_code varchar(20) NOT NULL DEFAULT ('pending'),
+    approval_datetime timestamp,
+    office_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT transaction_from_service_id_unique UNIQUE (from_service_id),
+    CONSTRAINT transaction_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX transaction_index_on_rowidentifier ON transaction.transaction (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON transaction.transaction CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON transaction.transaction FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table transaction.transaction_historic used for the history of data of table transaction.transaction ---
+DROP TABLE IF EXISTS transaction.transaction_historic CASCADE;
+CREATE TABLE transaction.transaction_historic
+(
+    id varchar(40),
+    from_service_id varchar(40),
+    status_code varchar(20),
+    approval_datetime timestamp,
+    office_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX transaction_historic_index_on_rowidentifier ON transaction.transaction_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON transaction.transaction CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON transaction.transaction FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table application.service ----
+DROP TABLE IF EXISTS application.service CASCADE;
+CREATE TABLE application.service(
+    id varchar(40) NOT NULL,
+    application_id varchar(40),
+    request_type_code varchar(20) NOT NULL,
+    service_order integer NOT NULL DEFAULT (0),
+    lodging_datetime timestamp NOT NULL DEFAULT (now()),
+    expected_completion_date date NOT NULL,
+    status_code varchar(20) NOT NULL DEFAULT ('lodged'),
+    action_code varchar(20) NOT NULL DEFAULT ('lodge'),
+    action_notes varchar(255),
+    base_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    area_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    value_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT service_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX service_index_on_rowidentifier ON application.service (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON application.service CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON application.service FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table application.service_historic used for the history of data of table application.service ---
+DROP TABLE IF EXISTS application.service_historic CASCADE;
+CREATE TABLE application.service_historic
+(
+    id varchar(40),
+    application_id varchar(40),
+    request_type_code varchar(20),
+    service_order integer,
+    lodging_datetime timestamp,
+    expected_completion_date date,
+    status_code varchar(20),
+    action_code varchar(20),
+    action_notes varchar(255),
+    base_fee numeric(20, 2),
+    area_fee numeric(20, 2),
+    value_fee numeric(20, 2),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX service_historic_index_on_rowidentifier ON application.service_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON application.service CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON application.service FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table application.application ----
+DROP TABLE IF EXISTS application.application CASCADE;
+CREATE TABLE application.application(
+    id varchar(40) NOT NULL,
+    nr varchar(15) NOT NULL,
+    agent_id varchar(40),
+    contact_person_id varchar(40) NOT NULL,
+    lodging_datetime timestamp NOT NULL DEFAULT (now()),
+    expected_completion_date date NOT NULL DEFAULT (now()),
+    assignee_id varchar(40),
+    assigned_datetime timestamp,
+    location GEOMETRY,
+    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+    
+            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
+    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
+    services_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    tax numeric(20, 2) NOT NULL DEFAULT (0),
+    total_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    total_amount_paid numeric(20, 2) NOT NULL DEFAULT (0),
+    fee_paid bool NOT NULL DEFAULT (false),
+    action_code varchar(20) NOT NULL DEFAULT ('lodge'),
+    action_notes varchar(255),
+    status_code varchar(20) NOT NULL DEFAULT ('lodged'),
+    office_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT application_check_assigned CHECK ((assignee_id is null and assigned_datetime is null) or (assignee_id is not null and assigned_datetime is not null)),
+    CONSTRAINT application_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX application_index_on_rowidentifier ON application.application (rowidentifier);
+CREATE INDEX application_index_on_location ON application.application USING gist (location);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON application.application CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON application.application FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table application.application_historic used for the history of data of table application.application ---
+DROP TABLE IF EXISTS application.application_historic CASCADE;
+CREATE TABLE application.application_historic
+(
+    id varchar(40),
+    nr varchar(15),
+    agent_id varchar(40),
+    contact_person_id varchar(40),
+    lodging_datetime timestamp,
+    expected_completion_date date,
+    assignee_id varchar(40),
+    assigned_datetime timestamp,
+    location GEOMETRY,
+    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+    
+            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
+    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
+    services_fee numeric(20, 2),
+    tax numeric(20, 2),
+    total_fee numeric(20, 2),
+    total_amount_paid numeric(20, 2),
+    fee_paid bool,
+    action_code varchar(20),
+    action_notes varchar(255),
+    status_code varchar(20),
+    office_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX application_historic_index_on_rowidentifier ON application.application_historic (rowidentifier);
+CREATE INDEX application_historic_index_on_location ON application.application_historic USING gist (location);
+
+
+DROP TRIGGER IF EXISTS __track_history ON application.application CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON application.application FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table party.party ----
+DROP TABLE IF EXISTS party.party CASCADE;
+CREATE TABLE party.party(
+    id varchar(40) NOT NULL,
+    ext_id varchar(255),
+    type_code varchar(20) NOT NULL,
+    name varchar(255),
+    last_name varchar(50),
+    fathers_name varchar(50),
+    fathers_last_name varchar(50),
+    grandfather_name varchar(50),
+    grandfather_last_name varchar(50),
+    alias varchar(50),
+    gender_code varchar(20),
+    address_id varchar(40),
+    id_type_code varchar(20),
+    id_number varchar(20),
+    email varchar(50),
+    mobile varchar(15),
+    phone varchar(15),
+    fax varchar(15),
+    preferred_communication_code varchar(20),
+    date_of_birth date,
+    remarks varchar(200),
+    id_provider_office_code varchar(20),
+    id_issue_date date,
+    office_code varchar(20),
+    photo_id varchar(40),
+    left_finger_id varchar(40),
+    right_finger_id varchar(40),
+    signature_id varchar(40),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT party_id_is_present CHECK ((id_type_code is null and id_number is null) or ((id_type_code is not null and id_number is not null))),
+    CONSTRAINT party_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX party_index_on_rowidentifier ON party.party (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON party.party CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON party.party FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table party.party_historic used for the history of data of table party.party ---
+DROP TABLE IF EXISTS party.party_historic CASCADE;
+CREATE TABLE party.party_historic
+(
+    id varchar(40),
+    ext_id varchar(255),
+    type_code varchar(20),
+    name varchar(255),
+    last_name varchar(50),
+    fathers_name varchar(50),
+    fathers_last_name varchar(50),
+    grandfather_name varchar(50),
+    grandfather_last_name varchar(50),
+    alias varchar(50),
+    gender_code varchar(20),
+    address_id varchar(40),
+    id_type_code varchar(20),
+    id_number varchar(20),
+    email varchar(50),
+    mobile varchar(15),
+    phone varchar(15),
+    fax varchar(15),
+    preferred_communication_code varchar(20),
+    date_of_birth date,
+    remarks varchar(200),
+    id_provider_office_code varchar(20),
+    id_issue_date date,
+    office_code varchar(20),
+    photo_id varchar(40),
+    left_finger_id varchar(40),
+    right_finger_id varchar(40),
+    signature_id varchar(40),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX party_historic_index_on_rowidentifier ON party.party_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON party.party CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON party.party FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table party.party_type ----
+DROP TABLE IF EXISTS party.party_type CASCADE;
+CREATE TABLE party.party_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT party_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT party_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table party.party_type -- 
+insert into party.party_type(code, display_value, status) values('naturalPerson', 'Natural Person::::Persona Naturale', 'c');
+insert into party.party_type(code, display_value, status) values('nonNaturalPerson', 'Non-natural Person::::Persona Giuridica', 'c');
+insert into party.party_type(code, display_value, status) values('baunit', 'Basic Administrative Unit::::Unita Amministrativa di Base', 'c');
+insert into party.party_type(code, display_value) values('group', 'Group::::Gruppo');
+
+
+
+--Table address.address ----
+DROP TABLE IF EXISTS address.address CASCADE;
+CREATE TABLE address.address(
+    id varchar(40) NOT NULL,
+    districtcode varchar(20),
+    vdc_code varchar(20) NOT NULL,
+    ward_no varchar(20),
+    street varchar(50),
+    description varchar(255),
+    ext_address_id varchar(40),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT address_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX address_index_on_rowidentifier ON address.address (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON address.address CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON address.address FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table address.address_historic used for the history of data of table address.address ---
+DROP TABLE IF EXISTS address.address_historic CASCADE;
+CREATE TABLE address.address_historic
+(
+    id varchar(40),
+    districtcode varchar(20),
+    vdc_code varchar(20),
+    ward_no varchar(20),
+    street varchar(50),
+    description varchar(255),
+    ext_address_id varchar(40),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX address_historic_index_on_rowidentifier ON address.address_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON address.address CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON address.address FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table party.communication_type ----
+DROP TABLE IF EXISTS party.communication_type CASCADE;
+CREATE TABLE party.communication_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT communication_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT communication_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table party.communication_type -- 
+insert into party.communication_type(code, display_value, status) values('eMail', 'e-Mail::::E-mail', 'c');
+insert into party.communication_type(code, display_value, status) values('fax', 'Fax::::Fax', 'c');
+insert into party.communication_type(code, display_value, status) values('post', 'Post::::Posta', 'c');
+insert into party.communication_type(code, display_value, status) values('phone', 'Phone::::Telefono', 'c');
+insert into party.communication_type(code, display_value, status) values('courier', 'Courier::::Corriere', 'c');
+
+
+
+--Table party.id_type ----
+DROP TABLE IF EXISTS party.id_type CASCADE;
+CREATE TABLE party.id_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT id_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT id_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table party.id_type -- 
+insert into party.id_type(code, display_value, status, description) values('nationalID', 'National ID::::Carta Identita Nazionale', 'c', 'The main person ID that exists in the country::::Il principale documento identificativo nel paese');
+insert into party.id_type(code, display_value, status, description) values('nationalPassport', 'National Passport::::Passaporto Nazionale', 'c', 'A passport issued by the country::::Passaporto fornito dal paese');
+insert into party.id_type(code, display_value, status, description) values('otherPassport', 'Other Passport::::Altro Passaporto', 'c', 'A passport issued by another country::::Passaporto Fornito da un altro paese');
+
+
+
+--Table party.gender_type ----
+DROP TABLE IF EXISTS party.gender_type CASCADE;
+CREATE TABLE party.gender_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT gender_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT gender_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table party.gender_type -- 
+insert into party.gender_type(code, display_value, status) values('male', 'Male', 'c');
+insert into party.gender_type(code, display_value, status) values('female', 'Female', 'c');
+
+
+
+--Table system.vdc ----
+DROP TABLE IF EXISTS system.vdc CASCADE;
+CREATE TABLE system.vdc(
+    code varchar(20) NOT NULL,
+    display_value varchar(50) NOT NULL,
+    district_code varchar(20) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT vdc_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.vdc -- 
+insert into system.vdc(code, display_value, district_code, description, status) values('43055', 'Singana', '25', 'Test VDC', 'c');
+insert into system.vdc(code, display_value, district_code, description, status) values('27009', 'Mulpani', '27', 'Mulpani', 'c');
+
+
+
+--Table system.appuser ----
+DROP TABLE IF EXISTS system.appuser CASCADE;
+CREATE TABLE system.appuser(
+    id varchar(40) NOT NULL,
+    username varchar(40) NOT NULL,
+    first_name varchar(30) NOT NULL,
+    last_name varchar(30) NOT NULL,
+    passwd varchar(100) NOT NULL DEFAULT (uuid_generate_v1()),
+    active bool NOT NULL DEFAULT (true),
+    description varchar(255),
+    department_code varchar(20) NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT appuser_username_unique UNIQUE (username),
+    CONSTRAINT appuser_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX appuser_index_on_rowidentifier ON system.appuser (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON system.appuser CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON system.appuser FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table system.appuser_historic used for the history of data of table system.appuser ---
+DROP TABLE IF EXISTS system.appuser_historic CASCADE;
+CREATE TABLE system.appuser_historic
+(
+    id varchar(40),
+    username varchar(40),
+    first_name varchar(30),
+    last_name varchar(30),
+    passwd varchar(100),
+    active bool,
+    description varchar(255),
+    department_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX appuser_historic_index_on_rowidentifier ON system.appuser_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON system.appuser CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON system.appuser FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+ -- Data for the table system.appuser -- 
+insert into system.appuser(id, username, first_name, last_name, passwd, active, department_code) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true, 'Lalitpur-001');
+
+
+
+--Table system.department ----
+DROP TABLE IF EXISTS system.department CASCADE;
+CREATE TABLE system.department(
+    code varchar(20) NOT NULL,
+    office_code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(500),
+    status char(1) NOT NULL DEFAULT ('c'),
+
+    -- Internal constraints
+    
+    CONSTRAINT department_unique_department_name UNIQUE (office_code, display_value),
+    CONSTRAINT department_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.department -- 
+insert into system.department(code, office_code, display_value) values('Lalitpur-001', '7-25-003-001', 'Section-001, Lalitpur LMO');
+
+
+
+--Table application.application_action_type ----
+DROP TABLE IF EXISTS application.application_action_type CASCADE;
+CREATE TABLE application.application_action_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status_to_set varchar(20),
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT application_action_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT application_action_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.application_action_type -- 
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodgement Notice Prepared::::Ricevuta della Registrazione Preparata', 'lodged', 'c', 'Lodgement notice is prepared (action is automatically logged when application details are saved for the first time::::La ricevuta della registrazione pronta');
+insert into application.application_action_type(code, display_value, status, description) values('addDocument', 'Add document::::Documenti scannerizzati allegati alla pratica', 'c', 'Scanned Documents linked to Application (action is automatically logged when a new document is saved)::::Documenti scannerizzati allegati alla pratica');
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('withdraw', 'Withdraw application::::Pratica Ritirata', 'anulled', 'c', 'Application withdrawn by Applicant (action is manually logged)::::Pratica Ritirata dal Richiedente');
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('cancel', 'Cancel application::::Pratica cancellata', 'anulled', 'c', 'Application cancelled by Land Office (action is automatically logged when application is cancelled)::::Pratica cancellata da Ufficio Territoriale');
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('requisition', 'Requisition:::Ulteriori Informazioni domandate dal richiedente', 'requisitioned', 'c', 'Further information requested from applicant (action is manually logged)::::Ulteriori Informazioni domandate dal richiedente');
+insert into application.application_action_type(code, display_value, status, description) values('validateFailed', 'Quality Check Fails::::Controllo Qualita Fallito', 'c', 'Quality check fails (automatically logged when a critical business rule failure occurs)::::Controllo Qualita Fallito');
+insert into application.application_action_type(code, display_value, status, description) values('validatePassed', 'Quality Check Passes::::Controllo Qualita Superato', 'c', 'Quality check passes (automatically logged when business rules are run without any critical failures)::::Controllo Qualita Superato');
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('approve', 'Approve::::Approvata', 'approved', 'c', 'Application is approved (automatically logged when application is approved successively)::::Pratica approvata');
+insert into application.application_action_type(code, display_value, status_to_set, status, description) values('archive', 'Archive::::Archiviata', 'completed', 'c', 'Paper application records are archived (action is manually logged)::::I fogli della pratica sono stati archiviati');
+insert into application.application_action_type(code, display_value, status, description) values('despatch', 'Despatch::::Inviata', 'c', 'Application documents and new land office products are sent or collected by applicant (action is manually logged)::::I documenti della pratica e i nuovi prodotti da Ufficio Territoriale sono stati spediti o ritirati dal richiedente');
+insert into application.application_action_type(code, display_value, status_to_set, status) values('lapse', 'Lapse::::ITALIANO', 'anulled', 'c');
+insert into application.application_action_type(code, display_value, status) values('assign', 'Assign::::ITALIANO', 'c');
+insert into application.application_action_type(code, display_value, status) values('unAssign', 'Unassign::::ITALIANO', 'c');
+insert into application.application_action_type(code, display_value, status_to_set, status) values('resubmit', 'Resubmit::::ITALIANO', 'lodged', 'c');
+insert into application.application_action_type(code, display_value, status, description) values('validate', 'Validate::::ITALIANO', 'c', 'The action validate does not leave a mark, because validateFailed and validateSucceded will be used instead when the validate is completed.');
+insert into application.application_action_type(code, display_value, status, description) values('transfer', 'Transfer application between departments', 'c', 'Application transfered to the given department');
+
+
+
+--Table application.application_status_type ----
+DROP TABLE IF EXISTS application.application_status_type CASCADE;
+CREATE TABLE application.application_status_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT application_status_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT application_status_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.application_status_type -- 
+insert into application.application_status_type(code, display_value, status, description) values('lodged', 'Lodged::::Registrata', 'c', 'Application has been lodged and officially received by land office::::La pratica registrata e formalmente ricevuta da ufficio territoriale');
+insert into application.application_status_type(code, display_value, status) values('approved', 'Approved::::ITALIANO', 'c');
+insert into application.application_status_type(code, display_value, status) values('anulled', 'Anulled::::Anullato', 'c');
+insert into application.application_status_type(code, display_value, status) values('completed', 'Completed::::ITALIANO', 'c');
+insert into application.application_status_type(code, display_value, status) values('requisitioned', 'Requisitioned::::ITALIANO', 'c');
+
+
+
+--Table application.request_type ----
+DROP TABLE IF EXISTS application.request_type CASCADE;
+CREATE TABLE application.request_type(
+    code varchar(20) NOT NULL,
+    request_category_code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+    nr_days_to_complete integer NOT NULL DEFAULT (0),
+    base_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    area_base_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    value_base_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    nr_properties_required integer NOT NULL DEFAULT (0),
+    notation_template varchar(1000),
+    rrr_type_code varchar(20),
+    type_action_code varchar(20),
+
+    -- Internal constraints
+    
+    CONSTRAINT request_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT request_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.request_type -- 
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'registrationServices', 'Change to Cadastre::::किता काट्', 'c', 30, 25.00, 0.10, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('redefineCadastre', 'registrationServices', 'Redefine Cadastre::::किता संसोधन', 'c', 30, 25.00, 0.10, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('registrationDismiss', 'registrationServices', 'Registration Dismissal::::दाखिला खारेज', 'c', 1, 0.50, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('missingLandRegister', 'registrationServices', 'Missing Land Registration::::छुट जग्गा दर्ता', 'x', 1, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownershipClearance', 'registrationServices', 'Ownership Clearance::::हकसफि', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('Guthi', 'informationServices', 'Guthi::::गूठी', 'c', 1, 0.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnDeeds', 'registrationServices', 'Deed Registration::::लिखट रजिष्टेसन', 'x', 3, 1.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('resignation', 'registrationServices', 'Resignation::::राजिनामा', 'c', 5, 5.00, 0.00, 0.01, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnPowerOfAttorney', 'registrationServices', 'Willingness Letter::::बकस पत्र', 'c', 3, 5.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('propertyDivision', 'registrationServices', 'Property Division::::अंशवण्डा', 'c', 3, 5.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('exchange', 'informationServices', 'Exchange::::सट्टा पट्टा', 'x', 1, 5.00, 0.00, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('leaveNotice', 'informationServices', 'Leave Notice::::छोड पत्र', 'x', 1, 1.00, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('multipleOwner', 'registrationServices', 'Multiple Ownership Registration::::सगोलनामा', 'c', 1, 0.50, 0.00, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('locMerging', 'registrationServices', 'LOC Merging::::श्रेष्ता एकिकरण', 'x', 1, 0.00, 0.10, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('oldSurvey', 'registrationServices', 'Old Survey::::पुरानो नापी', 'x', 5, 5.00, 0.10, 0, 0);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newSurvey', 'registrationServices', 'New Survey::::नयां नापी', 'c', 5, 5.00, 0.00, 0.01, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('manuJodiako', 'registrationServices', 'Manu Jodiako::::मानु जोडिएको', 'x', 5, 5.00, 0.00, 0.01, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newOwnership', 'registrationServices', 'Register New Ownership::::जग्गा नामसारी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('removeDuplicate', 'registrationServices', 'Duplication Registration Removal::::दोहोरो दर्ता हटाइएको', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('afterDeathWilling', 'registrationServices', 'After Death Willingness Letter::::शेष पछिको बकसपत्र', 'c', 5, 5.00, 0.01, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('shresthaAdhyabadhik', 'registrationServices', 'Shresta Adhyabadhik::::श्रेष्ता अध्यावधिक', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('guthiRaitani', 'registrationServices', 'Guthi Raitani Numberi::::गुठि रैतानी नम्बरी', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownerCancellation', 'registrationServices', 'Ownership Registration Cancellation::::मोही दाखिल खारेज', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('chakalaBandhi', 'registrationServices', 'Chakala Bandhi::::चकला बन्धी', 'x', 5, 5.00, 0.00, 0.02, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newApartment', 'registrationServices', 'Building Development::::बिकसित घडेरी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('stayCurrent', 'registrationServices', 'Validate Current Condition::::हा. सा.', 'x', 5, 0.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('lakhaBandhaki', 'registrationServices', 'Lakha Bandhaki::::लख बन्धकी', 'c', 5, 50.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('distriBandhaki', 'registrationServices', 'Dristi Bandahaki::::दृषटी बन्धकी', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('agreement', 'registrationServices', 'Aggrement::::मिला पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('donationLetter', 'registrationServices', 'Donation Letter:::: दान पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('rightReceived', 'registrationServices', 'Right Receiving Recipt::::अंश बुझेको भरपाई', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('threeGeneration', 'registrationServices', 'Three Generation Donation Letter::::तिनपुस्ते बकस पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('decisionBased', 'registrationServices', 'Decision Letter::::निर्णय अनुसार', 'c', 5, 5.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('memoBased', 'registrationServices', 'Memo Based::::टिप्पणी अनुसार', 'c', 5, 0.00, 0.00, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('cancelProperty', 'registrationServices', 'Registration Cancellation::::दर्ता फारी', 'c', 5, 5, 0, 0, 1, '');
+
+
+
+--Table application.request_category_type ----
+DROP TABLE IF EXISTS application.request_category_type CASCADE;
+CREATE TABLE application.request_category_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT request_category_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT request_category_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.request_category_type -- 
+insert into application.request_category_type(code, display_value, status) values('registrationServices', 'Registration Services::::Registration Services', 'c');
+insert into application.request_category_type(code, display_value, status) values('informationServices', 'Information Services::::Information Services', 'c');
+
+
+
+--Table administrative.rrr_type ----
+DROP TABLE IF EXISTS administrative.rrr_type CASCADE;
+CREATE TABLE administrative.rrr_type(
+    code varchar(20) NOT NULL,
+    rrr_group_type_code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    is_primary bool NOT NULL DEFAULT (false),
+    share_check bool NOT NULL,
+    party_required bool NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT rrr_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT rrr_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table administrative.rrr_type -- 
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('agriActivity', 'rights', 'Agriculture Activity::::Attivita Agricola', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('commonOwnership', 'ownership', 'Common Ownership::::Proprieta Comune', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('customaryType', 'rights', 'Customary Right::::Diritto Abituale', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('firewood', 'rights', 'Firewood Collection::::Collezione legna da ardere', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('fishing', 'rights', 'Fishing Right::::Diritto di Pesca', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('grazing', 'rights', 'Grazing Right::::Diritto di Pascolo', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('informalOccupation', 'rights', 'Informal Occupation::::Occupazione informale', false, false, false, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('lease', 'rights', 'Lease::::Affitto', false, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('occupation', 'rights', 'Occupation::::Occupazione', false, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownership', 'ownership', 'Ownership::::Proprieta', true, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownershipAssumed', 'rights', 'Ownership Assumed::::Proprieta Assunta', true, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('superficies', 'rights', 'Superficies::::Superficie', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('tenancy', 'rights', 'Tenancy::::Locazione', true, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('usufruct', 'rights', 'Usufruct::::Usufrutto', false, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterrights', 'rights', 'Water Right::::Servitu di Acqua', false, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('adminPublicServitude', 'restrictions', 'Administrative Public Servitude::::Servitu  Amministrazione Pubblica', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monument', 'restrictions', 'Monument::::Monumento', false, true, true, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('mortgage', 'restrictions', 'Mortgage::::Ipoteca', false, true, true, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('noBuilding', 'restrictions', 'Building Restriction::::Restrizione di Costruzione', false, false, false, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('servitude', 'restrictions', 'Servitude::::Servitu', false, false, false, 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monumentMaintenance', 'responsibilities', 'Monument Maintenance::::Mantenimento Monumenti', false, false, false, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterwayMaintenance', 'responsibilities', 'Waterway Maintenance::::Mantenimento Acqurdotti', false, false, false, 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('lifeEstate', 'rights', 'Life Estate::::Patrimonio vita', true, true, true, 'Extension to LADM', 'x');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('apartment', 'ownership', 'Apartment Ownership::::Proprieta Appartamento', true, true, true, 'Extension to LADM', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('stateOwnership', 'ownership', 'State Ownership::::Proprieta di Stato', true, false, false, 'Extension to LADM', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('caveat', 'restrictions', 'Caveat::::Ammonizione', false, true, true, 'Extension to LADM', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('historicPreservation', 'restrictions', 'Historic Preservation::::Conservazione Storica', false, false, false, 'Extension to LADM', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('limitedAccess', 'restrictions', 'Limited Access (to Road)::::Accesso limitato (su strada)', false, false, false, 'Extension to LADM', 'c');
+
+
+
+--Table administrative.rrr_group_type ----
+DROP TABLE IF EXISTS administrative.rrr_group_type CASCADE;
+CREATE TABLE administrative.rrr_group_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT rrr_group_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT rrr_group_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table administrative.rrr_group_type -- 
+insert into administrative.rrr_group_type(code, display_value, status) values('rights', 'Rights::::Diritti', 'c');
+insert into administrative.rrr_group_type(code, display_value, status) values('restrictions', 'Restrictions::::Restrizioni', 'c');
+insert into administrative.rrr_group_type(code, display_value, status) values('responsibilities', 'Responsibilities::::Responsabilita', 'x');
+insert into administrative.rrr_group_type(code, display_value, status) values('ownership', 'Ownership::::Ownership', 'c');
+
+
+
+--Table application.type_action ----
+DROP TABLE IF EXISTS application.type_action CASCADE;
+CREATE TABLE application.type_action(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT type_action_display_value_unique UNIQUE (display_value),
+    CONSTRAINT type_action_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.type_action -- 
+insert into application.type_action(code, display_value, status) values('new', 'New::::ITALIANO', 'c');
+insert into application.type_action(code, display_value, status) values('vary', 'Vary::::ITALIANO', 'c');
+insert into application.type_action(code, display_value, status) values('cancel', 'Cancel::::ITALIANO', 'c');
+
+
+
+--Table application.service_status_type ----
+DROP TABLE IF EXISTS application.service_status_type CASCADE;
+CREATE TABLE application.service_status_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT service_status_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT service_status_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.service_status_type -- 
+insert into application.service_status_type(code, display_value, status, description) values('lodged', 'Lodged::::रेजि्ष्टर', 'c', 'Application for a service has been lodged and officially received by land office::::La pratica per un servizio, registrata e formalmente ricevuta da ufficio territoriale');
+insert into application.service_status_type(code, display_value, status) values('completed', 'Completed::::पुर्ण', 'c');
+insert into application.service_status_type(code, display_value, status) values('pending', 'Pending::::बाकि', 'c');
+insert into application.service_status_type(code, display_value, status) values('cancelled', 'Cancelled::::खारेज', 'c');
+
+
+
+--Table application.service_action_type ----
+DROP TABLE IF EXISTS application.service_action_type CASCADE;
+CREATE TABLE application.service_action_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status_to_set varchar(20),
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT service_action_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT service_action_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table application.service_action_type -- 
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodge::::रेजि्ष्टर', 'lodged', 'c', 'Application for service(s) is officially received by land office (action is automatically logged when application is saved for the first time)::::La pratica per i servizi formalmente ricevuta da ufficio territoriale');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('start', 'Start::::सुरु', 'pending', 'c', 'Provisional RRR Changes Made to Database as a result of application (action is automatically logged when a change is made to a rrr object)::::Apportate Modifiche Provvisorie di tipo RRR al Database come risultato della pratica');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('cancel', 'Cancel::::खारेज', 'cancelled', 'c', 'Service is cancelled by Land Office (action is automatically logged when a service is cancelled)::::Pratica cancellata da Ufficio Territoriale');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('complete', 'Complete::::पुर्ण', 'completed', 'c', 'Application is ready for approval (action is automatically logged when service is marked as complete::::Pratica pronta per approvazione');
+insert into application.service_action_type(code, display_value, status_to_set, status, description) values('revert', 'Revert::::उल्टाउनु', 'pending', 'c', 'The status of the service has been reverted to pending from being completed (action is automatically logged when a service is reverted back for further work)::::ITALIANO');
+
+
+
+--Table transaction.transaction_status_type ----
+DROP TABLE IF EXISTS transaction.transaction_status_type CASCADE;
+CREATE TABLE transaction.transaction_status_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT transaction_status_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT transaction_status_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table transaction.transaction_status_type -- 
+insert into transaction.transaction_status_type(code, display_value, status) values('approved', 'Approved::::Approvata', 'c');
+insert into transaction.transaction_status_type(code, display_value, status) values('cancelled', 'CancelledApproved::::Cancellata', 'c');
+insert into transaction.transaction_status_type(code, display_value, status) values('pending', 'Pending::::In Attesa', 'c');
+insert into transaction.transaction_status_type(code, display_value, status) values('completed', 'Completed::::ITALIANO', 'c');
 
 
 
@@ -724,130 +1808,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON source.spatial_source_measurement FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table party.party ----
-DROP TABLE IF EXISTS party.party CASCADE;
-CREATE TABLE party.party(
-    id varchar(40) NOT NULL,
-    ext_id varchar(255),
-    type_code varchar(20) NOT NULL,
-    name varchar(255),
-    last_name varchar(50),
-    fathers_name varchar(50),
-    fathers_last_name varchar(50),
-    grandfather_name varchar(50),
-    grandfather_last_name varchar(50),
-    alias varchar(50),
-    gender_code varchar(20),
-    address_id varchar(40),
-    id_type_code varchar(20),
-    id_number varchar(20),
-    email varchar(50),
-    mobile varchar(15),
-    phone varchar(15),
-    fax varchar(15),
-    preferred_communication_code varchar(20),
-    date_of_birth date,
-    remarks varchar(200),
-    id_provider_office_code varchar(20),
-    id_issue_date date,
-    office_code varchar(20),
-    photo_id varchar(40),
-    left_finger_id varchar(40),
-    right_finger_id varchar(40),
-    signature_id varchar(40),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT party_id_is_present CHECK ((id_type_code is null and id_number is null) or ((id_type_code is not null and id_number is not null))),
-    CONSTRAINT party_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX party_index_on_rowidentifier ON party.party (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON party.party CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON party.party FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table party.party_historic used for the history of data of table party.party ---
-DROP TABLE IF EXISTS party.party_historic CASCADE;
-CREATE TABLE party.party_historic
-(
-    id varchar(40),
-    ext_id varchar(255),
-    type_code varchar(20),
-    name varchar(255),
-    last_name varchar(50),
-    fathers_name varchar(50),
-    fathers_last_name varchar(50),
-    grandfather_name varchar(50),
-    grandfather_last_name varchar(50),
-    alias varchar(50),
-    gender_code varchar(20),
-    address_id varchar(40),
-    id_type_code varchar(20),
-    id_number varchar(20),
-    email varchar(50),
-    mobile varchar(15),
-    phone varchar(15),
-    fax varchar(15),
-    preferred_communication_code varchar(20),
-    date_of_birth date,
-    remarks varchar(200),
-    id_provider_office_code varchar(20),
-    id_issue_date date,
-    office_code varchar(20),
-    photo_id varchar(40),
-    left_finger_id varchar(40),
-    right_finger_id varchar(40),
-    signature_id varchar(40),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX party_historic_index_on_rowidentifier ON party.party_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON party.party CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON party.party FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table party.party_type ----
-DROP TABLE IF EXISTS party.party_type CASCADE;
-CREATE TABLE party.party_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT party_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT party_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table party.party_type -- 
-insert into party.party_type(code, display_value, status) values('naturalPerson', 'Natural Person::::Persona Naturale', 'c');
-insert into party.party_type(code, display_value, status) values('nonNaturalPerson', 'Non-natural Person::::Persona Giuridica', 'c');
-insert into party.party_type(code, display_value, status) values('baunit', 'Basic Administrative Unit::::Unita Amministrativa di Base', 'c');
-insert into party.party_type(code, display_value) values('group', 'Group::::Gruppo');
-
-
-
 --Table party.group_party ----
 DROP TABLE IF EXISTS party.group_party CASCADE;
 CREATE TABLE party.group_party(
@@ -969,6 +1929,90 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON party.party_member FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
+--Table party.party_role ----
+DROP TABLE IF EXISTS party.party_role CASCADE;
+CREATE TABLE party.party_role(
+    party_id varchar(40) NOT NULL,
+    type_code varchar(20) NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT party_role_pkey PRIMARY KEY (party_id,type_code)
+);
+
+
+CREATE INDEX party_role_index_on_rowidentifier ON party.party_role (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON party.party_role CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON party.party_role FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table party.party_role_historic used for the history of data of table party.party_role ---
+DROP TABLE IF EXISTS party.party_role_historic CASCADE;
+CREATE TABLE party.party_role_historic
+(
+    party_id varchar(40),
+    type_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX party_role_historic_index_on_rowidentifier ON party.party_role_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON party.party_role CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON party.party_role FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table party.party_role_type ----
+DROP TABLE IF EXISTS party.party_role_type CASCADE;
+CREATE TABLE party.party_role_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    status char(1) NOT NULL DEFAULT ('t'),
+    description varchar(555),
+
+    -- Internal constraints
+    
+    CONSTRAINT party_role_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT party_role_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table party.party_role_type -- 
+insert into party.party_role_type(code, display_value, status) values('conveyor', 'Conveyor::::Trasportatore', 'x');
+insert into party.party_role_type(code, display_value, status) values('notary', 'Notary::::Notaio', 'c');
+insert into party.party_role_type(code, display_value, status) values('writer', 'Writer::::Autore', 'x');
+insert into party.party_role_type(code, display_value, status) values('surveyor', 'Surveyor::::Perito', 'x');
+insert into party.party_role_type(code, display_value, status) values('certifiedSurveyor', 'Licenced Surveyor::::Perito con Licenza', 'c');
+insert into party.party_role_type(code, display_value, status) values('bank', 'Bank::::Banca', 'c');
+insert into party.party_role_type(code, display_value, status) values('moneyProvider', 'Money Provider::::Istituto Credito', 'c');
+insert into party.party_role_type(code, display_value, status) values('employee', 'Employee::::Impiegato', 'x');
+insert into party.party_role_type(code, display_value, status) values('farmer', 'Farmer::::Contadino', 'x');
+insert into party.party_role_type(code, display_value, status) values('citizen', 'Citizen::::Cittadino', 'c');
+insert into party.party_role_type(code, display_value, status) values('stateAdministrator', 'Registrar / Approving Surveyor::::Cancelleriere/ Perito Approvatore/', 'c');
+insert into party.party_role_type(code, display_value, status, description) values('landOfficer', 'Land Officer::::Ufficiale del Registro Territoriale', 'c', 'Extension to LADM');
+insert into party.party_role_type(code, display_value, status, description) values('lodgingAgent', 'Lodging Agent::::Richiedente Registrazione', 'c', 'Extension to LADM');
+insert into party.party_role_type(code, display_value, status, description) values('powerOfAttorney', 'Power of Attorney::::Procuratore', 'c', 'Extension to LADM');
+insert into party.party_role_type(code, display_value, status, description) values('transferee', 'Transferee (to)::::Avente Causa', 'c', 'Extension to LADM');
+insert into party.party_role_type(code, display_value, status, description) values('transferor', 'Transferor (from)::::Dante Causa', 'c', 'Extension to LADM');
+insert into party.party_role_type(code, display_value, status, description) values('applicant', 'Applicant', 'c', 'Extension to LADM');
+
+
+
 --Table administrative.ba_unit ----
 DROP TABLE IF EXISTS administrative.ba_unit CASCADE;
 CREATE TABLE administrative.ba_unit(
@@ -1058,6 +2102,486 @@ insert into administrative.ba_unit_type(code, display_value, description, status
 
 
 
+--Table cadastre.cadastre_object ----
+DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
+CREATE TABLE cadastre.cadastre_object(
+    id varchar(40) NOT NULL,
+    type_code varchar(20) NOT NULL DEFAULT ('parcel'),
+    map_sheet_id varchar(40),
+    building_unit_type_code varchar(20),
+    approval_datetime timestamp,
+    historic_datetime timestamp,
+    source_reference varchar(100),
+    name_firstpart varchar(20),
+    name_lastpart varchar(50),
+    status_code varchar(20) NOT NULL DEFAULT ('pending'),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    transaction_id varchar(40) NOT NULL,
+    parcel_no integer,
+    parcel_note varchar(255),
+    office_code varchar(20),
+    parcel_typecode varchar(20) NOT NULL,
+    land_usecode varchar(20),
+    land_classcode varchar(20),
+    guthi_namecode varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT cadastre_object_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX cadastre_object_index_on_rowidentifier ON cadastre.cadastre_object (rowidentifier);
+CREATE INDEX cadastre_object_index_on_geom_polygon ON cadastre.cadastre_object USING gist (geom_polygon);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON cadastre.cadastre_object FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table cadastre.cadastre_object_historic used for the history of data of table cadastre.cadastre_object ---
+DROP TABLE IF EXISTS cadastre.cadastre_object_historic CASCADE;
+CREATE TABLE cadastre.cadastre_object_historic
+(
+    id varchar(40),
+    type_code varchar(20),
+    map_sheet_id varchar(40),
+    building_unit_type_code varchar(20),
+    approval_datetime timestamp,
+    historic_datetime timestamp,
+    source_reference varchar(100),
+    name_firstpart varchar(20),
+    name_lastpart varchar(50),
+    status_code varchar(20),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    transaction_id varchar(40),
+    parcel_no integer,
+    parcel_note varchar(255),
+    office_code varchar(20),
+    parcel_typecode varchar(20),
+    land_usecode varchar(20),
+    land_classcode varchar(20),
+    guthi_namecode varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX cadastre_object_historic_index_on_rowidentifier ON cadastre.cadastre_object_historic (rowidentifier);
+CREATE INDEX cadastre_object_historic_index_on_geom_polygon ON cadastre.cadastre_object_historic USING gist (geom_polygon);
+
+
+DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON cadastre.cadastre_object FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table cadastre.spatial_unit ----
+DROP TABLE IF EXISTS cadastre.spatial_unit CASCADE;
+CREATE TABLE cadastre.spatial_unit(
+    id varchar(40) NOT NULL,
+    dimension_code varchar(20) NOT NULL DEFAULT ('2D'),
+    label varchar(255),
+    surface_relation_code varchar(20) NOT NULL DEFAULT ('onSurface'),
+    level_id varchar(40),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT spatial_unit_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX spatial_unit_index_on_rowidentifier ON cadastre.spatial_unit (rowidentifier);
+CREATE INDEX spatial_unit_index_on_reference_point ON cadastre.spatial_unit USING gist (reference_point);
+CREATE INDEX spatial_unit_index_on_geom ON cadastre.spatial_unit USING gist (geom);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.spatial_unit CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON cadastre.spatial_unit FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table cadastre.spatial_unit_historic used for the history of data of table cadastre.spatial_unit ---
+DROP TABLE IF EXISTS cadastre.spatial_unit_historic CASCADE;
+CREATE TABLE cadastre.spatial_unit_historic
+(
+    id varchar(40),
+    dimension_code varchar(20),
+    label varchar(255),
+    surface_relation_code varchar(20),
+    level_id varchar(40),
+    reference_point GEOMETRY,
+    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
+    
+            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
+    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX spatial_unit_historic_index_on_rowidentifier ON cadastre.spatial_unit_historic (rowidentifier);
+CREATE INDEX spatial_unit_historic_index_on_reference_point ON cadastre.spatial_unit_historic USING gist (reference_point);
+CREATE INDEX spatial_unit_historic_index_on_geom ON cadastre.spatial_unit_historic USING gist (geom);
+
+
+DROP TRIGGER IF EXISTS __track_history ON cadastre.spatial_unit CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON cadastre.spatial_unit FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table cadastre.dimension_type ----
+DROP TABLE IF EXISTS cadastre.dimension_type CASCADE;
+CREATE TABLE cadastre.dimension_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT dimension_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT dimension_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.dimension_type -- 
+insert into cadastre.dimension_type(code, display_value, status) values('0D', '0D::::0D', 'c');
+insert into cadastre.dimension_type(code, display_value, status) values('1D', '1D::::1D', 'c');
+insert into cadastre.dimension_type(code, display_value, status) values('2D', '2D::::sD', 'c');
+insert into cadastre.dimension_type(code, display_value, status) values('3D', '3D::::3D', 'c');
+insert into cadastre.dimension_type(code, display_value, status) values('liminal', 'Liminal', 'x');
+
+
+
+--Table cadastre.surface_relation_type ----
+DROP TABLE IF EXISTS cadastre.surface_relation_type CASCADE;
+CREATE TABLE cadastre.surface_relation_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT surface_relation_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT surface_relation_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.surface_relation_type -- 
+insert into cadastre.surface_relation_type(code, display_value, status) values('above', 'Above::::Sopra', 'x');
+insert into cadastre.surface_relation_type(code, display_value, status) values('below', 'Below::::Sotto', 'x');
+insert into cadastre.surface_relation_type(code, display_value, status) values('mixed', 'Mixed::::Misto', 'x');
+insert into cadastre.surface_relation_type(code, display_value, status) values('onSurface', 'On Surface::::Sulla Superficie', 'c');
+
+
+
+--Table cadastre.level ----
+DROP TABLE IF EXISTS cadastre.level CASCADE;
+CREATE TABLE cadastre.level(
+    id varchar(40) NOT NULL,
+    name varchar(50),
+    register_type_code varchar(20) NOT NULL,
+    structure_code varchar(20),
+    type_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT level_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX level_index_on_rowidentifier ON cadastre.level (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.level CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON cadastre.level FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table cadastre.level_historic used for the history of data of table cadastre.level ---
+DROP TABLE IF EXISTS cadastre.level_historic CASCADE;
+CREATE TABLE cadastre.level_historic
+(
+    id varchar(40),
+    name varchar(50),
+    register_type_code varchar(20),
+    structure_code varchar(20),
+    type_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX level_historic_index_on_rowidentifier ON cadastre.level_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON cadastre.level CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON cadastre.level FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table cadastre.register_type ----
+DROP TABLE IF EXISTS cadastre.register_type CASCADE;
+CREATE TABLE cadastre.register_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT register_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT register_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.register_type -- 
+insert into cadastre.register_type(code, display_value, status) values('all', 'All::::Tutti', 'c');
+insert into cadastre.register_type(code, display_value, status) values('forest', 'Forest::::Forestale', 'c');
+insert into cadastre.register_type(code, display_value, status) values('mining', 'Mining::::Minerario', 'c');
+insert into cadastre.register_type(code, display_value, status) values('publicSpace', 'Public Space::::Spazio Pubblico', 'c');
+insert into cadastre.register_type(code, display_value, status) values('rural', 'Rural::::Rurale', 'c');
+insert into cadastre.register_type(code, display_value, status) values('urban', 'Urban::::Urbano', 'c');
+
+
+
+--Table cadastre.structure_type ----
+DROP TABLE IF EXISTS cadastre.structure_type CASCADE;
+CREATE TABLE cadastre.structure_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT structure_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT structure_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.structure_type -- 
+insert into cadastre.structure_type(code, display_value, status) values('point', 'Point::::Punto', 'c');
+insert into cadastre.structure_type(code, display_value, status) values('polygon', 'Polygon::::Poligono', 'c');
+insert into cadastre.structure_type(code, display_value, status) values('sketch', 'Sketch::::Schizzo', 'c');
+insert into cadastre.structure_type(code, display_value, status) values('text', 'Text::::Testo', 'c');
+insert into cadastre.structure_type(code, display_value, status) values('topological', 'Topological::::Topologico', 'c');
+insert into cadastre.structure_type(code, display_value) values('unStructuredLine', 'UnstructuredLine::::LineanonDefinita');
+
+
+
+--Table cadastre.level_content_type ----
+DROP TABLE IF EXISTS cadastre.level_content_type CASCADE;
+CREATE TABLE cadastre.level_content_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT level_content_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT level_content_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.level_content_type -- 
+insert into cadastre.level_content_type(code, display_value, status) values('building', 'Building::::Costruzione', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('customary', 'Customary::::Consueto', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('informal', 'Informal::::Informale', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('mixed', 'Mixed::::Misto', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('network', 'Network::::Rete', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('primaryRight', 'Primary Right::::Diritto Primario', 'c');
+insert into cadastre.level_content_type(code, display_value, status) values('responsibility', 'Responsibility::::Responsabilita', 'x');
+insert into cadastre.level_content_type(code, display_value, status) values('restriction', 'Restriction::::Restrizione', 'c');
+insert into cadastre.level_content_type(code, display_value, description, status) values('geographicLocator', 'Geographic Locators::::Locatori Geografici', 'Extension to LADM', 'c');
+
+
+
+--Table cadastre.cadastre_object_type ----
+DROP TABLE IF EXISTS cadastre.cadastre_object_type CASCADE;
+CREATE TABLE cadastre.cadastre_object_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT cadastre_object_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT cadastre_object_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.cadastre_object_type -- 
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('parcel', 'Parcel::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('buildingUnit', 'Building Unit::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('utilityNetwork', 'Utility Network::::ITALIANO', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('segment', 'Segment::::Segment', '', 'c');
+insert into cadastre.cadastre_object_type(code, display_value, description, status) values('construction', 'Construction::Construction', '', 'c');
+
+
+
+--Table cadastre.building_unit_type ----
+DROP TABLE IF EXISTS cadastre.building_unit_type CASCADE;
+CREATE TABLE cadastre.building_unit_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL DEFAULT ('t'),
+
+    -- Internal constraints
+    
+    CONSTRAINT building_unit_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT building_unit_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table cadastre.building_unit_type -- 
+insert into cadastre.building_unit_type(code, display_value, status) values('individual', 'Individual::::Individuale', 'c');
+insert into cadastre.building_unit_type(code, display_value, status) values('shared', 'Shared::::Condiviso', 'c');
+
+
+
+--Table cadastre.map_sheet ----
+DROP TABLE IF EXISTS cadastre.map_sheet CASCADE;
+CREATE TABLE cadastre.map_sheet(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    map_number varchar(10) NOT NULL,
+    sheet_type integer,
+    office_code varchar(20),
+    srid integer NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT map_sheet_pkey PRIMARY KEY (id)
+);
+
+    
+ -- Data for the table cadastre.map_sheet -- 
+insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '010', 0, '7-25-003-001', 97260);
+
+
+
+--Table system.parcel_type ----
+DROP TABLE IF EXISTS system.parcel_type CASCADE;
+CREATE TABLE system.parcel_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT parcel_type_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.parcel_type -- 
+insert into system.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
+insert into system.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
+
+
+
+--Table system.land_use ----
+DROP TABLE IF EXISTS system.land_use CASCADE;
+CREATE TABLE system.land_use(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT land_use_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.land_class ----
+DROP TABLE IF EXISTS system.land_class CASCADE;
+CREATE TABLE system.land_class(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT land_class_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.guthi_name ----
+DROP TABLE IF EXISTS system.guthi_name CASCADE;
+CREATE TABLE system.guthi_name(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT guthi_name_pkey PRIMARY KEY (code)
+);
+
+    
 --Table administrative.rrr ----
 DROP TABLE IF EXISTS administrative.rrr CASCADE;
 CREATE TABLE administrative.rrr(
@@ -1156,80 +2680,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.rrr FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table administrative.rrr_group_type ----
-DROP TABLE IF EXISTS administrative.rrr_group_type CASCADE;
-CREATE TABLE administrative.rrr_group_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT rrr_group_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT rrr_group_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table administrative.rrr_group_type -- 
-insert into administrative.rrr_group_type(code, display_value, status) values('rights', 'Rights::::Diritti', 'c');
-insert into administrative.rrr_group_type(code, display_value, status) values('restrictions', 'Restrictions::::Restrizioni', 'c');
-insert into administrative.rrr_group_type(code, display_value, status) values('responsibilities', 'Responsibilities::::Responsabilita', 'x');
-insert into administrative.rrr_group_type(code, display_value, status) values('ownership', 'Ownership::::Ownership', 'c');
-
-
-
---Table administrative.rrr_type ----
-DROP TABLE IF EXISTS administrative.rrr_type CASCADE;
-CREATE TABLE administrative.rrr_type(
-    code varchar(20) NOT NULL,
-    rrr_group_type_code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    is_primary bool NOT NULL DEFAULT (false),
-    share_check bool NOT NULL,
-    party_required bool NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT rrr_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT rrr_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table administrative.rrr_type -- 
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('agriActivity', 'rights', 'Agriculture Activity::::Attivita Agricola', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('commonOwnership', 'ownership', 'Common Ownership::::Proprieta Comune', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('customaryType', 'rights', 'Customary Right::::Diritto Abituale', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('firewood', 'rights', 'Firewood Collection::::Collezione legna da ardere', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('fishing', 'rights', 'Fishing Right::::Diritto di Pesca', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('grazing', 'rights', 'Grazing Right::::Diritto di Pascolo', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('informalOccupation', 'rights', 'Informal Occupation::::Occupazione informale', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('lease', 'rights', 'Lease::::Affitto', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('occupation', 'rights', 'Occupation::::Occupazione', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownership', 'ownership', 'Ownership::::Proprieta', true, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownershipAssumed', 'rights', 'Ownership Assumed::::Proprieta Assunta', true, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('superficies', 'rights', 'Superficies::::Superficie', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('tenancy', 'rights', 'Tenancy::::Locazione', true, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('usufruct', 'rights', 'Usufruct::::Usufrutto', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterrights', 'rights', 'Water Right::::Servitu di Acqua', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('adminPublicServitude', 'restrictions', 'Administrative Public Servitude::::Servitu  Amministrazione Pubblica', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monument', 'restrictions', 'Monument::::Monumento', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('mortgage', 'restrictions', 'Mortgage::::Ipoteca', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('noBuilding', 'restrictions', 'Building Restriction::::Restrizione di Costruzione', false, false, false, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('servitude', 'restrictions', 'Servitude::::Servitu', false, false, false, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monumentMaintenance', 'responsibilities', 'Monument Maintenance::::Mantenimento Monumenti', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterwayMaintenance', 'responsibilities', 'Waterway Maintenance::::Mantenimento Acqurdotti', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('lifeEstate', 'rights', 'Life Estate::::Patrimonio vita', true, true, true, 'Extension to LADM', 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('apartment', 'ownership', 'Apartment Ownership::::Proprieta Appartamento', true, true, true, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('stateOwnership', 'ownership', 'State Ownership::::Proprieta di Stato', true, false, false, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('caveat', 'restrictions', 'Caveat::::Ammonizione', false, true, true, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('historicPreservation', 'restrictions', 'Historic Preservation::::Conservazione Storica', false, false, false, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('limitedAccess', 'restrictions', 'Limited Access (to Road)::::Accesso limitato (su strada)', false, false, false, 'Extension to LADM', 'c');
-
-
-
 --Table administrative.mortgage_type ----
 DROP TABLE IF EXISTS administrative.mortgage_type CASCADE;
 CREATE TABLE administrative.mortgage_type(
@@ -1252,6 +2702,191 @@ insert into administrative.mortgage_type(code, display_value, status) values('mi
 
 
 
+--Table administrative.loc ----
+DROP TABLE IF EXISTS administrative.loc CASCADE;
+CREATE TABLE administrative.loc(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    moth_id varchar(40) NOT NULL,
+    pana_no varchar(15),
+    tmp_pana_no varchar(15),
+    status_code varchar(20),
+    office_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT loc_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX loc_index_on_rowidentifier ON administrative.loc (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON administrative.loc CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON administrative.loc FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table administrative.loc_historic used for the history of data of table administrative.loc ---
+DROP TABLE IF EXISTS administrative.loc_historic CASCADE;
+CREATE TABLE administrative.loc_historic
+(
+    id varchar(40),
+    moth_id varchar(40),
+    pana_no varchar(15),
+    tmp_pana_no varchar(15),
+    status_code varchar(20),
+    office_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX loc_historic_index_on_rowidentifier ON administrative.loc_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON administrative.loc CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON administrative.loc FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table administrative.moth ----
+DROP TABLE IF EXISTS administrative.moth CASCADE;
+CREATE TABLE administrative.moth(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    mothluj_no varchar(15),
+    vdc_code varchar(20) NOT NULL,
+    moth_luj varchar(2),
+    financial_year varchar(20),
+    status_code varchar(20),
+    office_code varchar(20),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT moth_pkey PRIMARY KEY (id)
+);
+
+
+CREATE INDEX moth_index_on_rowidentifier ON administrative.moth (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON administrative.moth CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON administrative.moth FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table administrative.moth_historic used for the history of data of table administrative.moth ---
+DROP TABLE IF EXISTS administrative.moth_historic CASCADE;
+CREATE TABLE administrative.moth_historic
+(
+    id varchar(40),
+    mothluj_no varchar(15),
+    vdc_code varchar(20),
+    moth_luj varchar(2),
+    financial_year varchar(20),
+    status_code varchar(20),
+    office_code varchar(20),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX moth_historic_index_on_rowidentifier ON administrative.moth_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON administrative.moth CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON administrative.moth FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table system.restriction_office ----
+DROP TABLE IF EXISTS system.restriction_office CASCADE;
+CREATE TABLE system.restriction_office(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_office_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.restriction_office -- 
+insert into system.restriction_office(code, display_value, status) values('1', 'Household and Development', 'c');
+insert into system.restriction_office(code, display_value, status) values('2', 'Development Credit Bank', 'c');
+insert into system.restriction_office(code, display_value, status) values('3', 'Ramesh Kumar Sainju', 'c');
+
+
+
+--Table system.restriction_reason ----
+DROP TABLE IF EXISTS system.restriction_reason CASCADE;
+CREATE TABLE system.restriction_reason(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_reason_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table system.restriction_reason -- 
+insert into system.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
+insert into system.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
+insert into system.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
+insert into system.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
+
+
+
+--Table system.ownership_type ----
+DROP TABLE IF EXISTS system.ownership_type CASCADE;
+CREATE TABLE system.ownership_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT ownership_type_pkey PRIMARY KEY (code)
+);
+
+    
+--Table system.share_type ----
+DROP TABLE IF EXISTS system.share_type CASCADE;
+CREATE TABLE system.share_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT share_type_pkey PRIMARY KEY (code)
+);
+
+    
 --Table administrative.mortgage_isbased_in_rrr ----
 DROP TABLE IF EXISTS administrative.mortgage_isbased_in_rrr CASCADE;
 CREATE TABLE administrative.mortgage_isbased_in_rrr(
@@ -1446,23 +3081,43 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON administrative.required_relationship_baunit FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table cadastre.spatial_unit ----
-DROP TABLE IF EXISTS cadastre.spatial_unit CASCADE;
-CREATE TABLE cadastre.spatial_unit(
+--Table administrative.ba_unit_rel_type ----
+DROP TABLE IF EXISTS administrative.ba_unit_rel_type CASCADE;
+CREATE TABLE administrative.ba_unit_rel_type(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT ba_unit_rel_type_display_value_unique UNIQUE (display_value),
+    CONSTRAINT ba_unit_rel_type_pkey PRIMARY KEY (code)
+);
+
+    
+--Table administrative.ba_unit_as_party ----
+DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
+CREATE TABLE administrative.ba_unit_as_party(
+    ba_unit_id varchar(40) NOT NULL,
+    party_id varchar(40) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT ba_unit_as_party_pkey PRIMARY KEY (ba_unit_id,party_id)
+);
+
+    
+--Table administrative.notation ----
+DROP TABLE IF EXISTS administrative.notation CASCADE;
+CREATE TABLE administrative.notation(
     id varchar(40) NOT NULL,
-    dimension_code varchar(20) NOT NULL DEFAULT ('2D'),
-    label varchar(255),
-    surface_relation_code varchar(20) NOT NULL DEFAULT ('onSurface'),
-    level_id varchar(40),
-    reference_point GEOMETRY,
-    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-    
-            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
-    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    ba_unit_id varchar(40),
+    rrr_id varchar(40),
+    transaction_id varchar(40) NOT NULL,
+    reference_nr varchar(15) NOT NULL,
+    notation_text varchar(1000),
+    status_code varchar(20) NOT NULL DEFAULT ('pending'),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1471,39 +3126,30 @@ CREATE TABLE cadastre.spatial_unit(
 
     -- Internal constraints
     
-    CONSTRAINT spatial_unit_pkey PRIMARY KEY (id)
+    CONSTRAINT notation_pkey PRIMARY KEY (id)
 );
 
 
-CREATE INDEX spatial_unit_index_on_rowidentifier ON cadastre.spatial_unit (rowidentifier);
-CREATE INDEX spatial_unit_index_on_reference_point ON cadastre.spatial_unit USING gist (reference_point);
-CREATE INDEX spatial_unit_index_on_geom ON cadastre.spatial_unit USING gist (geom);
+CREATE INDEX notation_index_on_rowidentifier ON administrative.notation (rowidentifier);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.spatial_unit CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON administrative.notation CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.spatial_unit FOR EACH ROW
+   ON administrative.notation FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table cadastre.spatial_unit_historic used for the history of data of table cadastre.spatial_unit ---
-DROP TABLE IF EXISTS cadastre.spatial_unit_historic CASCADE;
-CREATE TABLE cadastre.spatial_unit_historic
+----Table administrative.notation_historic used for the history of data of table administrative.notation ---
+DROP TABLE IF EXISTS administrative.notation_historic CASCADE;
+CREATE TABLE administrative.notation_historic
 (
     id varchar(40),
-    dimension_code varchar(20),
-    label varchar(255),
-    surface_relation_code varchar(20),
-    level_id varchar(40),
-    reference_point GEOMETRY,
-    CONSTRAINT enforce_dims_reference_point CHECK (st_ndims(reference_point) = 2),
-    
-            CONSTRAINT enforce_srid_reference_point CHECK (st_srid(reference_point) = 97261),
-    CONSTRAINT enforce_geotype_reference_point CHECK (geometrytype(reference_point) = 'POINT'::text OR reference_point IS NULL),
-    geom GEOMETRY,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    ba_unit_id varchar(40),
+    rrr_id varchar(40),
+    transaction_id varchar(40),
+    reference_nr varchar(15),
+    notation_text varchar(1000),
+    status_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1512,14 +3158,162 @@ CREATE TABLE cadastre.spatial_unit_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX spatial_unit_historic_index_on_rowidentifier ON cadastre.spatial_unit_historic (rowidentifier);
-CREATE INDEX spatial_unit_historic_index_on_reference_point ON cadastre.spatial_unit_historic USING gist (reference_point);
-CREATE INDEX spatial_unit_historic_index_on_geom ON cadastre.spatial_unit_historic USING gist (geom);
+CREATE INDEX notation_historic_index_on_rowidentifier ON administrative.notation_historic (rowidentifier);
 
 
-DROP TRIGGER IF EXISTS __track_history ON cadastre.spatial_unit CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON administrative.notation CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.spatial_unit FOR EACH ROW
+   ON administrative.notation FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table administrative.rrr_share ----
+DROP TABLE IF EXISTS administrative.rrr_share CASCADE;
+CREATE TABLE administrative.rrr_share(
+    rrr_id varchar(40) NOT NULL,
+    id varchar(40) NOT NULL,
+    nominator smallint NOT NULL,
+    denominator smallint NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT rrr_share_pkey PRIMARY KEY (rrr_id,id)
+);
+
+
+CREATE INDEX rrr_share_index_on_rowidentifier ON administrative.rrr_share (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON administrative.rrr_share CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON administrative.rrr_share FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table administrative.rrr_share_historic used for the history of data of table administrative.rrr_share ---
+DROP TABLE IF EXISTS administrative.rrr_share_historic CASCADE;
+CREATE TABLE administrative.rrr_share_historic
+(
+    rrr_id varchar(40),
+    id varchar(40),
+    nominator smallint,
+    denominator smallint,
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX rrr_share_historic_index_on_rowidentifier ON administrative.rrr_share_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON administrative.rrr_share CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON administrative.rrr_share FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table administrative.party_for_rrr ----
+DROP TABLE IF EXISTS administrative.party_for_rrr CASCADE;
+CREATE TABLE administrative.party_for_rrr(
+    rrr_id varchar(40) NOT NULL,
+    party_id varchar(40) NOT NULL,
+    share_id varchar(40),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT party_for_rrr_pkey PRIMARY KEY (rrr_id,party_id)
+);
+
+
+CREATE INDEX party_for_rrr_index_on_rowidentifier ON administrative.party_for_rrr (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON administrative.party_for_rrr CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON administrative.party_for_rrr FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table administrative.party_for_rrr_historic used for the history of data of table administrative.party_for_rrr ---
+DROP TABLE IF EXISTS administrative.party_for_rrr_historic CASCADE;
+CREATE TABLE administrative.party_for_rrr_historic
+(
+    rrr_id varchar(40),
+    party_id varchar(40),
+    share_id varchar(40),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX party_for_rrr_historic_index_on_rowidentifier ON administrative.party_for_rrr_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON administrative.party_for_rrr CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON administrative.party_for_rrr FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table administrative.ba_unit_target ----
+DROP TABLE IF EXISTS administrative.ba_unit_target CASCADE;
+CREATE TABLE administrative.ba_unit_target(
+    ba_unit_id varchar(40) NOT NULL,
+    transaction_id varchar(40) NOT NULL,
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
+
+    -- Internal constraints
+    
+    CONSTRAINT ba_unit_target_pkey PRIMARY KEY (ba_unit_id,transaction_id)
+);
+
+
+CREATE INDEX ba_unit_target_index_on_rowidentifier ON administrative.ba_unit_target (rowidentifier);
+
+    
+DROP TRIGGER IF EXISTS __track_changes ON administrative.ba_unit_target CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON administrative.ba_unit_target FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table administrative.ba_unit_target_historic used for the history of data of table administrative.ba_unit_target ---
+DROP TABLE IF EXISTS administrative.ba_unit_target_historic CASCADE;
+CREATE TABLE administrative.ba_unit_target_historic
+(
+    ba_unit_id varchar(40),
+    transaction_id varchar(40),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX ba_unit_target_historic_index_on_rowidentifier ON administrative.ba_unit_target_historic (rowidentifier);
+
+
+DROP TRIGGER IF EXISTS __track_history ON administrative.ba_unit_target CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON administrative.ba_unit_target FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
 --Table cadastre.spatial_value_area ----
@@ -1643,161 +3437,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON cadastre.spatial_unit_address FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table cadastre.surface_relation_type ----
-DROP TABLE IF EXISTS cadastre.surface_relation_type CASCADE;
-CREATE TABLE cadastre.surface_relation_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT surface_relation_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT surface_relation_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.surface_relation_type -- 
-insert into cadastre.surface_relation_type(code, display_value, status) values('above', 'Above::::Sopra', 'x');
-insert into cadastre.surface_relation_type(code, display_value, status) values('below', 'Below::::Sotto', 'x');
-insert into cadastre.surface_relation_type(code, display_value, status) values('mixed', 'Mixed::::Misto', 'x');
-insert into cadastre.surface_relation_type(code, display_value, status) values('onSurface', 'On Surface::::Sulla Superficie', 'c');
-
-
-
---Table cadastre.level ----
-DROP TABLE IF EXISTS cadastre.level CASCADE;
-CREATE TABLE cadastre.level(
-    id varchar(40) NOT NULL,
-    name varchar(50),
-    register_type_code varchar(20) NOT NULL,
-    structure_code varchar(20),
-    type_code varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT level_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX level_index_on_rowidentifier ON cadastre.level (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.level CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.level FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table cadastre.level_historic used for the history of data of table cadastre.level ---
-DROP TABLE IF EXISTS cadastre.level_historic CASCADE;
-CREATE TABLE cadastre.level_historic
-(
-    id varchar(40),
-    name varchar(50),
-    register_type_code varchar(20),
-    structure_code varchar(20),
-    type_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX level_historic_index_on_rowidentifier ON cadastre.level_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON cadastre.level CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.level FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table cadastre.register_type ----
-DROP TABLE IF EXISTS cadastre.register_type CASCADE;
-CREATE TABLE cadastre.register_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT register_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT register_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.register_type -- 
-insert into cadastre.register_type(code, display_value, status) values('all', 'All::::Tutti', 'c');
-insert into cadastre.register_type(code, display_value, status) values('forest', 'Forest::::Forestale', 'c');
-insert into cadastre.register_type(code, display_value, status) values('mining', 'Mining::::Minerario', 'c');
-insert into cadastre.register_type(code, display_value, status) values('publicSpace', 'Public Space::::Spazio Pubblico', 'c');
-insert into cadastre.register_type(code, display_value, status) values('rural', 'Rural::::Rurale', 'c');
-insert into cadastre.register_type(code, display_value, status) values('urban', 'Urban::::Urbano', 'c');
-
-
-
---Table cadastre.structure_type ----
-DROP TABLE IF EXISTS cadastre.structure_type CASCADE;
-CREATE TABLE cadastre.structure_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT structure_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT structure_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.structure_type -- 
-insert into cadastre.structure_type(code, display_value, status) values('point', 'Point::::Punto', 'c');
-insert into cadastre.structure_type(code, display_value, status) values('polygon', 'Polygon::::Poligono', 'c');
-insert into cadastre.structure_type(code, display_value, status) values('sketch', 'Sketch::::Schizzo', 'c');
-insert into cadastre.structure_type(code, display_value, status) values('text', 'Text::::Testo', 'c');
-insert into cadastre.structure_type(code, display_value, status) values('topological', 'Topological::::Topologico', 'c');
-insert into cadastre.structure_type(code, display_value) values('unStructuredLine', 'UnstructuredLine::::LineanonDefinita');
-
-
-
---Table cadastre.level_content_type ----
-DROP TABLE IF EXISTS cadastre.level_content_type CASCADE;
-CREATE TABLE cadastre.level_content_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT level_content_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT level_content_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.level_content_type -- 
-insert into cadastre.level_content_type(code, display_value, status) values('building', 'Building::::Costruzione', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('customary', 'Customary::::Consueto', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('informal', 'Informal::::Informale', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('mixed', 'Mixed::::Misto', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('network', 'Network::::Rete', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('primaryRight', 'Primary Right::::Diritto Primario', 'c');
-insert into cadastre.level_content_type(code, display_value, status) values('responsibility', 'Responsibility::::Responsabilita', 'x');
-insert into cadastre.level_content_type(code, display_value, status) values('restriction', 'Restriction::::Restrizione', 'c');
-insert into cadastre.level_content_type(code, display_value, description, status) values('geographicLocator', 'Geographic Locators::::Locatori Geografici', 'Extension to LADM', 'c');
-
-
-
 --Table cadastre.spatial_unit_group ----
 DROP TABLE IF EXISTS cadastre.spatial_unit_group CASCADE;
 CREATE TABLE cadastre.spatial_unit_group(
@@ -1986,27 +3625,6 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
    ON cadastre.legal_space_utility_network FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table cadastre.building_unit_type ----
-DROP TABLE IF EXISTS cadastre.building_unit_type CASCADE;
-CREATE TABLE cadastre.building_unit_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT building_unit_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT building_unit_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.building_unit_type -- 
-insert into cadastre.building_unit_type(code, display_value, status) values('individual', 'Individual::::Individuale', 'c');
-insert into cadastre.building_unit_type(code, display_value, status) values('shared', 'Shared::::Condiviso', 'c');
-
-
-
 --Table cadastre.utility_network_status_type ----
 DROP TABLE IF EXISTS cadastre.utility_network_status_type CASCADE;
 CREATE TABLE cadastre.utility_network_status_type(
@@ -2055,31 +3673,17 @@ insert into cadastre.utility_network_type(code, display_value, status) values('w
 
 
 
---Table application.application ----
-DROP TABLE IF EXISTS application.application CASCADE;
-CREATE TABLE application.application(
-    id varchar(40) NOT NULL,
-    nr varchar(15) NOT NULL,
-    agent_id varchar(40),
-    contact_person_id varchar(40) NOT NULL,
-    lodging_datetime timestamp NOT NULL DEFAULT (now()),
-    expected_completion_date date NOT NULL DEFAULT (now()),
-    assignee_id varchar(40),
-    assigned_datetime timestamp,
-    location GEOMETRY,
-    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+--Table cadastre.cadastre_object_target ----
+DROP TABLE IF EXISTS cadastre.cadastre_object_target CASCADE;
+CREATE TABLE cadastre.cadastre_object_target(
+    transaction_id varchar(40) NOT NULL,
+    cadastre_object_id varchar(40) NOT NULL,
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
     
-            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
-    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
-    services_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    tax numeric(20, 2) NOT NULL DEFAULT (0),
-    total_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    total_amount_paid numeric(20, 2) NOT NULL DEFAULT (0),
-    fee_paid bool NOT NULL DEFAULT (false),
-    action_code varchar(20) NOT NULL DEFAULT ('lodge'),
-    action_notes varchar(255),
-    status_code varchar(20) NOT NULL DEFAULT ('lodged'),
-    office_code varchar(20),
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
+    office_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2088,46 +3692,31 @@ CREATE TABLE application.application(
 
     -- Internal constraints
     
-    CONSTRAINT application_check_assigned CHECK ((assignee_id is null and assigned_datetime is null) or (assignee_id is not null and assigned_datetime is not null)),
-    CONSTRAINT application_pkey PRIMARY KEY (id)
+    CONSTRAINT cadastre_object_target_pkey PRIMARY KEY (transaction_id,cadastre_object_id)
 );
 
 
-CREATE INDEX application_index_on_rowidentifier ON application.application (rowidentifier);
-CREATE INDEX application_index_on_location ON application.application USING gist (location);
+CREATE INDEX cadastre_object_target_index_on_rowidentifier ON cadastre.cadastre_object_target (rowidentifier);
+CREATE INDEX cadastre_object_target_index_on_geom_polygon ON cadastre.cadastre_object_target USING gist (geom_polygon);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON application.application CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object_target CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON application.application FOR EACH ROW
+   ON cadastre.cadastre_object_target FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table application.application_historic used for the history of data of table application.application ---
-DROP TABLE IF EXISTS application.application_historic CASCADE;
-CREATE TABLE application.application_historic
+----Table cadastre.cadastre_object_target_historic used for the history of data of table cadastre.cadastre_object_target ---
+DROP TABLE IF EXISTS cadastre.cadastre_object_target_historic CASCADE;
+CREATE TABLE cadastre.cadastre_object_target_historic
 (
-    id varchar(40),
-    nr varchar(15),
-    agent_id varchar(40),
-    contact_person_id varchar(40),
-    lodging_datetime timestamp,
-    expected_completion_date date,
-    assignee_id varchar(40),
-    assigned_datetime timestamp,
-    location GEOMETRY,
-    CONSTRAINT enforce_dims_location CHECK (st_ndims(location) = 2),
+    transaction_id varchar(40),
+    cadastre_object_id varchar(40),
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
     
-            CONSTRAINT enforce_srid_location CHECK (st_srid(location) = 97261),
-    CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
-    services_fee numeric(20, 2),
-    tax numeric(20, 2),
-    total_fee numeric(20, 2),
-    total_amount_paid numeric(20, 2),
-    fee_paid bool,
-    action_code varchar(20),
-    action_notes varchar(255),
-    status_code varchar(20),
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
@@ -2137,114 +3726,31 @@ CREATE TABLE application.application_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX application_historic_index_on_rowidentifier ON application.application_historic (rowidentifier);
-CREATE INDEX application_historic_index_on_location ON application.application_historic USING gist (location);
+CREATE INDEX cadastre_object_target_historic_index_on_rowidentifier ON cadastre.cadastre_object_target_historic (rowidentifier);
+CREATE INDEX cadastre_object_target_historic_index_on_geom_polygon ON cadastre.cadastre_object_target_historic USING gist (geom_polygon);
 
 
-DROP TRIGGER IF EXISTS __track_history ON application.application CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object_target CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON application.application FOR EACH ROW
+   ON cadastre.cadastre_object_target FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table application.request_type ----
-DROP TABLE IF EXISTS application.request_type CASCADE;
-CREATE TABLE application.request_type(
-    code varchar(20) NOT NULL,
-    request_category_code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-    nr_days_to_complete integer NOT NULL DEFAULT (0),
-    base_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    area_base_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    value_base_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    nr_properties_required integer NOT NULL DEFAULT (0),
-    notation_template varchar(1000),
-    rrr_type_code varchar(20),
-    type_action_code varchar(20),
-
-    -- Internal constraints
-    
-    CONSTRAINT request_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT request_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.request_type -- 
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'registrationServices', 'Change to Cadastre::::किता काट्', 'c', 30, 25.00, 0.10, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('redefineCadastre', 'registrationServices', 'Redefine Cadastre::::किता संसोधन', 'c', 30, 25.00, 0.10, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('registrationDismiss', 'registrationServices', 'Registration Dismissal::::दाखिला खारेज', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('missingLandRegister', 'registrationServices', 'Missing Land Registration::::छुट जग्गा दर्ता', 'x', 1, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownershipClearance', 'registrationServices', 'Ownership Clearance::::हकसफि', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('Guthi', 'informationServices', 'Guthi::::गूठी', 'c', 1, 0.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnDeeds', 'registrationServices', 'Deed Registration::::लिखट रजिष्टेसन', 'x', 3, 1.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('resignation', 'registrationServices', 'Resignation::::राजिनामा', 'c', 5, 5.00, 0.00, 0.01, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnPowerOfAttorney', 'registrationServices', 'Willingness Letter::::बकस पत्र', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('propertyDivision', 'registrationServices', 'Property Division::::अंशवण्डा', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('exchange', 'informationServices', 'Exchange::::सट्टा पट्टा', 'x', 1, 5.00, 0.00, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('leaveNotice', 'informationServices', 'Leave Notice::::छोड पत्र', 'x', 1, 1.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('multipleOwner', 'registrationServices', 'Multiple Ownership Registration::::सगोलनामा', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('locMerging', 'registrationServices', 'LOC Merging::::श्रेष्ता एकिकरण', 'x', 1, 0.00, 0.10, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('oldSurvey', 'registrationServices', 'Old Survey::::पुरानो नापी', 'x', 5, 5.00, 0.10, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newSurvey', 'registrationServices', 'New Survey::::नयां नापी', 'c', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('manuJodiako', 'registrationServices', 'Manu Jodiako::::मानु जोडिएको', 'x', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newOwnership', 'registrationServices', 'Register New Ownership::::जग्गा नामसारी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('removeDuplicate', 'registrationServices', 'Duplication Registration Removal::::दोहोरो दर्ता हटाइएको', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('afterDeathWilling', 'registrationServices', 'After Death Willingness Letter::::शेष पछिको बकसपत्र', 'c', 5, 5.00, 0.01, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('shresthaAdhyabadhik', 'registrationServices', 'Shresta Adhyabadhik::::श्रेष्ता अध्यावधिक', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('guthiRaitani', 'registrationServices', 'Guthi Raitani Numberi::::गुठि रैतानी नम्बरी', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownerCancellation', 'registrationServices', 'Ownership Registration Cancellation::::मोही दाखिल खारेज', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('chakalaBandhi', 'registrationServices', 'Chakala Bandhi::::चकला बन्धी', 'x', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newApartment', 'registrationServices', 'Building Development::::बिकसित घडेरी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('stayCurrent', 'registrationServices', 'Validate Current Condition::::हा. सा.', 'x', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('lakhaBandhaki', 'registrationServices', 'Lakha Bandhaki::::लख बन्धकी', 'c', 5, 50.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('distriBandhaki', 'registrationServices', 'Dristi Bandahaki::::दृषटी बन्धकी', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('agreement', 'registrationServices', 'Aggrement::::मिला पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('donationLetter', 'registrationServices', 'Donation Letter:::: दान पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('rightReceived', 'registrationServices', 'Right Receiving Recipt::::अंश बुझेको भरपाई', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('threeGeneration', 'registrationServices', 'Three Generation Donation Letter::::तिनपुस्ते बकस पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('decisionBased', 'registrationServices', 'Decision Letter::::निर्णय अनुसार', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('memoBased', 'registrationServices', 'Memo Based::::टिप्पणी अनुसार', 'c', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('cancelProperty', 'registrationServices', 'Registration Cancellation::::दर्ता फारी', 'c', 5, 5, 0, 0, 1, '');
-
-
-
---Table application.request_category_type ----
-DROP TABLE IF EXISTS application.request_category_type CASCADE;
-CREATE TABLE application.request_category_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT request_category_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT request_category_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.request_category_type -- 
-insert into application.request_category_type(code, display_value, status) values('registrationServices', 'Registration Services::::Registration Services', 'c');
-insert into application.request_category_type(code, display_value, status) values('informationServices', 'Information Services::::Information Services', 'c');
-
-
-
---Table application.service ----
-DROP TABLE IF EXISTS application.service CASCADE;
-CREATE TABLE application.service(
+--Table cadastre.survey_point ----
+DROP TABLE IF EXISTS cadastre.survey_point CASCADE;
+CREATE TABLE cadastre.survey_point(
+    transaction_id varchar(40) NOT NULL,
     id varchar(40) NOT NULL,
-    application_id varchar(40),
-    request_type_code varchar(20) NOT NULL,
-    service_order integer NOT NULL DEFAULT (0),
-    lodging_datetime timestamp NOT NULL DEFAULT (now()),
-    expected_completion_date date NOT NULL,
-    status_code varchar(20) NOT NULL DEFAULT ('lodged'),
-    action_code varchar(20) NOT NULL DEFAULT ('lodge'),
-    action_notes varchar(255),
-    base_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    area_fee numeric(20, 2) NOT NULL DEFAULT (0),
-    value_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    boundary bool NOT NULL DEFAULT (true),
+    geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    original_geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
+    
+            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
+    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2253,35 +3759,38 @@ CREATE TABLE application.service(
 
     -- Internal constraints
     
-    CONSTRAINT service_pkey PRIMARY KEY (id)
+    CONSTRAINT survey_point_pkey PRIMARY KEY (transaction_id,id)
 );
 
 
-CREATE INDEX service_index_on_rowidentifier ON application.service (rowidentifier);
+CREATE INDEX survey_point_index_on_rowidentifier ON cadastre.survey_point (rowidentifier);
+CREATE INDEX survey_point_index_on_geom ON cadastre.survey_point USING gist (geom);
+CREATE INDEX survey_point_index_on_original_geom ON cadastre.survey_point USING gist (original_geom);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON application.service CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.survey_point CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON application.service FOR EACH ROW
+   ON cadastre.survey_point FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table application.service_historic used for the history of data of table application.service ---
-DROP TABLE IF EXISTS application.service_historic CASCADE;
-CREATE TABLE application.service_historic
+----Table cadastre.survey_point_historic used for the history of data of table cadastre.survey_point ---
+DROP TABLE IF EXISTS cadastre.survey_point_historic CASCADE;
+CREATE TABLE cadastre.survey_point_historic
 (
+    transaction_id varchar(40),
     id varchar(40),
-    application_id varchar(40),
-    request_type_code varchar(20),
-    service_order integer,
-    lodging_datetime timestamp,
-    expected_completion_date date,
-    status_code varchar(20),
-    action_code varchar(20),
-    action_notes varchar(255),
-    base_fee numeric(20, 2),
-    area_fee numeric(20, 2),
-    value_fee numeric(20, 2),
+    boundary bool,
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    original_geom GEOMETRY,
+    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
+    
+            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
+    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2290,19 +3799,21 @@ CREATE TABLE application.service_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX service_historic_index_on_rowidentifier ON application.service_historic (rowidentifier);
+CREATE INDEX survey_point_historic_index_on_rowidentifier ON cadastre.survey_point_historic (rowidentifier);
+CREATE INDEX survey_point_historic_index_on_geom ON cadastre.survey_point_historic USING gist (geom);
+CREATE INDEX survey_point_historic_index_on_original_geom ON cadastre.survey_point_historic USING gist (original_geom);
 
 
-DROP TRIGGER IF EXISTS __track_history ON application.service CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON cadastre.survey_point CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON application.service FOR EACH ROW
+   ON cadastre.survey_point FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table party.party_role ----
-DROP TABLE IF EXISTS party.party_role CASCADE;
-CREATE TABLE party.party_role(
-    party_id varchar(40) NOT NULL,
-    type_code varchar(20) NOT NULL,
+--Table transaction.transaction_source ----
+DROP TABLE IF EXISTS transaction.transaction_source CASCADE;
+CREATE TABLE transaction.transaction_source(
+    transaction_id varchar(40) NOT NULL,
+    source_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2311,25 +3822,25 @@ CREATE TABLE party.party_role(
 
     -- Internal constraints
     
-    CONSTRAINT party_role_pkey PRIMARY KEY (party_id,type_code)
+    CONSTRAINT transaction_source_pkey PRIMARY KEY (transaction_id,source_id)
 );
 
 
-CREATE INDEX party_role_index_on_rowidentifier ON party.party_role (rowidentifier);
+CREATE INDEX transaction_source_index_on_rowidentifier ON transaction.transaction_source (rowidentifier);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON party.party_role CASCADE;
+DROP TRIGGER IF EXISTS __track_changes ON transaction.transaction_source CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON party.party_role FOR EACH ROW
+   ON transaction.transaction_source FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_changes();
     
 
-----Table party.party_role_historic used for the history of data of table party.party_role ---
-DROP TABLE IF EXISTS party.party_role_historic CASCADE;
-CREATE TABLE party.party_role_historic
+----Table transaction.transaction_source_historic used for the history of data of table transaction.transaction_source ---
+DROP TABLE IF EXISTS transaction.transaction_source_historic CASCADE;
+CREATE TABLE transaction.transaction_source_historic
 (
-    party_id varchar(40),
-    type_code varchar(20),
+    transaction_id varchar(40),
+    source_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2338,409 +3849,248 @@ CREATE TABLE party.party_role_historic
     change_time_valid_until TIMESTAMP NOT NULL default NOW()
 );
 
-CREATE INDEX party_role_historic_index_on_rowidentifier ON party.party_role_historic (rowidentifier);
+CREATE INDEX transaction_source_historic_index_on_rowidentifier ON transaction.transaction_source_historic (rowidentifier);
 
 
-DROP TRIGGER IF EXISTS __track_history ON party.party_role CASCADE;
+DROP TRIGGER IF EXISTS __track_history ON transaction.transaction_source CASCADE;
 CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON party.party_role FOR EACH ROW
+   ON transaction.transaction_source FOR EACH ROW
    EXECUTE PROCEDURE f_for_trg_track_history();
     
---Table party.party_role_type ----
-DROP TABLE IF EXISTS party.party_role_type CASCADE;
-CREATE TABLE party.party_role_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
+--Table cadastre.cadastre_object_node_target ----
+DROP TABLE IF EXISTS cadastre.cadastre_object_node_target CASCADE;
+CREATE TABLE cadastre.cadastre_object_node_target(
+    transaction_id varchar(40) NOT NULL,
+    node_id varchar(40) NOT NULL,
+    geom GEOMETRY NOT NULL,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    rowversion integer NOT NULL DEFAULT (0),
+    change_action char(1) NOT NULL DEFAULT ('i'),
+    change_user varchar(50),
+    change_time timestamp NOT NULL DEFAULT (now()),
 
     -- Internal constraints
     
-    CONSTRAINT party_role_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT party_role_type_pkey PRIMARY KEY (code)
+    CONSTRAINT cadastre_object_node_target_pkey PRIMARY KEY (transaction_id,node_id)
 );
 
+
+CREATE INDEX cadastre_object_node_target_index_on_rowidentifier ON cadastre.cadastre_object_node_target (rowidentifier);
+CREATE INDEX cadastre_object_node_target_index_on_geom ON cadastre.cadastre_object_node_target USING gist (geom);
+
     
- -- Data for the table party.party_role_type -- 
-insert into party.party_role_type(code, display_value, status) values('conveyor', 'Conveyor::::Trasportatore', 'x');
-insert into party.party_role_type(code, display_value, status) values('notary', 'Notary::::Notaio', 'c');
-insert into party.party_role_type(code, display_value, status) values('writer', 'Writer::::Autore', 'x');
-insert into party.party_role_type(code, display_value, status) values('surveyor', 'Surveyor::::Perito', 'x');
-insert into party.party_role_type(code, display_value, status) values('certifiedSurveyor', 'Licenced Surveyor::::Perito con Licenza', 'c');
-insert into party.party_role_type(code, display_value, status) values('bank', 'Bank::::Banca', 'c');
-insert into party.party_role_type(code, display_value, status) values('moneyProvider', 'Money Provider::::Istituto Credito', 'c');
-insert into party.party_role_type(code, display_value, status) values('employee', 'Employee::::Impiegato', 'x');
-insert into party.party_role_type(code, display_value, status) values('farmer', 'Farmer::::Contadino', 'x');
-insert into party.party_role_type(code, display_value, status) values('citizen', 'Citizen::::Cittadino', 'c');
-insert into party.party_role_type(code, display_value, status) values('stateAdministrator', 'Registrar / Approving Surveyor::::Cancelleriere/ Perito Approvatore/', 'c');
-insert into party.party_role_type(code, display_value, status, description) values('landOfficer', 'Land Officer::::Ufficiale del Registro Territoriale', 'c', 'Extension to LADM');
-insert into party.party_role_type(code, display_value, status, description) values('lodgingAgent', 'Lodging Agent::::Richiedente Registrazione', 'c', 'Extension to LADM');
-insert into party.party_role_type(code, display_value, status, description) values('powerOfAttorney', 'Power of Attorney::::Procuratore', 'c', 'Extension to LADM');
-insert into party.party_role_type(code, display_value, status, description) values('transferee', 'Transferee (to)::::Avente Causa', 'c', 'Extension to LADM');
-insert into party.party_role_type(code, display_value, status, description) values('transferor', 'Transferor (from)::::Dante Causa', 'c', 'Extension to LADM');
-insert into party.party_role_type(code, display_value, status, description) values('applicant', 'Applicant', 'c', 'Extension to LADM');
+DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object_node_target CASCADE;
+CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
+   ON cadastre.cadastre_object_node_target FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_changes();
+    
+
+----Table cadastre.cadastre_object_node_target_historic used for the history of data of table cadastre.cadastre_object_node_target ---
+DROP TABLE IF EXISTS cadastre.cadastre_object_node_target_historic CASCADE;
+CREATE TABLE cadastre.cadastre_object_node_target_historic
+(
+    transaction_id varchar(40),
+    node_id varchar(40),
+    geom GEOMETRY,
+    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
+    
+            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
+    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
+    rowidentifier varchar(40),
+    rowversion integer,
+    change_action char(1),
+    change_user varchar(50),
+    change_time timestamp,
+    change_time_valid_until TIMESTAMP NOT NULL default NOW()
+);
+
+CREATE INDEX cadastre_object_node_target_historic_index_on_rowidentifier ON cadastre.cadastre_object_node_target_historic (rowidentifier);
+CREATE INDEX cadastre_object_node_target_historic_index_on_geom ON cadastre.cadastre_object_node_target_historic USING gist (geom);
 
 
-
---Table address.address ----
-DROP TABLE IF EXISTS address.address CASCADE;
-CREATE TABLE address.address(
+DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object_node_target CASCADE;
+CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
+   ON cadastre.cadastre_object_node_target FOR EACH ROW
+   EXECUTE PROCEDURE f_for_trg_track_history();
+    
+--Table cadastre.verticalParcel ----
+DROP TABLE IF EXISTS cadastre.verticalParcel CASCADE;
+CREATE TABLE cadastre.verticalParcel(
+    vid integer NOT NULL,
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
+    
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     id varchar(40) NOT NULL,
-    districtcode varchar(20),
-    vdc_code varchar(20) NOT NULL,
-    ward_no varchar(20),
-    street varchar(50),
-    description varchar(255),
-    ext_address_id varchar(40),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
+    height numeric(19, 3),
+    ownerId integer,
+    area numeric(29, 3),
 
     -- Internal constraints
     
-    CONSTRAINT address_pkey PRIMARY KEY (id)
+    CONSTRAINT verticalParcel_pkey PRIMARY KEY (vid,id)
 );
 
 
-CREATE INDEX address_index_on_rowidentifier ON address.address (rowidentifier);
+CREATE INDEX verticalParcel_index_on_geom_polygon ON cadastre.verticalParcel USING gist (geom_polygon);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON address.address CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON address.address FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
+--Table cadastre.construction ----
+DROP TABLE IF EXISTS cadastre.construction CASCADE;
+CREATE TABLE cadastre.construction(
+    cid integer NOT NULL,
+    geom_polygon GEOMETRY,
+    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
     
-
-----Table address.address_historic used for the history of data of table address.address ---
-DROP TABLE IF EXISTS address.address_historic CASCADE;
-CREATE TABLE address.address_historic
-(
-    id varchar(40),
-    districtcode varchar(20),
-    vdc_code varchar(20),
-    ward_no varchar(20),
-    street varchar(50),
-    description varchar(255),
-    ext_address_id varchar(40),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX address_historic_index_on_rowidentifier ON address.address_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON address.address CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON address.address FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table system.appuser ----
-DROP TABLE IF EXISTS system.appuser CASCADE;
-CREATE TABLE system.appuser(
+            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
+    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     id varchar(40) NOT NULL,
-    username varchar(40) NOT NULL,
-    first_name varchar(30) NOT NULL,
-    last_name varchar(30) NOT NULL,
-    passwd varchar(100) NOT NULL DEFAULT (uuid_generate_v1()),
-    active bool NOT NULL DEFAULT (true),
+    constype integer NOT NULL,
+    area numeric(29, 3),
+
+    -- Internal constraints
+    
+    CONSTRAINT construction_pkey PRIMARY KEY (cid,id)
+);
+
+
+CREATE INDEX construction_index_on_geom_polygon ON cadastre.construction USING gist (geom_polygon);
+
+    
+--Table cadastre.construction_type ----
+DROP TABLE IF EXISTS cadastre.construction_type CASCADE;
+CREATE TABLE cadastre.construction_type(
+    code integer NOT NULL,
     description varchar(255),
-    department_code varchar(20) NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
 
     -- Internal constraints
     
-    CONSTRAINT appuser_username_unique UNIQUE (username),
-    CONSTRAINT appuser_pkey PRIMARY KEY (id)
+    CONSTRAINT construction_type_pkey PRIMARY KEY (code)
 );
 
-
-CREATE INDEX appuser_index_on_rowidentifier ON system.appuser (rowidentifier);
-
     
-DROP TRIGGER IF EXISTS __track_changes ON system.appuser CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON system.appuser FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
+ -- Data for the table cadastre.construction_type -- 
+insert into cadastre.construction_type(code, description) values(0, 'Permanent Building::::Permanent Building');
+insert into cadastre.construction_type(code, description) values(10, 'Temporary Building::::Temporary Building');
+insert into cadastre.construction_type(code, description) values(20, 'Damaged Building::::Damaged Building');
+insert into cadastre.construction_type(code, description) values(30, 'Wall::::Wall');
+insert into cadastre.construction_type(code, description) values(40, 'Pond::::Pond');
+insert into cadastre.construction_type(code, description) values(50, 'Gate/Entrance::::Gate/Entrance');
+insert into cadastre.construction_type(code, description) values(60, 'Temple::::Temple');
+insert into cadastre.construction_type(code, description) values(150, 'Stupa::::Stupa');
 
-----Table system.appuser_historic used for the history of data of table system.appuser ---
-DROP TABLE IF EXISTS system.appuser_historic CASCADE;
-CREATE TABLE system.appuser_historic
-(
-    id varchar(40),
-    username varchar(40),
-    first_name varchar(30),
-    last_name varchar(30),
-    passwd varchar(100),
-    active bool,
+
+
+--Table cadastre.boundary_type ----
+DROP TABLE IF EXISTS cadastre.boundary_type CASCADE;
+CREATE TABLE cadastre.boundary_type(
+    code integer NOT NULL,
     description varchar(255),
-    department_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX appuser_historic_index_on_rowidentifier ON system.appuser_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON system.appuser CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON system.appuser FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
- -- Data for the table system.appuser -- 
-insert into system.appuser(id, username, first_name, last_name, passwd, active, department_code) values('test-id', 'test', 'Test', 'The BOSS', '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', true, 'Lalitpur-001');
-
-
-
---Table cadastre.dimension_type ----
-DROP TABLE IF EXISTS cadastre.dimension_type CASCADE;
-CREATE TABLE cadastre.dimension_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
 
     -- Internal constraints
     
-    CONSTRAINT dimension_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT dimension_type_pkey PRIMARY KEY (code)
+    CONSTRAINT boundary_type_pkey PRIMARY KEY (code)
 );
 
     
- -- Data for the table cadastre.dimension_type -- 
-insert into cadastre.dimension_type(code, display_value, status) values('0D', '0D::::0D', 'c');
-insert into cadastre.dimension_type(code, display_value, status) values('1D', '1D::::1D', 'c');
-insert into cadastre.dimension_type(code, display_value, status) values('2D', '2D::::sD', 'c');
-insert into cadastre.dimension_type(code, display_value, status) values('3D', '3D::::3D', 'c');
-insert into cadastre.dimension_type(code, display_value, status) values('liminal', 'Liminal', 'x');
+ -- Data for the table cadastre.boundary_type -- 
+insert into cadastre.boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.boundary_type(code, description) values(10, 'Building Foot Print::::Building Foot Print');
+insert into cadastre.boundary_type(code, description) values(20, 'Wall::::Wall');
+insert into cadastre.boundary_type(code, description) values(25, 'Shared Wall::::Shared Wall');
+insert into cadastre.boundary_type(code, description) values(30, 'Fence::::Fence');
+insert into cadastre.boundary_type(code, description) values(35, 'Shared Fence::::Shared Fence');
+insert into cadastre.boundary_type(code, description) values(40, 'Gate::::Gate');
+insert into cadastre.boundary_type(code, description) values(50, 'Line Canal::::Line Canal');
+insert into cadastre.boundary_type(code, description) values(52, 'Line Canal and Wall::::Line Canal and Wall');
+insert into cadastre.boundary_type(code, description) values(54, 'Line Canal and Fence::::Line Canal and Fence');
+insert into cadastre.boundary_type(code, description) values(58, 'Line Canal and Gate::::Line Canal and Gate');
 
 
 
---Table party.communication_type ----
-DROP TABLE IF EXISTS party.communication_type CASCADE;
-CREATE TABLE party.communication_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
+--Table cadastre.adminstrative_boundary_type ----
+DROP TABLE IF EXISTS cadastre.adminstrative_boundary_type CASCADE;
+CREATE TABLE cadastre.adminstrative_boundary_type(
+    code integer NOT NULL,
+    description varchar(255),
 
     -- Internal constraints
     
-    CONSTRAINT communication_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT communication_type_pkey PRIMARY KEY (code)
+    CONSTRAINT adminstrative_boundary_type_pkey PRIMARY KEY (code)
 );
 
     
- -- Data for the table party.communication_type -- 
-insert into party.communication_type(code, display_value, status) values('eMail', 'e-Mail::::E-mail', 'c');
-insert into party.communication_type(code, display_value, status) values('fax', 'Fax::::Fax', 'c');
-insert into party.communication_type(code, display_value, status) values('post', 'Post::::Posta', 'c');
-insert into party.communication_type(code, display_value, status) values('phone', 'Phone::::Telefono', 'c');
-insert into party.communication_type(code, display_value, status) values('courier', 'Courier::::Corriere', 'c');
+ -- Data for the table cadastre.adminstrative_boundary_type -- 
+insert into cadastre.adminstrative_boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.adminstrative_boundary_type(code, description) values(10, 'Ward::::Ward');
+insert into cadastre.adminstrative_boundary_type(code, description) values(20, 'VDC/Municipality::::VDC/Municipality');
+insert into cadastre.adminstrative_boundary_type(code, description) values(30, 'District::::District');
+insert into cadastre.adminstrative_boundary_type(code, description) values(40, 'Zone::::Zone');
+insert into cadastre.adminstrative_boundary_type(code, description) values(50, 'National::::National');
 
 
 
---Table source.presentation_form_type ----
-DROP TABLE IF EXISTS source.presentation_form_type CASCADE;
-CREATE TABLE source.presentation_form_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
+--Table cadastre.map_boundary_type ----
+DROP TABLE IF EXISTS cadastre.map_boundary_type CASCADE;
+CREATE TABLE cadastre.map_boundary_type(
+    code integer NOT NULL,
+    description varchar(255),
 
     -- Internal constraints
     
-    CONSTRAINT presentation_form_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT presentation_form_type_pkey PRIMARY KEY (code)
+    CONSTRAINT map_boundary_type_pkey PRIMARY KEY (code)
 );
 
     
- -- Data for the table source.presentation_form_type -- 
-insert into source.presentation_form_type(code, display_value, status) values('documentDigital', 'Digital Document::::Documento Digitale', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('documentHardcopy', 'Hardcopy Document::::Documento in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('imageDigital', 'Digital Image::::Immagine Digitale', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('imageHardcopy', 'Hardcopy Image::::Immagine in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('mapDigital', 'Digital Map::::Mappa Digitale', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('mapHardcopy', 'Hardcopy Map::::Mappa in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('modelDigital', 'Digital Model::::Modello Digitale'',', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('modelHarcopy', 'Hardcopy Model::::Modello in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('profileDigital', 'Digital Profile::::Profilo Digitale', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('profileHardcopy', 'Hardcopy Profile::::Profilo in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('tableDigital', 'Digital Table::::Tabella Digitale', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('tableHardcopy', 'Hardcopy Table::::Tabella in Hardcopy', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('videoDigital', 'Digital Video::::Video Digitale'',', 'c');
-insert into source.presentation_form_type(code, display_value, status) values('videoHardcopy', 'Hardcopy Video::::Video in Hardcopy', 'c');
+ -- Data for the table cadastre.map_boundary_type -- 
+insert into cadastre.map_boundary_type(code, description) values(0, 'None::::None');
+insert into cadastre.map_boundary_type(code, description) values(10, 'Grid Sheet::::Grid Sheet');
+insert into cadastre.map_boundary_type(code, description) values(20, 'Free Sheet::::Free Sheet');
 
 
 
---Table source.archive ----
-DROP TABLE IF EXISTS source.archive CASCADE;
-CREATE TABLE source.archive(
+--Table cadastre.segments ----
+DROP TABLE IF EXISTS cadastre.segments CASCADE;
+CREATE TABLE cadastre.segments(
+    sid integer NOT NULL,
+    segno integer,
+    the_geom GEOMETRY,
+    CONSTRAINT enforce_dims_the_geom CHECK (st_ndims(the_geom) = 2),
+    
+            CONSTRAINT enforce_srid_the_geom CHECK (st_srid(the_geom) = 97261),
+    CONSTRAINT enforce_geotype_the_geom CHECK (geometrytype(the_geom) = 'LINESTRING'::text OR the_geom IS NULL),
+    bound_type integer NOT NULL,
     id varchar(40) NOT NULL,
-    name varchar(50) NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
+    mbound_type integer NOT NULL,
+    abound_type integer NOT NULL,
+    shape_length numeric(19, 3),
 
     -- Internal constraints
     
-    CONSTRAINT archive_pkey PRIMARY KEY (id)
+    CONSTRAINT segments_pkey PRIMARY KEY (sid,id)
 );
 
 
-CREATE INDEX archive_index_on_rowidentifier ON source.archive (rowidentifier);
+CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geom);
 
     
-DROP TRIGGER IF EXISTS __track_changes ON source.archive CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON source.archive FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table source.archive_historic used for the history of data of table source.archive ---
-DROP TABLE IF EXISTS source.archive_historic CASCADE;
-CREATE TABLE source.archive_historic
-(
-    id varchar(40),
-    name varchar(50),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX archive_historic_index_on_rowidentifier ON source.archive_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON source.archive CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON source.archive FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table application.application_action_type ----
-DROP TABLE IF EXISTS application.application_action_type CASCADE;
-CREATE TABLE application.application_action_type(
+--Table system.alpha_code ----
+DROP TABLE IF EXISTS system.alpha_code CASCADE;
+CREATE TABLE system.alpha_code(
     code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status_to_set varchar(20),
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
+    alpha_char varchar(10),
 
     -- Internal constraints
     
-    CONSTRAINT application_action_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT application_action_type_pkey PRIMARY KEY (code)
+    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
 );
 
     
- -- Data for the table application.application_action_type -- 
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodgement Notice Prepared::::Ricevuta della Registrazione Preparata', 'lodged', 'c', 'Lodgement notice is prepared (action is automatically logged when application details are saved for the first time::::La ricevuta della registrazione pronta');
-insert into application.application_action_type(code, display_value, status, description) values('addDocument', 'Add document::::Documenti scannerizzati allegati alla pratica', 'c', 'Scanned Documents linked to Application (action is automatically logged when a new document is saved)::::Documenti scannerizzati allegati alla pratica');
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('withdraw', 'Withdraw application::::Pratica Ritirata', 'anulled', 'c', 'Application withdrawn by Applicant (action is manually logged)::::Pratica Ritirata dal Richiedente');
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('cancel', 'Cancel application::::Pratica cancellata', 'anulled', 'c', 'Application cancelled by Land Office (action is automatically logged when application is cancelled)::::Pratica cancellata da Ufficio Territoriale');
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('requisition', 'Requisition:::Ulteriori Informazioni domandate dal richiedente', 'requisitioned', 'c', 'Further information requested from applicant (action is manually logged)::::Ulteriori Informazioni domandate dal richiedente');
-insert into application.application_action_type(code, display_value, status, description) values('validateFailed', 'Quality Check Fails::::Controllo Qualita Fallito', 'c', 'Quality check fails (automatically logged when a critical business rule failure occurs)::::Controllo Qualita Fallito');
-insert into application.application_action_type(code, display_value, status, description) values('validatePassed', 'Quality Check Passes::::Controllo Qualita Superato', 'c', 'Quality check passes (automatically logged when business rules are run without any critical failures)::::Controllo Qualita Superato');
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('approve', 'Approve::::Approvata', 'approved', 'c', 'Application is approved (automatically logged when application is approved successively)::::Pratica approvata');
-insert into application.application_action_type(code, display_value, status_to_set, status, description) values('archive', 'Archive::::Archiviata', 'completed', 'c', 'Paper application records are archived (action is manually logged)::::I fogli della pratica sono stati archiviati');
-insert into application.application_action_type(code, display_value, status, description) values('despatch', 'Despatch::::Inviata', 'c', 'Application documents and new land office products are sent or collected by applicant (action is manually logged)::::I documenti della pratica e i nuovi prodotti da Ufficio Territoriale sono stati spediti o ritirati dal richiedente');
-insert into application.application_action_type(code, display_value, status_to_set, status) values('lapse', 'Lapse::::ITALIANO', 'anulled', 'c');
-insert into application.application_action_type(code, display_value, status) values('assign', 'Assign::::ITALIANO', 'c');
-insert into application.application_action_type(code, display_value, status) values('unAssign', 'Unassign::::ITALIANO', 'c');
-insert into application.application_action_type(code, display_value, status_to_set, status) values('resubmit', 'Resubmit::::ITALIANO', 'lodged', 'c');
-insert into application.application_action_type(code, display_value, status, description) values('validate', 'Validate::::ITALIANO', 'c', 'The action validate does not leave a mark, because validateFailed and validateSucceded will be used instead when the validate is completed.');
-insert into application.application_action_type(code, display_value, status, description) values('transfer', 'Transfer application between departments', 'c', 'Application transfered to the given department');
-
-
-
---Table application.service_status_type ----
-DROP TABLE IF EXISTS application.service_status_type CASCADE;
-CREATE TABLE application.service_status_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT service_status_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT service_status_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.service_status_type -- 
-insert into application.service_status_type(code, display_value, status, description) values('lodged', 'Lodged::::रेजि्ष्टर', 'c', 'Application for a service has been lodged and officially received by land office::::La pratica per un servizio, registrata e formalmente ricevuta da ufficio territoriale');
-insert into application.service_status_type(code, display_value, status) values('completed', 'Completed::::पुर्ण', 'c');
-insert into application.service_status_type(code, display_value, status) values('pending', 'Pending::::बाकि', 'c');
-insert into application.service_status_type(code, display_value, status) values('cancelled', 'Cancelled::::खारेज', 'c');
-
-
-
---Table party.id_type ----
-DROP TABLE IF EXISTS party.id_type CASCADE;
-CREATE TABLE party.id_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT id_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT id_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table party.id_type -- 
-insert into party.id_type(code, display_value, status, description) values('nationalID', 'National ID::::Carta Identita Nazionale', 'c', 'The main person ID that exists in the country::::Il principale documento identificativo nel paese');
-insert into party.id_type(code, display_value, status, description) values('nationalPassport', 'National Passport::::Passaporto Nazionale', 'c', 'A passport issued by the country::::Passaporto fornito dal paese');
-insert into party.id_type(code, display_value, status, description) values('otherPassport', 'Other Passport::::Altro Passaporto', 'c', 'A passport issued by another country::::Passaporto Fornito da un altro paese');
-
-
-
---Table application.service_action_type ----
-DROP TABLE IF EXISTS application.service_action_type CASCADE;
-CREATE TABLE application.service_action_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status_to_set varchar(20),
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT service_action_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT service_action_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.service_action_type -- 
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('lodge', 'Lodge::::रेजि्ष्टर', 'lodged', 'c', 'Application for service(s) is officially received by land office (action is automatically logged when application is saved for the first time)::::La pratica per i servizi formalmente ricevuta da ufficio territoriale');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('start', 'Start::::सुरु', 'pending', 'c', 'Provisional RRR Changes Made to Database as a result of application (action is automatically logged when a change is made to a rrr object)::::Apportate Modifiche Provvisorie di tipo RRR al Database come risultato della pratica');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('cancel', 'Cancel::::खारेज', 'cancelled', 'c', 'Service is cancelled by Land Office (action is automatically logged when a service is cancelled)::::Pratica cancellata da Ufficio Territoriale');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('complete', 'Complete::::पुर्ण', 'completed', 'c', 'Application is ready for approval (action is automatically logged when service is marked as complete::::Pratica pronta per approvazione');
-insert into application.service_action_type(code, display_value, status_to_set, status, description) values('revert', 'Revert::::उल्टाउनु', 'pending', 'c', 'The status of the service has been reverted to pending from being completed (action is automatically logged when a service is reverted back for further work)::::ITALIANO');
-
-
-
 --Table application.application_property ----
 DROP TABLE IF EXISTS application.application_property CASCADE;
 CREATE TABLE application.application_property(
@@ -2902,87 +4252,6 @@ insert into application.request_type_requires_source_type(source_type_code, requ
 
 
 
---Table application.application_status_type ----
-DROP TABLE IF EXISTS application.application_status_type CASCADE;
-CREATE TABLE application.application_status_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT application_status_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT application_status_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.application_status_type -- 
-insert into application.application_status_type(code, display_value, status, description) values('lodged', 'Lodged::::Registrata', 'c', 'Application has been lodged and officially received by land office::::La pratica registrata e formalmente ricevuta da ufficio territoriale');
-insert into application.application_status_type(code, display_value, status) values('approved', 'Approved::::ITALIANO', 'c');
-insert into application.application_status_type(code, display_value, status) values('anulled', 'Anulled::::Anullato', 'c');
-insert into application.application_status_type(code, display_value, status) values('completed', 'Completed::::ITALIANO', 'c');
-insert into application.application_status_type(code, display_value, status) values('requisitioned', 'Requisitioned::::ITALIANO', 'c');
-
-
-
---Table document.document ----
-DROP TABLE IF EXISTS document.document CASCADE;
-CREATE TABLE document.document(
-    id varchar(40) NOT NULL,
-    nr varchar(15) NOT NULL,
-    extension varchar(5) NOT NULL,
-    body bytea NOT NULL,
-    description varchar(100),
-    office_code varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT document_nr_unique UNIQUE (nr),
-    CONSTRAINT document_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX document_index_on_rowidentifier ON document.document (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON document.document CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON document.document FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table document.document_historic used for the history of data of table document.document ---
-DROP TABLE IF EXISTS document.document_historic CASCADE;
-CREATE TABLE document.document_historic
-(
-    id varchar(40),
-    nr varchar(15),
-    extension varchar(5),
-    body bytea,
-    description varchar(100),
-    office_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX document_historic_index_on_rowidentifier ON document.document_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON document.document CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON document.document FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
 --Table system.setting ----
 DROP TABLE IF EXISTS system.setting CASCADE;
 CREATE TABLE system.setting(
@@ -3104,38 +4373,36 @@ insert into system.config_map_layer_type(code, display_value, status) values('po
 
 
 
---Table administrative.ba_unit_as_party ----
-DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
-CREATE TABLE administrative.ba_unit_as_party(
-    ba_unit_id varchar(40) NOT NULL,
-    party_id varchar(40) NOT NULL,
+--Table system.query ----
+DROP TABLE IF EXISTS system.query CASCADE;
+CREATE TABLE system.query(
+    name varchar(100) NOT NULL,
+    sql varchar(4000) NOT NULL,
+    description varchar(1000),
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_as_party_pkey PRIMARY KEY (ba_unit_id,party_id)
+    CONSTRAINT query_pkey PRIMARY KEY (name)
 );
 
     
---Table transaction.reg_status_type ----
-DROP TABLE IF EXISTS transaction.reg_status_type CASCADE;
-CREATE TABLE transaction.reg_status_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT reg_status_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT reg_status_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table transaction.reg_status_type -- 
-insert into transaction.reg_status_type(code, display_value, status) values('current', 'Current', 'c');
-insert into transaction.reg_status_type(code, display_value, status) values('pending', 'Pending', 'c');
-insert into transaction.reg_status_type(code, display_value, status) values('historic', 'Historic', 'c');
-insert into transaction.reg_status_type(code, display_value, status) values('previous', 'Previous', 'c');
+ -- Data for the table system.query -- 
+insert into system.query(name, sql) values('SpatialResult.getParcels', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co where type_code= ''parcel'' and status_code= ''current'' and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getParcelsPending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co  where type_code= ''parcel'' and status_code= ''pending''   and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid})) union select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co_t.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co inner join cadastre.cadastre_object_target co_t on co.id = co_t.cadastre_object_id and co_t.geom_polygon is not null where ST_Intersects(co_t.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))       and co_t.transaction_id in (select id from transaction.transaction where status_code not in (''approved''))');
+insert into system.query(name, sql) values('SpatialResult.getSurveyControls', 'select id, label, st_asewkb(geom) as the_geom from cadastre.survey_control  where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getRoads', 'select id, label, st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getPlaceNames', 'select id, label, st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getApplications', 'select id, nr as label, st_asewkb(location) as the_geom from application.application where ST_Intersects(location, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_parcel', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,      (select string_agg(ba.name_firstpart || ''/'' || ba.name_lastpart, '','')      from administrative.ba_unit_contains_spatial_unit bas, administrative.ba_unit ba      where spatial_unit_id= co.id and bas.ba_unit_id= ba.id) as ba_units,      ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area      WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,       st_asewkb(co.geom_polygon) as the_geom      from cadastre.cadastre_object co      where type_code= ''parcel'' and status_code= ''current''      and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_parcel_pending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,       ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area         WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,   st_asewkb(co.geom_polygon) as the_geom    from cadastre.cadastre_object co  where type_code= ''parcel'' and ((status_code= ''pending''    and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})))   or (co.id in (select cadastre_object_id           from cadastre.cadastre_object_target co_t inner join transaction.transaction t on co_t.transaction_id=t.id           where ST_Intersects(co_t.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})) and t.status_code not in (''approved''))))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_place_name', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_road', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_application', 'select id, nr,  st_asewkb(location) as the_geom from application.application where ST_Intersects(location, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_survey_control', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.survey_control where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getconstructions', 'select cid, id,constype, st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_construction', 'select cid, id,constype,  st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('SpatialResult.getsegments', 'select sid,id,bound_type,segno,shape_length, st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_segment', 'select sid, id,bound_type,segno,shape_length,  st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 
 
 
@@ -3206,20 +4473,6 @@ CREATE TABLE system.br_validation(
 );
 
     
---Table system.br_definition ----
-DROP TABLE IF EXISTS system.br_definition CASCADE;
-CREATE TABLE system.br_definition(
-    br_id varchar(100) NOT NULL,
-    active_from date NOT NULL,
-    active_until date NOT NULL DEFAULT ('infinity'),
-    body varchar(4000) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT br_definition_pkey PRIMARY KEY (br_id,active_from)
-);
-
-    
 --Table system.br_severity_type ----
 DROP TABLE IF EXISTS system.br_severity_type CASCADE;
 CREATE TABLE system.br_severity_type(
@@ -3267,601 +4520,19 @@ insert into system.br_validation_target_type(code, display_value, status, descri
 
 
 
---Table cadastre.cadastre_object_type ----
-DROP TABLE IF EXISTS cadastre.cadastre_object_type CASCADE;
-CREATE TABLE cadastre.cadastre_object_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
+--Table system.br_definition ----
+DROP TABLE IF EXISTS system.br_definition CASCADE;
+CREATE TABLE system.br_definition(
+    br_id varchar(100) NOT NULL,
+    active_from date NOT NULL,
+    active_until date NOT NULL DEFAULT ('infinity'),
+    body varchar(4000) NOT NULL,
 
     -- Internal constraints
     
-    CONSTRAINT cadastre_object_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT cadastre_object_type_pkey PRIMARY KEY (code)
+    CONSTRAINT br_definition_pkey PRIMARY KEY (br_id,active_from)
 );
 
-    
- -- Data for the table cadastre.cadastre_object_type -- 
-insert into cadastre.cadastre_object_type(code, display_value, description, status) values('parcel', 'Parcel::::ITALIANO', '', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, description, status) values('buildingUnit', 'Building Unit::::ITALIANO', '', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, description, status) values('utilityNetwork', 'Utility Network::::ITALIANO', '', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, description, status) values('segment', 'Segment::::Segment', '', 'c');
-insert into cadastre.cadastre_object_type(code, display_value, description, status) values('construction', 'Construction::Construction', '', 'c');
-
-
-
---Table cadastre.cadastre_object ----
-DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
-CREATE TABLE cadastre.cadastre_object(
-    id varchar(40) NOT NULL,
-    type_code varchar(20) NOT NULL DEFAULT ('parcel'),
-    map_sheet_id varchar(40),
-    building_unit_type_code varchar(20),
-    approval_datetime timestamp,
-    historic_datetime timestamp,
-    source_reference varchar(100),
-    name_firstpart varchar(20),
-    name_lastpart varchar(50),
-    status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    transaction_id varchar(40) NOT NULL,
-    parcel_no integer,
-    parcel_note varchar(255),
-    office_code varchar(20),
-    parcel_typecode varchar(20) NOT NULL,
-    land_usecode varchar(20),
-    land_classcode varchar(20),
-    guthi_namecode varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT cadastre_object_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX cadastre_object_index_on_rowidentifier ON cadastre.cadastre_object (rowidentifier);
-CREATE INDEX cadastre_object_index_on_geom_polygon ON cadastre.cadastre_object USING gist (geom_polygon);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.cadastre_object FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table cadastre.cadastre_object_historic used for the history of data of table cadastre.cadastre_object ---
-DROP TABLE IF EXISTS cadastre.cadastre_object_historic CASCADE;
-CREATE TABLE cadastre.cadastre_object_historic
-(
-    id varchar(40),
-    type_code varchar(20),
-    map_sheet_id varchar(40),
-    building_unit_type_code varchar(20),
-    approval_datetime timestamp,
-    historic_datetime timestamp,
-    source_reference varchar(100),
-    name_firstpart varchar(20),
-    name_lastpart varchar(50),
-    status_code varchar(20),
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    transaction_id varchar(40),
-    parcel_no integer,
-    parcel_note varchar(255),
-    office_code varchar(20),
-    parcel_typecode varchar(20),
-    land_usecode varchar(20),
-    land_classcode varchar(20),
-    guthi_namecode varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX cadastre_object_historic_index_on_rowidentifier ON cadastre.cadastre_object_historic (rowidentifier);
-CREATE INDEX cadastre_object_historic_index_on_geom_polygon ON cadastre.cadastre_object_historic USING gist (geom_polygon);
-
-
-DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.cadastre_object FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table administrative.ba_unit_rel_type ----
-DROP TABLE IF EXISTS administrative.ba_unit_rel_type CASCADE;
-CREATE TABLE administrative.ba_unit_rel_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT ba_unit_rel_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT ba_unit_rel_type_pkey PRIMARY KEY (code)
-);
-
-    
---Table administrative.notation ----
-DROP TABLE IF EXISTS administrative.notation CASCADE;
-CREATE TABLE administrative.notation(
-    id varchar(40) NOT NULL,
-    ba_unit_id varchar(40),
-    rrr_id varchar(40),
-    transaction_id varchar(40) NOT NULL,
-    reference_nr varchar(15) NOT NULL,
-    notation_text varchar(1000),
-    status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT notation_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX notation_index_on_rowidentifier ON administrative.notation (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.notation CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.notation FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.notation_historic used for the history of data of table administrative.notation ---
-DROP TABLE IF EXISTS administrative.notation_historic CASCADE;
-CREATE TABLE administrative.notation_historic
-(
-    id varchar(40),
-    ba_unit_id varchar(40),
-    rrr_id varchar(40),
-    transaction_id varchar(40),
-    reference_nr varchar(15),
-    notation_text varchar(1000),
-    status_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX notation_historic_index_on_rowidentifier ON administrative.notation_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.notation CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.notation FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table administrative.rrr_share ----
-DROP TABLE IF EXISTS administrative.rrr_share CASCADE;
-CREATE TABLE administrative.rrr_share(
-    rrr_id varchar(40) NOT NULL,
-    id varchar(40) NOT NULL,
-    nominator smallint NOT NULL,
-    denominator smallint NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT rrr_share_pkey PRIMARY KEY (rrr_id,id)
-);
-
-
-CREATE INDEX rrr_share_index_on_rowidentifier ON administrative.rrr_share (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.rrr_share CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.rrr_share FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.rrr_share_historic used for the history of data of table administrative.rrr_share ---
-DROP TABLE IF EXISTS administrative.rrr_share_historic CASCADE;
-CREATE TABLE administrative.rrr_share_historic
-(
-    rrr_id varchar(40),
-    id varchar(40),
-    nominator smallint,
-    denominator smallint,
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX rrr_share_historic_index_on_rowidentifier ON administrative.rrr_share_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.rrr_share CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.rrr_share FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table administrative.party_for_rrr ----
-DROP TABLE IF EXISTS administrative.party_for_rrr CASCADE;
-CREATE TABLE administrative.party_for_rrr(
-    rrr_id varchar(40) NOT NULL,
-    party_id varchar(40) NOT NULL,
-    share_id varchar(40),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT party_for_rrr_pkey PRIMARY KEY (rrr_id,party_id)
-);
-
-
-CREATE INDEX party_for_rrr_index_on_rowidentifier ON administrative.party_for_rrr (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.party_for_rrr CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.party_for_rrr FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.party_for_rrr_historic used for the history of data of table administrative.party_for_rrr ---
-DROP TABLE IF EXISTS administrative.party_for_rrr_historic CASCADE;
-CREATE TABLE administrative.party_for_rrr_historic
-(
-    rrr_id varchar(40),
-    party_id varchar(40),
-    share_id varchar(40),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX party_for_rrr_historic_index_on_rowidentifier ON administrative.party_for_rrr_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.party_for_rrr CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.party_for_rrr FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table transaction.transaction ----
-DROP TABLE IF EXISTS transaction.transaction CASCADE;
-CREATE TABLE transaction.transaction(
-    id varchar(40) NOT NULL,
-    from_service_id varchar(40),
-    status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    approval_datetime timestamp,
-    office_code varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT transaction_from_service_id_unique UNIQUE (from_service_id),
-    CONSTRAINT transaction_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX transaction_index_on_rowidentifier ON transaction.transaction (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON transaction.transaction CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON transaction.transaction FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table transaction.transaction_historic used for the history of data of table transaction.transaction ---
-DROP TABLE IF EXISTS transaction.transaction_historic CASCADE;
-CREATE TABLE transaction.transaction_historic
-(
-    id varchar(40),
-    from_service_id varchar(40),
-    status_code varchar(20),
-    approval_datetime timestamp,
-    office_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX transaction_historic_index_on_rowidentifier ON transaction.transaction_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON transaction.transaction CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON transaction.transaction FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table transaction.transaction_status_type ----
-DROP TABLE IF EXISTS transaction.transaction_status_type CASCADE;
-CREATE TABLE transaction.transaction_status_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT transaction_status_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT transaction_status_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table transaction.transaction_status_type -- 
-insert into transaction.transaction_status_type(code, display_value, status) values('approved', 'Approved::::Approvata', 'c');
-insert into transaction.transaction_status_type(code, display_value, status) values('cancelled', 'CancelledApproved::::Cancellata', 'c');
-insert into transaction.transaction_status_type(code, display_value, status) values('pending', 'Pending::::In Attesa', 'c');
-insert into transaction.transaction_status_type(code, display_value, status) values('completed', 'Completed::::ITALIANO', 'c');
-
-
-
---Table application.type_action ----
-DROP TABLE IF EXISTS application.type_action CASCADE;
-CREATE TABLE application.type_action(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('t'),
-
-    -- Internal constraints
-    
-    CONSTRAINT type_action_display_value_unique UNIQUE (display_value),
-    CONSTRAINT type_action_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table application.type_action -- 
-insert into application.type_action(code, display_value, status) values('new', 'New::::ITALIANO', 'c');
-insert into application.type_action(code, display_value, status) values('vary', 'Vary::::ITALIANO', 'c');
-insert into application.type_action(code, display_value, status) values('cancel', 'Cancel::::ITALIANO', 'c');
-
-
-
---Table cadastre.cadastre_object_target ----
-DROP TABLE IF EXISTS cadastre.cadastre_object_target CASCADE;
-CREATE TABLE cadastre.cadastre_object_target(
-    transaction_id varchar(40) NOT NULL,
-    cadastre_object_id varchar(40) NOT NULL,
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    office_code varchar(20) NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT cadastre_object_target_pkey PRIMARY KEY (transaction_id,cadastre_object_id)
-);
-
-
-CREATE INDEX cadastre_object_target_index_on_rowidentifier ON cadastre.cadastre_object_target (rowidentifier);
-CREATE INDEX cadastre_object_target_index_on_geom_polygon ON cadastre.cadastre_object_target USING gist (geom_polygon);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object_target CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.cadastre_object_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table cadastre.cadastre_object_target_historic used for the history of data of table cadastre.cadastre_object_target ---
-DROP TABLE IF EXISTS cadastre.cadastre_object_target_historic CASCADE;
-CREATE TABLE cadastre.cadastre_object_target_historic
-(
-    transaction_id varchar(40),
-    cadastre_object_id varchar(40),
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    office_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX cadastre_object_target_historic_index_on_rowidentifier ON cadastre.cadastre_object_target_historic (rowidentifier);
-CREATE INDEX cadastre_object_target_historic_index_on_geom_polygon ON cadastre.cadastre_object_target_historic USING gist (geom_polygon);
-
-
-DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object_target CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.cadastre_object_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table party.gender_type ----
-DROP TABLE IF EXISTS party.gender_type CASCADE;
-CREATE TABLE party.gender_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    status char(1) NOT NULL DEFAULT ('t'),
-    description varchar(555),
-
-    -- Internal constraints
-    
-    CONSTRAINT gender_type_display_value_unique UNIQUE (display_value),
-    CONSTRAINT gender_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table party.gender_type -- 
-insert into party.gender_type(code, display_value, status) values('male', 'Male', 'c');
-insert into party.gender_type(code, display_value, status) values('female', 'Female', 'c');
-
-
-
---Table cadastre.survey_point ----
-DROP TABLE IF EXISTS cadastre.survey_point CASCADE;
-CREATE TABLE cadastre.survey_point(
-    transaction_id varchar(40) NOT NULL,
-    id varchar(40) NOT NULL,
-    boundary bool NOT NULL DEFAULT (true),
-    geom GEOMETRY NOT NULL,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
-    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    original_geom GEOMETRY NOT NULL,
-    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
-    
-            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
-    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT survey_point_pkey PRIMARY KEY (transaction_id,id)
-);
-
-
-CREATE INDEX survey_point_index_on_rowidentifier ON cadastre.survey_point (rowidentifier);
-CREATE INDEX survey_point_index_on_geom ON cadastre.survey_point USING gist (geom);
-CREATE INDEX survey_point_index_on_original_geom ON cadastre.survey_point USING gist (original_geom);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.survey_point CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.survey_point FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table cadastre.survey_point_historic used for the history of data of table cadastre.survey_point ---
-DROP TABLE IF EXISTS cadastre.survey_point_historic CASCADE;
-CREATE TABLE cadastre.survey_point_historic
-(
-    transaction_id varchar(40),
-    id varchar(40),
-    boundary bool,
-    geom GEOMETRY,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
-    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    original_geom GEOMETRY,
-    CONSTRAINT enforce_dims_original_geom CHECK (st_ndims(original_geom) = 2),
-    
-            CONSTRAINT enforce_srid_original_geom CHECK (st_srid(original_geom) = 97261),
-    CONSTRAINT enforce_geotype_original_geom CHECK (geometrytype(original_geom) = 'POINT'::text OR original_geom IS NULL),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX survey_point_historic_index_on_rowidentifier ON cadastre.survey_point_historic (rowidentifier);
-CREATE INDEX survey_point_historic_index_on_geom ON cadastre.survey_point_historic USING gist (geom);
-CREATE INDEX survey_point_historic_index_on_original_geom ON cadastre.survey_point_historic USING gist (original_geom);
-
-
-DROP TRIGGER IF EXISTS __track_history ON cadastre.survey_point CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.survey_point FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table transaction.transaction_source ----
-DROP TABLE IF EXISTS transaction.transaction_source CASCADE;
-CREATE TABLE transaction.transaction_source(
-    transaction_id varchar(40) NOT NULL,
-    source_id varchar(40) NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT transaction_source_pkey PRIMARY KEY (transaction_id,source_id)
-);
-
-
-CREATE INDEX transaction_source_index_on_rowidentifier ON transaction.transaction_source (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON transaction.transaction_source CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON transaction.transaction_source FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table transaction.transaction_source_historic used for the history of data of table transaction.transaction_source ---
-DROP TABLE IF EXISTS transaction.transaction_source_historic CASCADE;
-CREATE TABLE transaction.transaction_source_historic
-(
-    transaction_id varchar(40),
-    source_id varchar(40),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX transaction_source_historic_index_on_rowidentifier ON transaction.transaction_source_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON transaction.transaction_source CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON transaction.transaction_source FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
     
 --Table system.approle ----
 DROP TABLE IF EXISTS system.approle CASCADE;
@@ -3987,39 +4658,6 @@ insert into system.appuser_appgroup(appuser_id, appgroup_id) values('test-id', '
 
 
 
---Table system.query ----
-DROP TABLE IF EXISTS system.query CASCADE;
-CREATE TABLE system.query(
-    name varchar(100) NOT NULL,
-    sql varchar(4000) NOT NULL,
-    description varchar(1000),
-
-    -- Internal constraints
-    
-    CONSTRAINT query_pkey PRIMARY KEY (name)
-);
-
-    
- -- Data for the table system.query -- 
-insert into system.query(name, sql) values('SpatialResult.getParcels', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co where type_code= ''parcel'' and status_code= ''current'' and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getParcelsPending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co  where type_code= ''parcel'' and status_code= ''pending''   and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid})) union select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co_t.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co inner join cadastre.cadastre_object_target co_t on co.id = co_t.cadastre_object_id and co_t.geom_polygon is not null where ST_Intersects(co_t.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))       and co_t.transaction_id in (select id from transaction.transaction where status_code not in (''approved''))');
-insert into system.query(name, sql) values('SpatialResult.getSurveyControls', 'select id, label, st_asewkb(geom) as the_geom from cadastre.survey_control  where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getRoads', 'select id, label, st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getPlaceNames', 'select id, label, st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getApplications', 'select id, nr as label, st_asewkb(location) as the_geom from application.application where ST_Intersects(location, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_parcel', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,      (select string_agg(ba.name_firstpart || ''/'' || ba.name_lastpart, '','')      from administrative.ba_unit_contains_spatial_unit bas, administrative.ba_unit ba      where spatial_unit_id= co.id and bas.ba_unit_id= ba.id) as ba_units,      ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area      WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,       st_asewkb(co.geom_polygon) as the_geom      from cadastre.cadastre_object co      where type_code= ''parcel'' and status_code= ''current''      and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_parcel_pending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,       ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area         WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,   st_asewkb(co.geom_polygon) as the_geom    from cadastre.cadastre_object co  where type_code= ''parcel'' and ((status_code= ''pending''    and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})))   or (co.id in (select cadastre_object_id           from cadastre.cadastre_object_target co_t inner join transaction.transaction t on co_t.transaction_id=t.id           where ST_Intersects(co_t.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})) and t.status_code not in (''approved''))))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_place_name', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_road', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_application', 'select id, nr,  st_asewkb(location) as the_geom from application.application where ST_Intersects(location, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_survey_control', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.survey_control where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getconstructions', 'select cid, id,constype, st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_construction', 'select cid, id,constype,  st_asewkb(geom_polygon) as the_geom from cadastre.construction where ST_Intersects(geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getsegments', 'select sid,id,bound_type,segno,shape_length, st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_segment', 'select sid, id,bound_type,segno,shape_length,  st_asewkb(the_geom) as the_geom from cadastre.segments where ST_Intersects(the_geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-
-
-
 --Table system.query_field ----
 DROP TABLE IF EXISTS system.query_field CASCADE;
 CREATE TABLE system.query_field(
@@ -4070,274 +4708,17 @@ insert into system.query_field(query_name, index_in_query, name) values('dynamic
 
 
 
---Table cadastre.cadastre_object_node_target ----
-DROP TABLE IF EXISTS cadastre.cadastre_object_node_target CASCADE;
-CREATE TABLE cadastre.cadastre_object_node_target(
-    transaction_id varchar(40) NOT NULL,
-    node_id varchar(40) NOT NULL,
-    geom GEOMETRY NOT NULL,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
-    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT cadastre_object_node_target_pkey PRIMARY KEY (transaction_id,node_id)
-);
-
-
-CREATE INDEX cadastre_object_node_target_index_on_rowidentifier ON cadastre.cadastre_object_node_target (rowidentifier);
-CREATE INDEX cadastre_object_node_target_index_on_geom ON cadastre.cadastre_object_node_target USING gist (geom);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON cadastre.cadastre_object_node_target CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON cadastre.cadastre_object_node_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table cadastre.cadastre_object_node_target_historic used for the history of data of table cadastre.cadastre_object_node_target ---
-DROP TABLE IF EXISTS cadastre.cadastre_object_node_target_historic CASCADE;
-CREATE TABLE cadastre.cadastre_object_node_target_historic
-(
-    transaction_id varchar(40),
-    node_id varchar(40),
-    geom GEOMETRY,
-    CONSTRAINT enforce_dims_geom CHECK (st_ndims(geom) = 2),
-    
-            CONSTRAINT enforce_srid_geom CHECK (st_srid(geom) = 97261),
-    CONSTRAINT enforce_geotype_geom CHECK (geometrytype(geom) = 'POINT'::text OR geom IS NULL),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX cadastre_object_node_target_historic_index_on_rowidentifier ON cadastre.cadastre_object_node_target_historic (rowidentifier);
-CREATE INDEX cadastre_object_node_target_historic_index_on_geom ON cadastre.cadastre_object_node_target_historic USING gist (geom);
-
-
-DROP TRIGGER IF EXISTS __track_history ON cadastre.cadastre_object_node_target CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON cadastre.cadastre_object_node_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table administrative.ba_unit_target ----
-DROP TABLE IF EXISTS administrative.ba_unit_target CASCADE;
-CREATE TABLE administrative.ba_unit_target(
-    ba_unit_id varchar(40) NOT NULL,
-    transaction_id varchar(40) NOT NULL,
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT ba_unit_target_pkey PRIMARY KEY (ba_unit_id,transaction_id)
-);
-
-
-CREATE INDEX ba_unit_target_index_on_rowidentifier ON administrative.ba_unit_target (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.ba_unit_target CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.ba_unit_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.ba_unit_target_historic used for the history of data of table administrative.ba_unit_target ---
-DROP TABLE IF EXISTS administrative.ba_unit_target_historic CASCADE;
-CREATE TABLE administrative.ba_unit_target_historic
-(
-    ba_unit_id varchar(40),
-    transaction_id varchar(40),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX ba_unit_target_historic_index_on_rowidentifier ON administrative.ba_unit_target_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.ba_unit_target CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.ba_unit_target FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table cadastre.verticalParcel ----
-DROP TABLE IF EXISTS cadastre.verticalParcel CASCADE;
-CREATE TABLE cadastre.verticalParcel(
-    vid integer NOT NULL,
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    id varchar(40) NOT NULL,
-    height numeric(19, 3),
-    ownerId integer,
-    area numeric(29, 3),
-
-    -- Internal constraints
-    
-    CONSTRAINT verticalParcel_pkey PRIMARY KEY (vid,id)
-);
-
-
-CREATE INDEX verticalParcel_index_on_geom_polygon ON cadastre.verticalParcel USING gist (geom_polygon);
-
-    
---Table cadastre.construction ----
-DROP TABLE IF EXISTS cadastre.construction CASCADE;
-CREATE TABLE cadastre.construction(
-    cid integer NOT NULL,
-    geom_polygon GEOMETRY,
-    CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
-    
-            CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
-    CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
-    id varchar(40) NOT NULL,
-    constype integer NOT NULL,
-    area numeric(29, 3),
-
-    -- Internal constraints
-    
-    CONSTRAINT construction_pkey PRIMARY KEY (cid,id)
-);
-
-
-CREATE INDEX construction_index_on_geom_polygon ON cadastre.construction USING gist (geom_polygon);
-
-    
---Table cadastre.boundary_type ----
-DROP TABLE IF EXISTS cadastre.boundary_type CASCADE;
-CREATE TABLE cadastre.boundary_type(
+--Table system.financial_year ----
+DROP TABLE IF EXISTS system.financial_year CASCADE;
+CREATE TABLE system.financial_year(
     code integer NOT NULL,
-    description varchar(255),
+    finyear integer,
+    selected bool,
 
     -- Internal constraints
     
-    CONSTRAINT boundary_type_pkey PRIMARY KEY (code)
+    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
 );
-
-    
- -- Data for the table cadastre.boundary_type -- 
-insert into cadastre.boundary_type(code, description) values(0, 'None::::None');
-insert into cadastre.boundary_type(code, description) values(10, 'Building Foot Print::::Building Foot Print');
-insert into cadastre.boundary_type(code, description) values(20, 'Wall::::Wall');
-insert into cadastre.boundary_type(code, description) values(25, 'Shared Wall::::Shared Wall');
-insert into cadastre.boundary_type(code, description) values(30, 'Fence::::Fence');
-insert into cadastre.boundary_type(code, description) values(35, 'Shared Fence::::Shared Fence');
-insert into cadastre.boundary_type(code, description) values(40, 'Gate::::Gate');
-insert into cadastre.boundary_type(code, description) values(50, 'Line Canal::::Line Canal');
-insert into cadastre.boundary_type(code, description) values(52, 'Line Canal and Wall::::Line Canal and Wall');
-insert into cadastre.boundary_type(code, description) values(54, 'Line Canal and Fence::::Line Canal and Fence');
-insert into cadastre.boundary_type(code, description) values(58, 'Line Canal and Gate::::Line Canal and Gate');
-
-
-
---Table cadastre.construction_type ----
-DROP TABLE IF EXISTS cadastre.construction_type CASCADE;
-CREATE TABLE cadastre.construction_type(
-    code integer NOT NULL,
-    description varchar(255),
-
-    -- Internal constraints
-    
-    CONSTRAINT construction_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.construction_type -- 
-insert into cadastre.construction_type(code, description) values(0, 'Permanent Building::::Permanent Building');
-insert into cadastre.construction_type(code, description) values(10, 'Temporary Building::::Temporary Building');
-insert into cadastre.construction_type(code, description) values(20, 'Damaged Building::::Damaged Building');
-insert into cadastre.construction_type(code, description) values(30, 'Wall::::Wall');
-insert into cadastre.construction_type(code, description) values(40, 'Pond::::Pond');
-insert into cadastre.construction_type(code, description) values(50, 'Gate/Entrance::::Gate/Entrance');
-insert into cadastre.construction_type(code, description) values(60, 'Temple::::Temple');
-insert into cadastre.construction_type(code, description) values(150, 'Stupa::::Stupa');
-
-
-
---Table cadastre.adminstrative_boundary_type ----
-DROP TABLE IF EXISTS cadastre.adminstrative_boundary_type CASCADE;
-CREATE TABLE cadastre.adminstrative_boundary_type(
-    code integer NOT NULL,
-    description varchar(255),
-
-    -- Internal constraints
-    
-    CONSTRAINT adminstrative_boundary_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.adminstrative_boundary_type -- 
-insert into cadastre.adminstrative_boundary_type(code, description) values(0, 'None::::None');
-insert into cadastre.adminstrative_boundary_type(code, description) values(10, 'Ward::::Ward');
-insert into cadastre.adminstrative_boundary_type(code, description) values(20, 'VDC/Municipality::::VDC/Municipality');
-insert into cadastre.adminstrative_boundary_type(code, description) values(30, 'District::::District');
-insert into cadastre.adminstrative_boundary_type(code, description) values(40, 'Zone::::Zone');
-insert into cadastre.adminstrative_boundary_type(code, description) values(50, 'National::::National');
-
-
-
---Table cadastre.map_boundary_type ----
-DROP TABLE IF EXISTS cadastre.map_boundary_type CASCADE;
-CREATE TABLE cadastre.map_boundary_type(
-    code integer NOT NULL,
-    description varchar(255),
-
-    -- Internal constraints
-    
-    CONSTRAINT map_boundary_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table cadastre.map_boundary_type -- 
-insert into cadastre.map_boundary_type(code, description) values(0, 'None::::None');
-insert into cadastre.map_boundary_type(code, description) values(10, 'Grid Sheet::::Grid Sheet');
-insert into cadastre.map_boundary_type(code, description) values(20, 'Free Sheet::::Free Sheet');
-
-
-
---Table cadastre.segments ----
-DROP TABLE IF EXISTS cadastre.segments CASCADE;
-CREATE TABLE cadastre.segments(
-    sid integer NOT NULL,
-    segno integer,
-    the_geom GEOMETRY,
-    CONSTRAINT enforce_dims_the_geom CHECK (st_ndims(the_geom) = 2),
-    
-            CONSTRAINT enforce_srid_the_geom CHECK (st_srid(the_geom) = 97261),
-    CONSTRAINT enforce_geotype_the_geom CHECK (geometrytype(the_geom) = 'LINESTRING'::text OR the_geom IS NULL),
-    bound_type integer NOT NULL,
-    id varchar(40) NOT NULL,
-    mbound_type integer NOT NULL,
-    abound_type integer NOT NULL,
-    shape_length numeric(19, 3),
-
-    -- Internal constraints
-    
-    CONSTRAINT segments_pkey PRIMARY KEY (sid,id)
-);
-
-
-CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geom);
 
     
 --Table system.np_calendar ----
@@ -4364,248 +4745,6 @@ insert into system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
 
 
 
---Table system.alpha_code ----
-DROP TABLE IF EXISTS system.alpha_code CASCADE;
-CREATE TABLE system.alpha_code(
-    code varchar(20) NOT NULL,
-    alpha_char varchar(10),
-
-    -- Internal constraints
-    
-    CONSTRAINT alpha_code_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.financial_year ----
-DROP TABLE IF EXISTS system.financial_year CASCADE;
-CREATE TABLE system.financial_year(
-    code integer NOT NULL,
-    finyear integer,
-    selected bool,
-
-    -- Internal constraints
-    
-    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.office ----
-DROP TABLE IF EXISTS system.office CASCADE;
-CREATE TABLE system.office(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    district_code varchar(20) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT office_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.office -- 
-insert into system.office(code, display_value, district_code) values('7-25-003-001', 'Lalitpur - LMO first section', '25');
-
-
-
---Table system.district ----
-DROP TABLE IF EXISTS system.district CASCADE;
-CREATE TABLE system.district(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    zone_code integer,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT district_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.district -- 
-insert into system.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
-insert into system.district(code, display_value, zone_code) values('27', 'Bhaktpur', 7);
-
-
-
---Table cadastre.map_sheet ----
-DROP TABLE IF EXISTS cadastre.map_sheet CASCADE;
-CREATE TABLE cadastre.map_sheet(
-    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    map_number varchar(10) NOT NULL,
-    sheet_type integer,
-    office_code varchar(20),
-    srid integer NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT map_sheet_pkey PRIMARY KEY (id)
-);
-
-    
- -- Data for the table cadastre.map_sheet -- 
-insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '010', 0, '7-25-003-001', 97260);
-
-
-
---Table system.vdc ----
-DROP TABLE IF EXISTS system.vdc CASCADE;
-CREATE TABLE system.vdc(
-    code varchar(20) NOT NULL,
-    display_value varchar(50) NOT NULL,
-    district_code varchar(20) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT vdc_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.vdc -- 
-insert into system.vdc(code, display_value, district_code, description, status) values('43055', 'Singana', '25', 'Test VDC', 'c');
-insert into system.vdc(code, display_value, district_code, description, status) values('27009', 'Mulpani', '27', 'Mulpani', 'c');
-
-
-
---Table system.department ----
-DROP TABLE IF EXISTS system.department CASCADE;
-CREATE TABLE system.department(
-    code varchar(20) NOT NULL,
-    office_code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(500),
-    status char(1) NOT NULL DEFAULT ('c'),
-
-    -- Internal constraints
-    
-    CONSTRAINT department_unique_department_name UNIQUE (office_code, display_value),
-    CONSTRAINT department_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.department -- 
-insert into system.department(code, office_code, display_value) values('Lalitpur-001', '7-25-003-001', 'Section-001, Lalitpur LMO');
-
-
-
---Table administrative.loc ----
-DROP TABLE IF EXISTS administrative.loc CASCADE;
-CREATE TABLE administrative.loc(
-    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    moth_id varchar(40) NOT NULL,
-    pana_no varchar(15),
-    tmp_pana_no varchar(15),
-    status_code varchar(20),
-    office_code varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT loc_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX loc_index_on_rowidentifier ON administrative.loc (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.loc CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.loc FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.loc_historic used for the history of data of table administrative.loc ---
-DROP TABLE IF EXISTS administrative.loc_historic CASCADE;
-CREATE TABLE administrative.loc_historic
-(
-    id varchar(40),
-    moth_id varchar(40),
-    pana_no varchar(15),
-    tmp_pana_no varchar(15),
-    status_code varchar(20),
-    office_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX loc_historic_index_on_rowidentifier ON administrative.loc_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.loc CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.loc FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
---Table administrative.moth ----
-DROP TABLE IF EXISTS administrative.moth CASCADE;
-CREATE TABLE administrative.moth(
-    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    mothluj_no varchar(15),
-    vdc_code varchar(20) NOT NULL,
-    moth_luj varchar(2),
-    financial_year varchar(20),
-    status_code varchar(20),
-    office_code varchar(20),
-    rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    rowversion integer NOT NULL DEFAULT (0),
-    change_action char(1) NOT NULL DEFAULT ('i'),
-    change_user varchar(50),
-    change_time timestamp NOT NULL DEFAULT (now()),
-
-    -- Internal constraints
-    
-    CONSTRAINT moth_pkey PRIMARY KEY (id)
-);
-
-
-CREATE INDEX moth_index_on_rowidentifier ON administrative.moth (rowidentifier);
-
-    
-DROP TRIGGER IF EXISTS __track_changes ON administrative.moth CASCADE;
-CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
-   ON administrative.moth FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_changes();
-    
-
-----Table administrative.moth_historic used for the history of data of table administrative.moth ---
-DROP TABLE IF EXISTS administrative.moth_historic CASCADE;
-CREATE TABLE administrative.moth_historic
-(
-    id varchar(40),
-    mothluj_no varchar(15),
-    vdc_code varchar(20),
-    moth_luj varchar(2),
-    financial_year varchar(20),
-    status_code varchar(20),
-    office_code varchar(20),
-    rowidentifier varchar(40),
-    rowversion integer,
-    change_action char(1),
-    change_user varchar(50),
-    change_time timestamp,
-    change_time_valid_until TIMESTAMP NOT NULL default NOW()
-);
-
-CREATE INDEX moth_historic_index_on_rowidentifier ON administrative.moth_historic (rowidentifier);
-
-
-DROP TRIGGER IF EXISTS __track_history ON administrative.moth CASCADE;
-CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
-   ON administrative.moth FOR EACH ROW
-   EXECUTE PROCEDURE f_for_trg_track_history();
-    
 --Table system.restriction_type ----
 DROP TABLE IF EXISTS system.restriction_type CASCADE;
 CREATE TABLE system.restriction_type(
@@ -4625,28 +4764,6 @@ insert into system.restriction_type(code, display_value, description, status) va
 insert into system.restriction_type(code, display_value, status) values('2', 'Bt Letter', 'c');
 insert into system.restriction_type(code, display_value, status) values('3', 'Bt Application', 'c');
 insert into system.restriction_type(code, display_value, status) values('4', 'unknown', 'c');
-
-
-
---Table system.restriction_reason ----
-DROP TABLE IF EXISTS system.restriction_reason CASCADE;
-CREATE TABLE system.restriction_reason(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT restriction_reason_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.restriction_reason -- 
-insert into system.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
-insert into system.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
-insert into system.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
-insert into system.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
 
 
 
@@ -4671,55 +4788,6 @@ insert into system.restriction_release_reason(code, display_value, status) value
 
 
 
---Table system.restriction_office ----
-DROP TABLE IF EXISTS system.restriction_office CASCADE;
-CREATE TABLE system.restriction_office(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT restriction_office_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.restriction_office -- 
-insert into system.restriction_office(code, display_value, status) values('1', 'Household and Development', 'c');
-insert into system.restriction_office(code, display_value, status) values('2', 'Development Credit Bank', 'c');
-insert into system.restriction_office(code, display_value, status) values('3', 'Ramesh Kumar Sainju', 'c');
-
-
-
---Table system.ownership_type ----
-DROP TABLE IF EXISTS system.ownership_type CASCADE;
-CREATE TABLE system.ownership_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT ownership_type_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.share_type ----
-DROP TABLE IF EXISTS system.share_type CASCADE;
-CREATE TABLE system.share_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT share_type_pkey PRIMARY KEY (code)
-);
-
-    
 --Table system.tenant_type ----
 DROP TABLE IF EXISTS system.tenant_type CASCADE;
 CREATE TABLE system.tenant_type(
@@ -4734,74 +4802,6 @@ CREATE TABLE system.tenant_type(
 );
 
     
---Table system.land_use ----
-DROP TABLE IF EXISTS system.land_use CASCADE;
-CREATE TABLE system.land_use(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT land_use_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.land_class ----
-DROP TABLE IF EXISTS system.land_class CASCADE;
-CREATE TABLE system.land_class(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT land_class_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.guthi_name ----
-DROP TABLE IF EXISTS system.guthi_name CASCADE;
-CREATE TABLE system.guthi_name(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT guthi_name_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.parcel_type ----
-DROP TABLE IF EXISTS system.parcel_type CASCADE;
-CREATE TABLE system.parcel_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT parcel_type_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table system.parcel_type -- 
-insert into system.parcel_type(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
-insert into system.parcel_type(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
-
-
-
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -4963,381 +4963,381 @@ ALTER TABLE application.application ADD CONSTRAINT application_contact_person_id
             FOREIGN KEY (contact_person_id) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX application_contact_person_id_fk39_ind ON application.application (contact_person_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_maintype_fk40 
-            FOREIGN KEY (maintype) REFERENCES source.presentation_form_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_maintype_fk40_ind ON source.source (maintype);
-
-ALTER TABLE source.source ADD CONSTRAINT source_archive_id_fk41 
-            FOREIGN KEY (archive_id) REFERENCES source.archive(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_archive_id_fk41_ind ON source.source (archive_id);
-
-ALTER TABLE application.application ADD CONSTRAINT application_action_code_fk42 
+ALTER TABLE application.application ADD CONSTRAINT application_action_code_fk40 
             FOREIGN KEY (action_code) REFERENCES application.application_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_action_code_fk42_ind ON application.application (action_code);
+CREATE INDEX application_action_code_fk40_ind ON application.application (action_code);
 
-ALTER TABLE application.service ADD CONSTRAINT service_status_code_fk43 
+ALTER TABLE application.service ADD CONSTRAINT service_status_code_fk41 
             FOREIGN KEY (status_code) REFERENCES application.service_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_status_code_fk43_ind ON application.service (status_code);
+CREATE INDEX service_status_code_fk41_ind ON application.service (status_code);
 
-ALTER TABLE party.party ADD CONSTRAINT party_id_type_code_fk44 
+ALTER TABLE party.party ADD CONSTRAINT party_id_type_code_fk42 
             FOREIGN KEY (id_type_code) REFERENCES party.id_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_id_type_code_fk44_ind ON party.party (id_type_code);
+CREATE INDEX party_id_type_code_fk42_ind ON party.party (id_type_code);
 
-ALTER TABLE application.service ADD CONSTRAINT service_action_code_fk45 
+ALTER TABLE application.service ADD CONSTRAINT service_action_code_fk43 
             FOREIGN KEY (action_code) REFERENCES application.service_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_action_code_fk45_ind ON application.service (action_code);
+CREATE INDEX service_action_code_fk43_ind ON application.service (action_code);
 
-ALTER TABLE application.application_property ADD CONSTRAINT application_property_application_id_fk46 
+ALTER TABLE application.application_property ADD CONSTRAINT application_property_application_id_fk44 
             FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_property_application_id_fk46_ind ON application.application_property (application_id);
+CREATE INDEX application_property_application_id_fk44_ind ON application.application_property (application_id);
 
-ALTER TABLE application.application_uses_source ADD CONSTRAINT application_uses_source_source_id_fk47 
+ALTER TABLE application.application_uses_source ADD CONSTRAINT application_uses_source_source_id_fk45 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX application_uses_source_source_id_fk47_ind ON application.application_uses_source (source_id);
+CREATE INDEX application_uses_source_source_id_fk45_ind ON application.application_uses_source (source_id);
 
-ALTER TABLE application.application_uses_source ADD CONSTRAINT application_uses_source_application_id_fk48 
+ALTER TABLE application.application_uses_source ADD CONSTRAINT application_uses_source_application_id_fk46 
             FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX application_uses_source_application_id_fk48_ind ON application.application_uses_source (application_id);
+CREATE INDEX application_uses_source_application_id_fk46_ind ON application.application_uses_source (application_id);
 
-ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request_type_requires_source_type_request_type_code_fk49 
+ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request_type_requires_source_type_request_type_code_fk47 
             FOREIGN KEY (request_type_code) REFERENCES application.request_type(code) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX request_type_requires_source_type_request_type_code_fk49_ind ON application.request_type_requires_source_type (request_type_code);
+CREATE INDEX request_type_requires_source_type_request_type_code_fk47_ind ON application.request_type_requires_source_type (request_type_code);
 
-ALTER TABLE application.application_property ADD CONSTRAINT application_property_ba_unit_id_fk50 
+ALTER TABLE application.application_property ADD CONSTRAINT application_property_ba_unit_id_fk48 
             FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_property_ba_unit_id_fk50_ind ON application.application_property (ba_unit_id);
+CREATE INDEX application_property_ba_unit_id_fk48_ind ON application.application_property (ba_unit_id);
 
-ALTER TABLE application.application ADD CONSTRAINT application_assignee_id_fk51 
+ALTER TABLE application.application ADD CONSTRAINT application_assignee_id_fk49 
             FOREIGN KEY (assignee_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_assignee_id_fk51_ind ON application.application (assignee_id);
+CREATE INDEX application_assignee_id_fk49_ind ON application.application (assignee_id);
 
-ALTER TABLE application.application ADD CONSTRAINT application_status_code_fk52 
+ALTER TABLE application.application ADD CONSTRAINT application_status_code_fk50 
             FOREIGN KEY (status_code) REFERENCES application.application_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_status_code_fk52_ind ON application.application (status_code);
+CREATE INDEX application_status_code_fk50_ind ON application.application (status_code);
 
-ALTER TABLE system.appuser_setting ADD CONSTRAINT appuser_setting_user_id_fk53 
+ALTER TABLE system.appuser_setting ADD CONSTRAINT appuser_setting_user_id_fk51 
             FOREIGN KEY (user_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX appuser_setting_user_id_fk53_ind ON system.appuser_setting (user_id);
+CREATE INDEX appuser_setting_user_id_fk51_ind ON system.appuser_setting (user_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_availability_status_code_fk54 
+ALTER TABLE source.source ADD CONSTRAINT source_availability_status_code_fk52 
             FOREIGN KEY (availability_status_code) REFERENCES source.availability_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_availability_status_code_fk54_ind ON source.source (availability_status_code);
+CREATE INDEX source_availability_status_code_fk52_ind ON source.source (availability_status_code);
 
-ALTER TABLE source.source ADD CONSTRAINT source_type_code_fk55 
+ALTER TABLE source.source ADD CONSTRAINT source_type_code_fk53 
             FOREIGN KEY (type_code) REFERENCES source.administrative_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_type_code_fk55_ind ON source.source (type_code);
+CREATE INDEX source_type_code_fk53_ind ON source.source (type_code);
 
-ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request_type_requires_source_type_source_type_code_fk56 
+ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request_type_requires_source_type_source_type_code_fk54 
             FOREIGN KEY (source_type_code) REFERENCES source.administrative_source_type(code) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX request_type_requires_source_type_source_type_code_fk56_ind ON application.request_type_requires_source_type (source_type_code);
+CREATE INDEX request_type_requires_source_type_source_type_code_fk54_ind ON application.request_type_requires_source_type (source_type_code);
 
-ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_type_code_fk57 
+ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_type_code_fk55 
             FOREIGN KEY (type_code) REFERENCES system.config_map_layer_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX config_map_layer_type_code_fk57_ind ON system.config_map_layer (type_code);
+CREATE INDEX config_map_layer_type_code_fk55_ind ON system.config_map_layer (type_code);
 
-ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_party_id_fk58 
+ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_party_id_fk56 
             FOREIGN KEY (party_id) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_as_party_party_id_fk58_ind ON administrative.ba_unit_as_party (party_id);
+CREATE INDEX ba_unit_as_party_party_id_fk56_ind ON administrative.ba_unit_as_party (party_id);
 
-ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_ba_unit_id_fk59 
+ALTER TABLE administrative.ba_unit_as_party ADD CONSTRAINT ba_unit_as_party_ba_unit_id_fk57 
             FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_as_party_ba_unit_id_fk59_ind ON administrative.ba_unit_as_party (ba_unit_id);
+CREATE INDEX ba_unit_as_party_ba_unit_id_fk57_ind ON administrative.ba_unit_as_party (ba_unit_id);
 
-ALTER TABLE system.br ADD CONSTRAINT br_technical_type_code_fk60 
+ALTER TABLE system.br ADD CONSTRAINT br_technical_type_code_fk58 
             FOREIGN KEY (technical_type_code) REFERENCES system.br_technical_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_technical_type_code_fk60_ind ON system.br (technical_type_code);
+CREATE INDEX br_technical_type_code_fk58_ind ON system.br (technical_type_code);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_br_id_fk61 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_br_id_fk59 
             FOREIGN KEY (br_id) REFERENCES system.br(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_br_id_fk61_ind ON system.br_validation (br_id);
+CREATE INDEX br_validation_br_id_fk59_ind ON system.br_validation (br_id);
 
-ALTER TABLE system.br_definition ADD CONSTRAINT br_definition_br_id_fk62 
+ALTER TABLE system.br_definition ADD CONSTRAINT br_definition_br_id_fk60 
             FOREIGN KEY (br_id) REFERENCES system.br(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX br_definition_br_id_fk62_ind ON system.br_definition (br_id);
+CREATE INDEX br_definition_br_id_fk60_ind ON system.br_definition (br_id);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_severity_code_fk63 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_severity_code_fk61 
             FOREIGN KEY (severity_code) REFERENCES system.br_severity_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_severity_code_fk63_ind ON system.br_validation (severity_code);
+CREATE INDEX br_validation_severity_code_fk61_ind ON system.br_validation (severity_code);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_code_fk64 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_code_fk62 
             FOREIGN KEY (target_code) REFERENCES system.br_validation_target_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_code_fk64_ind ON system.br_validation (target_code);
+CREATE INDEX br_validation_target_code_fk62_ind ON system.br_validation (target_code);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_rrr_type_code_fk65 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_rrr_type_code_fk63 
             FOREIGN KEY (target_rrr_type_code) REFERENCES administrative.rrr_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_rrr_type_code_fk65_ind ON system.br_validation (target_rrr_type_code);
+CREATE INDEX br_validation_target_rrr_type_code_fk63_ind ON system.br_validation (target_rrr_type_code);
 
-ALTER TABLE administrative.mortgage_isbased_in_rrr ADD CONSTRAINT mortgage_isbased_in_rrr_rrr_id_fk66 
+ALTER TABLE administrative.mortgage_isbased_in_rrr ADD CONSTRAINT mortgage_isbased_in_rrr_rrr_id_fk64 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX mortgage_isbased_in_rrr_rrr_id_fk66_ind ON administrative.mortgage_isbased_in_rrr (rrr_id);
+CREATE INDEX mortgage_isbased_in_rrr_rrr_id_fk64_ind ON administrative.mortgage_isbased_in_rrr (rrr_id);
 
-ALTER TABLE administrative.mortgage_isbased_in_rrr ADD CONSTRAINT mortgage_isbased_in_rrr_mortgage_id_fk67 
+ALTER TABLE administrative.mortgage_isbased_in_rrr ADD CONSTRAINT mortgage_isbased_in_rrr_mortgage_id_fk65 
             FOREIGN KEY (mortgage_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX mortgage_isbased_in_rrr_mortgage_id_fk67_ind ON administrative.mortgage_isbased_in_rrr (mortgage_id);
+CREATE INDEX mortgage_isbased_in_rrr_mortgage_id_fk65_ind ON administrative.mortgage_isbased_in_rrr (mortgage_id);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_status_code_fk68 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_status_code_fk66 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_status_code_fk68_ind ON administrative.rrr (status_code);
+CREATE INDEX rrr_status_code_fk66_ind ON administrative.rrr (status_code);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_status_code_fk69 
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_status_code_fk67 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_status_code_fk69_ind ON administrative.ba_unit (status_code);
+CREATE INDEX ba_unit_status_code_fk67_ind ON administrative.ba_unit (status_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_id_fk70 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_id_fk68 
             FOREIGN KEY (id) REFERENCES cadastre.spatial_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_id_fk70_ind ON cadastre.cadastre_object (id);
+CREATE INDEX cadastre_object_id_fk68_ind ON cadastre.cadastre_object (id);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_status_code_fk71 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_status_code_fk69 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_status_code_fk71_ind ON cadastre.cadastre_object (status_code);
+CREATE INDEX cadastre_object_status_code_fk69_ind ON cadastre.cadastre_object (status_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_type_code_fk72 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_type_code_fk70 
             FOREIGN KEY (type_code) REFERENCES cadastre.cadastre_object_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_type_code_fk72_ind ON cadastre.cadastre_object (type_code);
+CREATE INDEX cadastre_object_type_code_fk70_ind ON cadastre.cadastre_object (type_code);
 
-ALTER TABLE cadastre.legal_space_utility_network ADD CONSTRAINT legal_space_utility_network_id_fk73 
+ALTER TABLE cadastre.legal_space_utility_network ADD CONSTRAINT legal_space_utility_network_id_fk71 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX legal_space_utility_network_id_fk73_ind ON cadastre.legal_space_utility_network (id);
+CREATE INDEX legal_space_utility_network_id_fk71_ind ON cadastre.legal_space_utility_network (id);
 
-ALTER TABLE administrative.source_describes_ba_unit ADD CONSTRAINT source_describes_ba_unit_source_id_fk74 
+ALTER TABLE administrative.source_describes_ba_unit ADD CONSTRAINT source_describes_ba_unit_source_id_fk72 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX source_describes_ba_unit_source_id_fk74_ind ON administrative.source_describes_ba_unit (source_id);
+CREATE INDEX source_describes_ba_unit_source_id_fk72_ind ON administrative.source_describes_ba_unit (source_id);
 
-ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_relation_code_fk75 
+ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_relation_code_fk73 
             FOREIGN KEY (relation_code) REFERENCES administrative.ba_unit_rel_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX required_relationship_baunit_relation_code_fk75_ind ON administrative.required_relationship_baunit (relation_code);
+CREATE INDEX required_relationship_baunit_relation_code_fk73_ind ON administrative.required_relationship_baunit (relation_code);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_status_code_fk76 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_status_code_fk74 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX notation_status_code_fk76_ind ON administrative.notation (status_code);
+CREATE INDEX notation_status_code_fk74_ind ON administrative.notation (status_code);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_ba_unit_id_fk77 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_ba_unit_id_fk75 
             FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_ba_unit_id_fk77_ind ON administrative.notation (ba_unit_id);
+CREATE INDEX notation_ba_unit_id_fk75_ind ON administrative.notation (ba_unit_id);
 
-ALTER TABLE administrative.rrr_share ADD CONSTRAINT rrr_share_rrr_id_fk78 
+ALTER TABLE administrative.rrr_share ADD CONSTRAINT rrr_share_rrr_id_fk76 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX rrr_share_rrr_id_fk78_ind ON administrative.rrr_share (rrr_id);
+CREATE INDEX rrr_share_rrr_id_fk76_ind ON administrative.rrr_share (rrr_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk79 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk77 
             FOREIGN KEY (rrr_id,share_id) REFERENCES administrative.rrr_share(rrr_id,id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_rrr_id_fk79_ind ON administrative.party_for_rrr (rrr_id,share_id);
+CREATE INDEX party_for_rrr_rrr_id_fk77_ind ON administrative.party_for_rrr (rrr_id,share_id);
 
-ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_from_service_id_fk80 
+ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_from_service_id_fk78 
             FOREIGN KEY (from_service_id) REFERENCES application.service(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX transaction_from_service_id_fk80_ind ON transaction.transaction (from_service_id);
+CREATE INDEX transaction_from_service_id_fk78_ind ON transaction.transaction (from_service_id);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_transaction_id_fk81 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_transaction_id_fk79 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_transaction_id_fk81_ind ON administrative.notation (transaction_id);
+CREATE INDEX notation_transaction_id_fk79_ind ON administrative.notation (transaction_id);
 
-ALTER TABLE administrative.source_describes_rrr ADD CONSTRAINT source_describes_rrr_source_id_fk82 
+ALTER TABLE administrative.source_describes_rrr ADD CONSTRAINT source_describes_rrr_source_id_fk80 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX source_describes_rrr_source_id_fk82_ind ON administrative.source_describes_rrr (source_id);
+CREATE INDEX source_describes_rrr_source_id_fk80_ind ON administrative.source_describes_rrr (source_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_party_id_fk83 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_party_id_fk81 
             FOREIGN KEY (party_id) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_party_id_fk83_ind ON administrative.party_for_rrr (party_id);
+CREATE INDEX party_for_rrr_party_id_fk81_ind ON administrative.party_for_rrr (party_id);
 
-ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_status_code_fk84 
+ALTER TABLE transaction.transaction ADD CONSTRAINT transaction_status_code_fk82 
             FOREIGN KEY (status_code) REFERENCES transaction.transaction_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX transaction_status_code_fk84_ind ON transaction.transaction (status_code);
+CREATE INDEX transaction_status_code_fk82_ind ON transaction.transaction (status_code);
 
-ALTER TABLE application.request_type ADD CONSTRAINT request_type_rrr_type_code_fk85 
+ALTER TABLE application.request_type ADD CONSTRAINT request_type_rrr_type_code_fk83 
             FOREIGN KEY (rrr_type_code) REFERENCES administrative.rrr_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX request_type_rrr_type_code_fk85_ind ON application.request_type (rrr_type_code);
+CREATE INDEX request_type_rrr_type_code_fk83_ind ON application.request_type (rrr_type_code);
 
-ALTER TABLE application.request_type ADD CONSTRAINT request_type_type_action_code_fk86 
+ALTER TABLE application.request_type ADD CONSTRAINT request_type_type_action_code_fk84 
             FOREIGN KEY (type_action_code) REFERENCES application.type_action(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX request_type_type_action_code_fk86_ind ON application.request_type (type_action_code);
+CREATE INDEX request_type_type_action_code_fk84_ind ON application.request_type (type_action_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_mortgage_type_code_fk87 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_mortgage_type_code_fk85 
             FOREIGN KEY (mortgage_type_code) REFERENCES administrative.mortgage_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_mortgage_type_code_fk87_ind ON administrative.rrr (mortgage_type_code);
+CREATE INDEX rrr_mortgage_type_code_fk85_ind ON administrative.rrr (mortgage_type_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_transaction_id_fk88 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_transaction_id_fk86 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX rrr_transaction_id_fk88_ind ON administrative.rrr (transaction_id);
+CREATE INDEX rrr_transaction_id_fk86_ind ON administrative.rrr (transaction_id);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_transaction_id_fk89 
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_transaction_id_fk87 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX ba_unit_transaction_id_fk89_ind ON administrative.ba_unit (transaction_id);
+CREATE INDEX ba_unit_transaction_id_fk87_ind ON administrative.ba_unit (transaction_id);
 
-ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk90 
+ALTER TABLE administrative.party_for_rrr ADD CONSTRAINT party_for_rrr_rrr_id_fk88 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX party_for_rrr_rrr_id_fk90_ind ON administrative.party_for_rrr (rrr_id);
+CREATE INDEX party_for_rrr_rrr_id_fk88_ind ON administrative.party_for_rrr (rrr_id);
 
-ALTER TABLE administrative.notation ADD CONSTRAINT notation_rrr_id_fk91 
+ALTER TABLE administrative.notation ADD CONSTRAINT notation_rrr_id_fk89 
             FOREIGN KEY (rrr_id) REFERENCES administrative.rrr(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX notation_rrr_id_fk91_ind ON administrative.notation (rrr_id);
+CREATE INDEX notation_rrr_id_fk89_ind ON administrative.notation (rrr_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_transaction_id_fk92 
+ALTER TABLE source.source ADD CONSTRAINT source_transaction_id_fk90 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX source_transaction_id_fk92_ind ON source.source (transaction_id);
+CREATE INDEX source_transaction_id_fk90_ind ON source.source (transaction_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_status_code_fk93 
+ALTER TABLE source.source ADD CONSTRAINT source_status_code_fk91 
             FOREIGN KEY (status_code) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_status_code_fk93_ind ON source.source (status_code);
+CREATE INDEX source_status_code_fk91_ind ON source.source (status_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_building_unit_type_code_fk94 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_building_unit_type_code_fk92 
             FOREIGN KEY (building_unit_type_code) REFERENCES cadastre.building_unit_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_building_unit_type_code_fk94_ind ON cadastre.cadastre_object (building_unit_type_code);
+CREATE INDEX cadastre_object_building_unit_type_code_fk92_ind ON cadastre.cadastre_object (building_unit_type_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_transaction_id_fk95 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_transaction_id_fk93 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE Cascade;
-CREATE INDEX cadastre_object_transaction_id_fk95_ind ON cadastre.cadastre_object (transaction_id);
+CREATE INDEX cadastre_object_transaction_id_fk93_ind ON cadastre.cadastre_object (transaction_id);
 
-ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_cadastre_object_id_fk96 
+ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_cadastre_object_id_fk94 
             FOREIGN KEY (cadastre_object_id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_target_cadastre_object_id_fk96_ind ON cadastre.cadastre_object_target (cadastre_object_id);
+CREATE INDEX cadastre_object_target_cadastre_object_id_fk94_ind ON cadastre.cadastre_object_target (cadastre_object_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_gender_code_fk97 
+ALTER TABLE party.party ADD CONSTRAINT party_gender_code_fk95 
             FOREIGN KEY (gender_code) REFERENCES party.gender_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_gender_code_fk97_ind ON party.party (gender_code);
+CREATE INDEX party_gender_code_fk95_ind ON party.party (gender_code);
 
-ALTER TABLE cadastre.survey_point ADD CONSTRAINT survey_point_transaction_id_fk98 
+ALTER TABLE cadastre.survey_point ADD CONSTRAINT survey_point_transaction_id_fk96 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX survey_point_transaction_id_fk98_ind ON cadastre.survey_point (transaction_id);
+CREATE INDEX survey_point_transaction_id_fk96_ind ON cadastre.survey_point (transaction_id);
 
-ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_transaction_id_fk99 
+ALTER TABLE cadastre.cadastre_object_target ADD CONSTRAINT cadastre_object_target_transaction_id_fk97 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_target_transaction_id_fk99_ind ON cadastre.cadastre_object_target (transaction_id);
+CREATE INDEX cadastre_object_target_transaction_id_fk97_ind ON cadastre.cadastre_object_target (transaction_id);
 
-ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_transaction_id_fk100 
+ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_transaction_id_fk98 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX transaction_source_transaction_id_fk100_ind ON transaction.transaction_source (transaction_id);
+CREATE INDEX transaction_source_transaction_id_fk98_ind ON transaction.transaction_source (transaction_id);
 
-ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_source_id_fk101 
+ALTER TABLE transaction.transaction_source ADD CONSTRAINT transaction_source_source_id_fk99 
             FOREIGN KEY (source_id) REFERENCES source.source(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX transaction_source_source_id_fk101_ind ON transaction.transaction_source (source_id);
+CREATE INDEX transaction_source_source_id_fk99_ind ON transaction.transaction_source (source_id);
 
-ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appuser_id_fk102 
+ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appuser_id_fk100 
             FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX appuser_appgroup_appuser_id_fk102_ind ON system.appuser_appgroup (appuser_id);
+CREATE INDEX appuser_appgroup_appuser_id_fk100_ind ON system.appuser_appgroup (appuser_id);
 
-ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appgroup_id_fk103 
+ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appgroup_id_fk101 
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX appuser_appgroup_appgroup_id_fk103_ind ON system.appuser_appgroup (appgroup_id);
+CREATE INDEX appuser_appgroup_appgroup_id_fk101_ind ON system.appuser_appgroup (appgroup_id);
 
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk104 
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk102 
             FOREIGN KEY (approle_code) REFERENCES system.approle(code) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_approle_code_fk104_ind ON system.approle_appgroup (approle_code);
+CREATE INDEX approle_appgroup_approle_code_fk102_ind ON system.approle_appgroup (approle_code);
 
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk105 
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk103 
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_appgroup_id_fk105_ind ON system.approle_appgroup (appgroup_id);
+CREATE INDEX approle_appgroup_appgroup_id_fk103_ind ON system.approle_appgroup (appgroup_id);
 
-ALTER TABLE application.service_action_type ADD CONSTRAINT service_action_type_status_to_set_fk106 
+ALTER TABLE application.service_action_type ADD CONSTRAINT service_action_type_status_to_set_fk104 
             FOREIGN KEY (status_to_set) REFERENCES application.service_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX service_action_type_status_to_set_fk106_ind ON application.service_action_type (status_to_set);
+CREATE INDEX service_action_type_status_to_set_fk104_ind ON application.service_action_type (status_to_set);
 
-ALTER TABLE application.application_action_type ADD CONSTRAINT application_action_type_status_to_set_fk107 
+ALTER TABLE application.application_action_type ADD CONSTRAINT application_action_type_status_to_set_fk105 
             FOREIGN KEY (status_to_set) REFERENCES application.application_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_action_type_status_to_set_fk107_ind ON application.application_action_type (status_to_set);
+CREATE INDEX application_action_type_status_to_set_fk105_ind ON application.application_action_type (status_to_set);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_application_moment_fk108 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_application_moment_fk106 
             FOREIGN KEY (target_application_moment) REFERENCES application.application_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_application_moment_fk108_ind ON system.br_validation (target_application_moment);
+CREATE INDEX br_validation_target_application_moment_fk106_ind ON system.br_validation (target_application_moment);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_service_moment_fk109 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_service_moment_fk107 
             FOREIGN KEY (target_service_moment) REFERENCES application.service_action_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_service_moment_fk109_ind ON system.br_validation (target_service_moment);
+CREATE INDEX br_validation_target_service_moment_fk107_ind ON system.br_validation (target_service_moment);
 
-ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_reg_moment_fk110 
+ALTER TABLE system.br_validation ADD CONSTRAINT br_validation_target_reg_moment_fk108 
             FOREIGN KEY (target_reg_moment) REFERENCES transaction.reg_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX br_validation_target_reg_moment_fk110_ind ON system.br_validation (target_reg_moment);
+CREATE INDEX br_validation_target_reg_moment_fk108_ind ON system.br_validation (target_reg_moment);
 
-ALTER TABLE system.query_field ADD CONSTRAINT query_field_query_name_fk111 
+ALTER TABLE system.query_field ADD CONSTRAINT query_field_query_name_fk109 
             FOREIGN KEY (query_name) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX query_field_query_name_fk111_ind ON system.query_field (query_name);
+CREATE INDEX query_field_query_name_fk109_ind ON system.query_field (query_name);
 
-ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_fk112 
+ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_fk110 
             FOREIGN KEY (pojo_query_name) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX config_map_layer_pojo_query_name_fk112_ind ON system.config_map_layer (pojo_query_name);
+CREATE INDEX config_map_layer_pojo_query_name_fk110_ind ON system.config_map_layer (pojo_query_name);
 
-ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_for_select_fk113 
+ALTER TABLE system.config_map_layer ADD CONSTRAINT config_map_layer_pojo_query_name_for_select_fk111 
             FOREIGN KEY (pojo_query_name_for_select) REFERENCES system.query(name) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX config_map_layer_pojo_query_name_for_select_fk113_ind ON system.config_map_layer (pojo_query_name_for_select);
+CREATE INDEX config_map_layer_pojo_query_name_for_select_fk111_ind ON system.config_map_layer (pojo_query_name_for_select);
 
-ALTER TABLE cadastre.cadastre_object_node_target ADD CONSTRAINT cadastre_object_node_target_transaction_id_fk114 
+ALTER TABLE cadastre.cadastre_object_node_target ADD CONSTRAINT cadastre_object_node_target_transaction_id_fk112 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX cadastre_object_node_target_transaction_id_fk114_ind ON cadastre.cadastre_object_node_target (transaction_id);
+CREATE INDEX cadastre_object_node_target_transaction_id_fk112_ind ON cadastre.cadastre_object_node_target (transaction_id);
 
-ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_ba_unit_id_fk115 
+ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_ba_unit_id_fk113 
             FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_target_ba_unit_id_fk115_ind ON administrative.ba_unit_target (ba_unit_id);
+CREATE INDEX ba_unit_target_ba_unit_id_fk113_ind ON administrative.ba_unit_target (ba_unit_id);
 
-ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_transaction_id_fk116 
+ALTER TABLE administrative.ba_unit_target ADD CONSTRAINT ba_unit_target_transaction_id_fk114 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX ba_unit_target_transaction_id_fk116_ind ON administrative.ba_unit_target (transaction_id);
+CREATE INDEX ba_unit_target_transaction_id_fk114_ind ON administrative.ba_unit_target (transaction_id);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_id_fk117 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_id_fk115 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX segments_id_fk117_ind ON cadastre.segments (id);
+CREATE INDEX segments_id_fk115_ind ON cadastre.segments (id);
 
-ALTER TABLE cadastre.verticalParcel ADD CONSTRAINT verticalParcel_id_fk118 
+ALTER TABLE cadastre.verticalParcel ADD CONSTRAINT verticalParcel_id_fk116 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX verticalParcel_id_fk118_ind ON cadastre.verticalParcel (id);
+CREATE INDEX verticalParcel_id_fk116_ind ON cadastre.verticalParcel (id);
 
-ALTER TABLE cadastre.construction ADD CONSTRAINT construction_id_fk119 
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_id_fk117 
             FOREIGN KEY (id) REFERENCES cadastre.cadastre_object(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX construction_id_fk119_ind ON cadastre.construction (id);
+CREATE INDEX construction_id_fk117_ind ON cadastre.construction (id);
 
-ALTER TABLE cadastre.construction ADD CONSTRAINT construction_constype_fk120 
+ALTER TABLE cadastre.construction ADD CONSTRAINT construction_constype_fk118 
             FOREIGN KEY (constype) REFERENCES cadastre.construction_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX construction_constype_fk120_ind ON cadastre.construction (constype);
+CREATE INDEX construction_constype_fk118_ind ON cadastre.construction (constype);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_mbound_type_fk121 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_mbound_type_fk119 
             FOREIGN KEY (mbound_type) REFERENCES cadastre.map_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_mbound_type_fk121_ind ON cadastre.segments (mbound_type);
+CREATE INDEX segments_mbound_type_fk119_ind ON cadastre.segments (mbound_type);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_abound_type_fk122 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_abound_type_fk120 
             FOREIGN KEY (abound_type) REFERENCES cadastre.adminstrative_boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_abound_type_fk122_ind ON cadastre.segments (abound_type);
+CREATE INDEX segments_abound_type_fk120_ind ON cadastre.segments (abound_type);
 
-ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk123 
+ALTER TABLE cadastre.segments ADD CONSTRAINT segments_bound_type_fk121 
             FOREIGN KEY (bound_type) REFERENCES cadastre.boundary_type(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX segments_bound_type_fk123_ind ON cadastre.segments (bound_type);
+CREATE INDEX segments_bound_type_fk121_ind ON cadastre.segments (bound_type);
 
-ALTER TABLE administrative.loc ADD CONSTRAINT loc_moth_id_fk124 
+ALTER TABLE administrative.loc ADD CONSTRAINT loc_moth_id_fk122 
             FOREIGN KEY (moth_id) REFERENCES administrative.moth(id) ON UPDATE Cascade ON DELETE Cascade;
-CREATE INDEX loc_moth_id_fk124_ind ON administrative.loc (moth_id);
+CREATE INDEX loc_moth_id_fk122_ind ON administrative.loc (moth_id);
 
-ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk125 
+ALTER TABLE system.office ADD CONSTRAINT office_district_code_fk123 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX office_district_code_fk125_ind ON system.office (district_code);
+CREATE INDEX office_district_code_fk123_ind ON system.office (district_code);
 
-ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk126 
+ALTER TABLE system.vdc ADD CONSTRAINT vdc_district_code_fk124 
             FOREIGN KEY (district_code) REFERENCES system.district(code) ON UPDATE Cascade ON DELETE RESTRICT;
-CREATE INDEX vdc_district_code_fk126_ind ON system.vdc (district_code);
+CREATE INDEX vdc_district_code_fk124_ind ON system.vdc (district_code);
+
+ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk125 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX department_office_code_fk125_ind ON system.department (office_code);
+
+ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk126 
+            FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX appuser_department_code_fk126_ind ON system.appuser (department_code);
 
 ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk127 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX department_office_code_fk127_ind ON system.department (office_code);
 
-ALTER TABLE system.appuser ADD CONSTRAINT appuser_department_code_fk128 
-            FOREIGN KEY (department_code) REFERENCES system.department(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX appuser_department_code_fk128_ind ON system.appuser (department_code);
-
-ALTER TABLE system.department ADD CONSTRAINT department_office_code_fk129 
-            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX department_office_code_fk129_ind ON system.department (office_code);
-
-ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk130 
+ALTER TABLE administrative.moth ADD CONSTRAINT moth_vdc_code_fk128 
             FOREIGN KEY (vdc_code) REFERENCES system.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX moth_vdc_code_fk130_ind ON administrative.moth (vdc_code);
+CREATE INDEX moth_vdc_code_fk128_ind ON administrative.moth (vdc_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id_fk131 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id_fk129 
             FOREIGN KEY (map_sheet_id) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_map_sheet_id_fk131_ind ON cadastre.cadastre_object (map_sheet_id);
+CREATE INDEX cadastre_object_map_sheet_id_fk129_ind ON cadastre.cadastre_object (map_sheet_id);
 
-ALTER TABLE source.source ADD CONSTRAINT source_office_code_fk132 
+ALTER TABLE source.source ADD CONSTRAINT source_office_code_fk130 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX source_office_code_fk132_ind ON source.source (office_code);
+CREATE INDEX source_office_code_fk130_ind ON source.source (office_code);
 
-ALTER TABLE document.document ADD CONSTRAINT document_office_code_fk133 
+ALTER TABLE document.document ADD CONSTRAINT document_office_code_fk131 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX document_office_code_fk133_ind ON document.document (office_code);
+CREATE INDEX document_office_code_fk131_ind ON document.document (office_code);
+
+ALTER TABLE source.source ADD CONSTRAINT source_maintype_fk132 
+            FOREIGN KEY (maintype) REFERENCES source.presentation_form_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX source_maintype_fk132_ind ON source.source (maintype);
+
+ALTER TABLE source.source ADD CONSTRAINT source_archive_id_fk133 
+            FOREIGN KEY (archive_id) REFERENCES source.archive(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX source_archive_id_fk133_ind ON source.source (archive_id);
 
 ALTER TABLE party.party ADD CONSTRAINT party_office_code_fk134 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -5494,6 +5494,74 @@ CREATE TRIGGER trg_check_cadastre_object before insert or update
    ON administrative.ba_unit FOR EACH ROW
    EXECUTE PROCEDURE administrative.f_for_tbl_ba_unit_trg_check_cadastre_object();
     
+-- triggers for table cadastre.cadastre_object -- 
+
+ 
+
+CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_remove() RETURNS TRIGGER 
+AS $$
+BEGIN
+  delete from cadastre.spatial_unit where id=old.id;
+  return old;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_remove ON cadastre.cadastre_object CASCADE;
+CREATE TRIGGER trg_remove before delete
+   ON cadastre.cadastre_object FOR EACH ROW
+   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_remove();
+    
+
+CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_new() RETURNS TRIGGER 
+AS $$
+BEGIN
+  if (select count(*)=0 from cadastre.spatial_unit where id=new.id) then
+    insert into cadastre.spatial_unit(id, rowidentifier, change_user) 
+    values(new.id, new.rowidentifier,new.change_user);
+  end if;
+  return new;
+END;
+
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_new ON cadastre.cadastre_object CASCADE;
+CREATE TRIGGER trg_new before insert
+   ON cadastre.cadastre_object FOR EACH ROW
+   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_new();
+    
+
+CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_geommodify() RETURNS TRIGGER 
+AS $$
+declare
+  geom_is_modified boolean;
+  rec record;
+  rec_snap record;
+  snapping_tolerance float;
+begin
+  snapping_tolerance = coalesce(system.get_setting('map-tolerance')::double precision, 0.01);
+  geom_is_modified = (tg_op = 'INSERT' and new.geom_polygon is not null);
+  if tg_op= 'UPDATE' and new.geom_polygon is not null then
+    geom_is_modified = not st_equals(new.geom_polygon, old.geom_polygon);
+  end if;
+  if not geom_is_modified then
+    return new;
+  end if;
+  for rec in select co.id, co.geom_polygon 
+                 from cadastre.cadastre_object co 
+                 where  co.id != new.id 
+                     and co.geom_polygon is not null 
+                     and st_dwithin(new.geom_polygon, co.geom_polygon, snapping_tolerance)
+  loop
+    select * into rec_snap 
+        from snap_geometry_to_geometry(new.geom_polygon, rec.geom_polygon, snapping_tolerance, false);
+      new.geom_polygon = rec_snap.geom_to_snap;
+  end loop;
+  return new;
+end;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_geommodify ON cadastre.cadastre_object CASCADE;
+CREATE TRIGGER trg_geommodify before insert or update
+   ON cadastre.cadastre_object FOR EACH ROW
+   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_geommodify();
+    
 -- triggers for table administrative.rrr -- 
 
  
@@ -5574,74 +5642,6 @@ DROP TRIGGER IF EXISTS trg_change_from_pending ON administrative.rrr CASCADE;
 CREATE TRIGGER trg_change_from_pending before update
    ON administrative.rrr FOR EACH ROW
    EXECUTE PROCEDURE administrative.f_for_tbl_rrr_trg_change_from_pending();
-    
--- triggers for table cadastre.cadastre_object -- 
-
- 
-
-CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_remove() RETURNS TRIGGER 
-AS $$
-BEGIN
-  delete from cadastre.spatial_unit where id=old.id;
-  return old;
-END;
-$$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS trg_remove ON cadastre.cadastre_object CASCADE;
-CREATE TRIGGER trg_remove before delete
-   ON cadastre.cadastre_object FOR EACH ROW
-   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_remove();
-    
-
-CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_new() RETURNS TRIGGER 
-AS $$
-BEGIN
-  if (select count(*)=0 from cadastre.spatial_unit where id=new.id) then
-    insert into cadastre.spatial_unit(id, rowidentifier, change_user) 
-    values(new.id, new.rowidentifier,new.change_user);
-  end if;
-  return new;
-END;
-
-$$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS trg_new ON cadastre.cadastre_object CASCADE;
-CREATE TRIGGER trg_new before insert
-   ON cadastre.cadastre_object FOR EACH ROW
-   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_new();
-    
-
-CREATE OR REPLACE FUNCTION cadastre.f_for_tbl_cadastre_object_trg_geommodify() RETURNS TRIGGER 
-AS $$
-declare
-  geom_is_modified boolean;
-  rec record;
-  rec_snap record;
-  snapping_tolerance float;
-begin
-  snapping_tolerance = coalesce(system.get_setting('map-tolerance')::double precision, 0.01);
-  geom_is_modified = (tg_op = 'INSERT' and new.geom_polygon is not null);
-  if tg_op= 'UPDATE' and new.geom_polygon is not null then
-    geom_is_modified = not st_equals(new.geom_polygon, old.geom_polygon);
-  end if;
-  if not geom_is_modified then
-    return new;
-  end if;
-  for rec in select co.id, co.geom_polygon 
-                 from cadastre.cadastre_object co 
-                 where  co.id != new.id 
-                     and co.geom_polygon is not null 
-                     and st_dwithin(new.geom_polygon, co.geom_polygon, snapping_tolerance)
-  loop
-    select * into rec_snap 
-        from snap_geometry_to_geometry(new.geom_polygon, rec.geom_polygon, snapping_tolerance, false);
-      new.geom_polygon = rec_snap.geom_to_snap;
-  end loop;
-  return new;
-end;
-$$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS trg_geommodify ON cadastre.cadastre_object CASCADE;
-CREATE TRIGGER trg_geommodify before insert or update
-   ON cadastre.cadastre_object FOR EACH ROW
-   EXECUTE PROCEDURE cadastre.f_for_tbl_cadastre_object_trg_geommodify();
     
 
 --Extra modifications added to the script that cannot be generated --
@@ -6009,28 +6009,23 @@ END;
 $$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION administrative.get_rrrloc_notation(text, text) 
+RETURNS varchar
+AS $$ 
+DECLARE result varchar;
+BEGIN
+	SELECT n.notation_text INTO result
+	FROM administrative.rrr r INNER JOIN administrative.notation n ON r.id = n.rrr_id
+	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.status_code=$2 LIMIT 1;
+	RETURN result;
+END;
+$$
+LANGUAGE plpgsql;
+
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 
 where r.code not in (select approle_code from system.approle_appgroup g where appgroup_id = 'super-group-id');
 
-
--------View cadastre.survey_control ---------
-DROP VIEW IF EXISTS cadastre.survey_control CASCADE;
-CREATE VIEW cadastre.survey_control AS SELECT su.id, su.label, su.geom
-FROM cadastre.level l, cadastre.spatial_unit su 
-WHERE l.id = su.level_id AND l.name = 'Survey Control';;
-
--------View cadastre.road ---------
-DROP VIEW IF EXISTS cadastre.road CASCADE;
-CREATE VIEW cadastre.road AS SELECT su.id, su.label, su.geom
-FROM cadastre.level l, cadastre.spatial_unit su 
-WHERE l.id= su.level_id AND l.name = 'Roads';;
-
--------View cadastre.place_name ---------
-DROP VIEW IF EXISTS cadastre.place_name CASCADE;
-CREATE VIEW cadastre.place_name AS SELECT su.id, su.label, su.geom
-FROM cadastre.level l, cadastre.spatial_unit su 
-WHERE l.id = su.level_id AND l.name = 'Place Names';;
 
 -------View system.user_roles ---------
 DROP VIEW IF EXISTS system.user_roles CASCADE;
@@ -6039,24 +6034,6 @@ CREATE VIEW system.user_roles AS SELECT u.username, rg.approle_code as rolename
    JOIN system.appuser_appgroup ug ON (u.id = ug.appuser_id and u.active)
    JOIN system.approle_appgroup rg ON ug.appgroup_id = rg.appgroup_id
 ;
-
--------View application.application_log ---------
-DROP VIEW IF EXISTS application.application_log CASCADE;
-CREATE VIEW application.application_log AS select uuid_generate_v1()::varchar as id, id as application_id, action_code as action_type, '' as service_order, null as service_type, change_time, 
-(select first_name || ' ' || last_name from system.appuser where id = application.change_user) as user_fullname, action_notes
-from application.application
-union
-select uuid_generate_v1()::varchar as id, id as application_id, action_code, '' as service_order, null as service_type, change_time, 
-(select first_name || ' ' || last_name from system.appuser where id = application_historic.change_user) as user_fullname, action_notes
-from application.application_historic 
-union
-select uuid_generate_v1()::varchar as id, application_id, status_code, service_order::varchar, request_type_code, change_time, 
-(select first_name || ' ' || last_name from system.appuser where id = service.change_user) as user_fullname, action_notes
-from application.service
-union 
-select uuid_generate_v1()::varchar as id, application_id, status_code, service_order::varchar, request_type_code, change_time, 
-(select first_name || ' ' || last_name from system.appuser where id = service_historic.change_user) as user_fullname, action_notes
-from application.service_historic;;
 
 -------View system.br_current ---------
 DROP VIEW IF EXISTS system.br_current CASCADE;
@@ -6078,6 +6055,24 @@ FROM system.br b
   JOIN system.br_definition bd ON b.id = bd.br_id
 WHERE now() >= bd.active_from AND now() <= bd.active_until
 order by b.id;
+
+-------View cadastre.road ---------
+DROP VIEW IF EXISTS cadastre.road CASCADE;
+CREATE VIEW cadastre.road AS SELECT su.id, su.label, su.geom
+FROM cadastre.level l, cadastre.spatial_unit su 
+WHERE l.id= su.level_id AND l.name = 'Roads';;
+
+-------View cadastre.survey_control ---------
+DROP VIEW IF EXISTS cadastre.survey_control CASCADE;
+CREATE VIEW cadastre.survey_control AS SELECT su.id, su.label, su.geom
+FROM cadastre.level l, cadastre.spatial_unit su 
+WHERE l.id = su.level_id AND l.name = 'Survey Control';;
+
+-------View cadastre.place_name ---------
+DROP VIEW IF EXISTS cadastre.place_name CASCADE;
+CREATE VIEW cadastre.place_name AS SELECT su.id, su.label, su.geom
+FROM cadastre.level l, cadastre.spatial_unit su 
+WHERE l.id = su.level_id AND l.name = 'Place Names';;
 
 
 -- Scan tables and views for geometry columns                 and populate geometry_columns table
