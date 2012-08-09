@@ -1081,12 +1081,9 @@ CREATE TABLE administrative.rrr(
     is_terminating bool NOT NULL DEFAULT (false),
     restriction_office_code varchar(20),
     restriction_reason_code varchar(20),
+    restriction_release_reason_code varchar(20),
     office_code varchar(20) NOT NULL,
     bundle_number varchar(15),
-    pana_number varchar(15),
-    reference_date timestamp,
-    reference_number varchar(15),
-    serial_number varchar(15),
     price varchar(15),
     owner_type_code varchar(20),
     share_type_code varchar(20),
@@ -1133,12 +1130,9 @@ CREATE TABLE administrative.rrr_historic
     is_terminating bool,
     restriction_office_code varchar(20),
     restriction_reason_code varchar(20),
+    restriction_release_reason_code varchar(20),
     office_code varchar(20),
     bundle_number varchar(15),
-    pana_number varchar(15),
-    reference_date timestamp,
-    reference_number varchar(15),
-    serial_number varchar(15),
     price varchar(15),
     owner_type_code varchar(20),
     share_type_code varchar(20),
@@ -2262,7 +2256,6 @@ CREATE TABLE application.service(
 CREATE INDEX service_index_on_rowidentifier ON application.service (rowidentifier);
 
     
-<<<<<<< HEAD
 DROP TRIGGER IF EXISTS __track_changes ON application.service CASCADE;
 CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
    ON application.service FOR EACH ROW
@@ -2306,35 +2299,6 @@ DROP TABLE IF EXISTS party.party_role CASCADE;
 CREATE TABLE party.party_role(
     party_id varchar(40) NOT NULL,
     type_code varchar(20) NOT NULL,
-=======
---Table administrative.rrr ----
-DROP TABLE IF EXISTS administrative.rrr CASCADE;
-CREATE TABLE administrative.rrr(
-    id varchar(40) NOT NULL,
-    ba_unit_id varchar(40) NOT NULL,
-    nr varchar(20) NOT NULL,
-    type_code varchar(20) NOT NULL,
-    status_code varchar(20) NOT NULL DEFAULT ('pending'),
-    is_primary bool NOT NULL DEFAULT (false),
-    transaction_id varchar(40) NOT NULL,
-    registration_date timestamp,
-    expiration_date timestamp,
-    share double precision,
-    mortgage_amount numeric(29, 2),
-    mortgage_interest_rate numeric(5, 2),
-    mortgage_ranking integer,
-    mortgage_type_code varchar(20),
-    loc_id varchar(40),
-    is_terminating bool NOT NULL DEFAULT (false),
-    restriction_office_code varchar(20),
-    restriction_reason_code varchar(20),
-    restriction_release_reason_code varchar(20),
-    office_code varchar(20) NOT NULL,
-    bundle_number varchar(15),
-    price varchar(15),
-    owner_type_code varchar(20),
-    share_type_code varchar(20),
->>>>>>> 2f4ef84b23bd93bfb41a76281114ffdaa88dbedd
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2362,29 +2326,6 @@ CREATE TABLE party.party_role_historic
 (
     party_id varchar(40),
     type_code varchar(20),
-<<<<<<< HEAD
-=======
-    status_code varchar(20),
-    is_primary bool,
-    transaction_id varchar(40),
-    registration_date timestamp,
-    expiration_date timestamp,
-    share double precision,
-    mortgage_amount numeric(29, 2),
-    mortgage_interest_rate numeric(5, 2),
-    mortgage_ranking integer,
-    mortgage_type_code varchar(20),
-    loc_id varchar(40),
-    is_terminating bool,
-    restriction_office_code varchar(20),
-    restriction_reason_code varchar(20),
-    restriction_release_reason_code varchar(20),
-    office_code varchar(20),
-    bundle_number varchar(15),
-    price varchar(15),
-    owner_type_code varchar(20),
-    share_type_code varchar(20),
->>>>>>> 2f4ef84b23bd93bfb41a76281114ffdaa88dbedd
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2641,42 +2582,12 @@ insert into source.presentation_form_type(code, display_value, status) values('v
 insert into source.presentation_form_type(code, display_value, status) values('videoHardcopy', 'Hardcopy Video::::Video in Hardcopy', 'c');
 
 
-<<<<<<< HEAD
 
 --Table source.archive ----
 DROP TABLE IF EXISTS source.archive CASCADE;
 CREATE TABLE source.archive(
     id varchar(40) NOT NULL,
     name varchar(50) NOT NULL,
-=======
-    
---Table administrative.restriction_release_reason ----
-DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
-CREATE TABLE administrative.restriction_release_reason(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table administrative.restriction_release_reason -- 
-insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
-
-
-
---Table administrative.mortgage_isbased_in_rrr ----
-DROP TABLE IF EXISTS administrative.mortgage_isbased_in_rrr CASCADE;
-CREATE TABLE administrative.mortgage_isbased_in_rrr(
-    mortgage_id varchar(40) NOT NULL,
-    rrr_id varchar(40) NOT NULL,
->>>>>>> 2f4ef84b23bd93bfb41a76281114ffdaa88dbedd
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3083,7 +2994,6 @@ CREATE TABLE system.setting(
 );
 
     
-<<<<<<< HEAD
  -- Data for the table system.setting -- 
 insert into system.setting(name, vl, active, description) values('map-srid', '2193', true, 'The srid of the geographic data that are administered in the system.');
 insert into system.setting(name, vl, active, description) values('map-west', '1776400', true, 'The most west coordinate. It is used in the map control.');
@@ -3137,12 +3047,6 @@ DROP TABLE IF EXISTS system.config_map_layer CASCADE;
 CREATE TABLE system.config_map_layer(
     name varchar(50) NOT NULL,
     title varchar(100) NOT NULL,
-=======
---Table cadastre.spatial_value_area ----
-DROP TABLE IF EXISTS cadastre.spatial_value_area CASCADE;
-CREATE TABLE cadastre.spatial_value_area(
-    spatial_unit_id varchar(40) NOT NULL,
->>>>>>> 2f4ef84b23bd93bfb41a76281114ffdaa88dbedd
     type_code varchar(20) NOT NULL,
     wms_url varchar(500),
     wms_layers varchar(500),
@@ -4851,20 +4755,6 @@ CREATE TABLE cadastre.land_class(
     -- Internal constraints
     
     CONSTRAINT land_class_pkey PRIMARY KEY (code)
-);
-
-    
---Table system.guthi_name ----
-DROP TABLE IF EXISTS system.guthi_name CASCADE;
-CREATE TABLE system.guthi_name(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT guthi_name_pkey PRIMARY KEY (code)
 );
 
     
