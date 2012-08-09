@@ -2855,6 +2855,12 @@ CREATE TABLE administrative.owner_type(
 );
 
     
+ -- Data for the table administrative.owner_type -- 
+insert into administrative.owner_type(code, display_value, description, status) values('private', 'Private', 'Private', 'c');
+insert into administrative.owner_type(code, display_value, description, status) values('group', 'Group', 'Group', 'c');
+
+
+
 --Table administrative.share_type ----
 DROP TABLE IF EXISTS administrative.share_type CASCADE;
 CREATE TABLE administrative.share_type(
@@ -2869,6 +2875,12 @@ CREATE TABLE administrative.share_type(
 );
 
     
+ -- Data for the table administrative.share_type -- 
+insert into administrative.share_type(code, display_value, description, status) values('common', 'Common share', 'Common share', 'c');
+insert into administrative.share_type(code, display_value, description, status) values('share', 'Equal share', 'Equal share', 'c');
+
+
+
 --Table administrative.restriction_release_reason ----
 DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
 CREATE TABLE administrative.restriction_release_reason(
