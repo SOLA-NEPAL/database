@@ -567,6 +567,7 @@ CREATE TABLE source.source(
     maintype varchar(20),
     la_nr varchar(20) NOT NULL,
     reference_nr varchar(20),
+    serial_nr varchar(20),
     archive_id varchar(40),
     acceptance date,
     recordation date,
@@ -608,6 +609,7 @@ CREATE TABLE source.source_historic
     maintype varchar(20),
     la_nr varchar(20),
     reference_nr varchar(20),
+    serial_nr varchar(20),
     archive_id varchar(40),
     acceptance date,
     recordation date,
@@ -2568,20 +2570,6 @@ CREATE TABLE cadastre.land_class(
 );
 
     
---Table system.guthi_name ----
-DROP TABLE IF EXISTS system.guthi_name CASCADE;
-CREATE TABLE system.guthi_name(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT guthi_name_pkey PRIMARY KEY (code)
-);
-
-    
 --Table administrative.rrr ----
 DROP TABLE IF EXISTS administrative.rrr CASCADE;
 CREATE TABLE administrative.rrr(
@@ -2603,12 +2591,9 @@ CREATE TABLE administrative.rrr(
     is_terminating bool NOT NULL DEFAULT (false),
     restriction_office_code varchar(20),
     restriction_reason_code varchar(20),
+    restriction_release_reason_code varchar(20),
     office_code varchar(20) NOT NULL,
     bundle_number varchar(15),
-    pana_number varchar(15),
-    reference_date timestamp,
-    reference_number varchar(15),
-    serial_number varchar(15),
     price varchar(15),
     owner_type_code varchar(20),
     share_type_code varchar(20),
@@ -2655,12 +2640,9 @@ CREATE TABLE administrative.rrr_historic
     is_terminating bool,
     restriction_office_code varchar(20),
     restriction_reason_code varchar(20),
+    restriction_release_reason_code varchar(20),
     office_code varchar(20),
     bundle_number varchar(15),
-    pana_number varchar(15),
-    reference_date timestamp,
-    reference_number varchar(15),
-    serial_number varchar(15),
     price varchar(15),
     owner_type_code varchar(20),
     share_type_code varchar(20),
@@ -2887,6 +2869,27 @@ CREATE TABLE administrative.share_type(
 );
 
     
+--Table administrative.restriction_release_reason ----
+DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
+CREATE TABLE administrative.restriction_release_reason(
+    code varchar(20) NOT NULL,
+    display_value varchar(250) NOT NULL,
+    description varchar(555),
+    status char(1) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
+);
+
+    
+ -- Data for the table administrative.restriction_release_reason -- 
+insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
+
+
+
 --Table administrative.mortgage_isbased_in_rrr ----
 DROP TABLE IF EXISTS administrative.mortgage_isbased_in_rrr CASCADE;
 CREATE TABLE administrative.mortgage_isbased_in_rrr(
@@ -3330,27 +3333,6 @@ CREATE TABLE administrative.tenant_type(
 );
 
     
---Table administrative.restriction_release_reason ----
-DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
-CREATE TABLE administrative.restriction_release_reason(
-    code varchar(20) NOT NULL,
-    display_value varchar(250) NOT NULL,
-    description varchar(555),
-    status char(1) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT restriction_release_reason_pkey PRIMARY KEY (code)
-);
-
-    
- -- Data for the table administrative.restriction_release_reason -- 
-insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
-
-
-
 --Table cadastre.spatial_value_area ----
 DROP TABLE IF EXISTS cadastre.spatial_value_area CASCADE;
 CREATE TABLE cadastre.spatial_value_area(
@@ -5443,9 +5425,9 @@ ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_land_classco
             FOREIGN KEY (land_classcode) REFERENCES cadastre.land_class(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_land_classcode_fk159_ind ON cadastre.cadastre_object (land_classcode);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_guthi_namecode_fk160 
-            FOREIGN KEY (guthi_namecode) REFERENCES system.guthi_name(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_guthi_namecode_fk160_ind ON cadastre.cadastre_object (guthi_namecode);
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_release_reason_code_fk160 
+            FOREIGN KEY (restriction_release_reason_code) REFERENCES administrative.restriction_release_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_restriction_release_reason_code_fk160_ind ON administrative.rrr (restriction_release_reason_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
