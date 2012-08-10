@@ -5969,17 +5969,16 @@ END;
 $BODY$
   LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(text, text) 
-RETURNS TABLE(loc_id character varying(40), type_code character varying(20), registration_date timestamp without time zone, 
-status_code character varying(20))
-AS $$ 
+CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(IN text, IN text)
+  RETURNS TABLE(loc_id character varying, type_code character varying, owner_type_code character varying, share_type_code character varying, registration_date timestamp without time zone, status_code character varying) AS
+$BODY$ 
 BEGIN
-	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.registration_date, r.status_code
+	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.owner_type_code, r.share_type_code, r.registration_date, r.status_code
 	FROM administrative.rrr r
 	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.office_code = $2 AND (r.status_code='pending' OR r.status_code='current');
 END;
-$$
-LANGUAGE plpgsql;
+$BODY$
+  LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION administrative.get_loc_source_ids(_loc_id text, _status text) 
 RETURNS TABLE(id character varying(40))
