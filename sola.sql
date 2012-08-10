@@ -3112,9 +3112,21 @@ CREATE TABLE administrative.ba_unit_as_party(
 );
 
     
+<<<<<<< HEAD
 --Table transaction.reg_status_type ----
 DROP TABLE IF EXISTS transaction.reg_status_type CASCADE;
 CREATE TABLE transaction.reg_status_type(
+=======
+ -- Data for the table administrative.owner_type -- 
+insert into administrative.owner_type(code, display_value, description, status) values('private', 'Private', 'Private', 'c');
+insert into administrative.owner_type(code, display_value, description, status) values('group', 'Group', 'Group', 'c');
+
+
+
+--Table administrative.share_type ----
+DROP TABLE IF EXISTS administrative.share_type CASCADE;
+CREATE TABLE administrative.share_type(
+>>>>>>> 0c1de79e74ebf9512337805fc7117dee095ae64b
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -3127,6 +3139,7 @@ CREATE TABLE transaction.reg_status_type(
 );
 
     
+<<<<<<< HEAD
  -- Data for the table transaction.reg_status_type -- 
 insert into transaction.reg_status_type(code, display_value, status) values('current', 'Current', 'c');
 insert into transaction.reg_status_type(code, display_value, status) values('pending', 'Pending', 'c');
@@ -3156,6 +3169,17 @@ CREATE TABLE system.br(
 --Table system.br_technical_type ----
 DROP TABLE IF EXISTS system.br_technical_type CASCADE;
 CREATE TABLE system.br_technical_type(
+=======
+ -- Data for the table administrative.share_type -- 
+insert into administrative.share_type(code, display_value, description, status) values('common', 'Common share', 'Common share', 'c');
+insert into administrative.share_type(code, display_value, description, status) values('share', 'Equal share', 'Equal share', 'c');
+
+
+
+--Table administrative.restriction_release_reason ----
+DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
+CREATE TABLE administrative.restriction_release_reason(
+>>>>>>> 0c1de79e74ebf9512337805fc7117dee095ae64b
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     status char(1) NOT NULL,
@@ -5957,17 +5981,16 @@ END;
 $BODY$
   LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(text, text) 
-RETURNS TABLE(loc_id character varying(40), type_code character varying(20), registration_date timestamp without time zone, 
-status_code character varying(20))
-AS $$ 
+CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(IN text, IN text)
+  RETURNS TABLE(loc_id character varying, type_code character varying, owner_type_code character varying, share_type_code character varying, registration_date timestamp without time zone, status_code character varying) AS
+$BODY$ 
 BEGIN
-	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.registration_date, r.status_code
+	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.owner_type_code, r.share_type_code, r.registration_date, r.status_code
 	FROM administrative.rrr r
 	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.office_code = $2 AND (r.status_code='pending' OR r.status_code='current');
 END;
-$$
-LANGUAGE plpgsql;
+$BODY$
+  LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION administrative.get_loc_source_ids(_loc_id text, _status text) 
 RETURNS TABLE(id character varying(40))
