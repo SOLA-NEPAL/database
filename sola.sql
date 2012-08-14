@@ -3112,21 +3112,9 @@ CREATE TABLE administrative.ba_unit_as_party(
 );
 
     
-<<<<<<< HEAD
 --Table transaction.reg_status_type ----
 DROP TABLE IF EXISTS transaction.reg_status_type CASCADE;
 CREATE TABLE transaction.reg_status_type(
-=======
- -- Data for the table administrative.owner_type -- 
-insert into administrative.owner_type(code, display_value, description, status) values('private', 'Private', 'Private', 'c');
-insert into administrative.owner_type(code, display_value, description, status) values('group', 'Group', 'Group', 'c');
-
-
-
---Table administrative.share_type ----
-DROP TABLE IF EXISTS administrative.share_type CASCADE;
-CREATE TABLE administrative.share_type(
->>>>>>> 0c1de79e74ebf9512337805fc7117dee095ae64b
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     description varchar(555),
@@ -3139,7 +3127,6 @@ CREATE TABLE administrative.share_type(
 );
 
     
-<<<<<<< HEAD
  -- Data for the table transaction.reg_status_type -- 
 insert into transaction.reg_status_type(code, display_value, status) values('current', 'Current', 'c');
 insert into transaction.reg_status_type(code, display_value, status) values('pending', 'Pending', 'c');
@@ -3169,17 +3156,6 @@ CREATE TABLE system.br(
 --Table system.br_technical_type ----
 DROP TABLE IF EXISTS system.br_technical_type CASCADE;
 CREATE TABLE system.br_technical_type(
-=======
- -- Data for the table administrative.share_type -- 
-insert into administrative.share_type(code, display_value, description, status) values('common', 'Common share', 'Common share', 'c');
-insert into administrative.share_type(code, display_value, description, status) values('share', 'Equal share', 'Equal share', 'c');
-
-
-
---Table administrative.restriction_release_reason ----
-DROP TABLE IF EXISTS administrative.restriction_release_reason CASCADE;
-CREATE TABLE administrative.restriction_release_reason(
->>>>>>> 0c1de79e74ebf9512337805fc7117dee095ae64b
     code varchar(20) NOT NULL,
     display_value varchar(250) NOT NULL,
     status char(1) NOT NULL,
@@ -3337,6 +3313,7 @@ CREATE TABLE cadastre.cadastre_object(
     land_usecode varchar(20),
     land_classcode varchar(20),
     guthi_namecode varchar(20),
+    addressid varchar(40),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3386,6 +3363,7 @@ CREATE TABLE cadastre.cadastre_object_historic
     land_usecode varchar(20),
     land_classcode varchar(20),
     guthi_namecode varchar(20),
+    addressid varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4726,6 +4704,12 @@ CREATE TABLE administrative.owner_type(
 );
 
     
+ -- Data for the table administrative.owner_type -- 
+insert into administrative.owner_type(code, display_value, description, status) values('private', 'Private', 'Private', 'c');
+insert into administrative.owner_type(code, display_value, description, status) values('group', 'Group', 'Group', 'c');
+
+
+
 --Table administrative.share_type ----
 DROP TABLE IF EXISTS administrative.share_type CASCADE;
 CREATE TABLE administrative.share_type(
@@ -4740,6 +4724,12 @@ CREATE TABLE administrative.share_type(
 );
 
     
+ -- Data for the table administrative.share_type -- 
+insert into administrative.share_type(code, display_value, description, status) values('common', 'Common share', 'Common share', 'c');
+insert into administrative.share_type(code, display_value, description, status) values('share', 'Equal share', 'Equal share', 'c');
+
+
+
 --Table administrative.tenant_type ----
 DROP TABLE IF EXISTS administrative.tenant_type CASCADE;
 CREATE TABLE administrative.tenant_type(
@@ -5452,6 +5442,10 @@ CREATE INDEX cadastre_object_land_classcode_fk159_ind ON cadastre.cadastre_objec
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_release_reason_code_fk160 
             FOREIGN KEY (restriction_release_reason_code) REFERENCES administrative.restriction_release_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_restriction_release_reason_code_fk160_ind ON administrative.rrr (restriction_release_reason_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_addressid_fk161 
+            FOREIGN KEY (addressid) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_addressid_fk161_ind ON cadastre.cadastre_object (addressid);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
