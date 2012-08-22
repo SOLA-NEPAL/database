@@ -1,4 +1,4 @@
---TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
+﻿--TO POPULATE THE SOLA DATABASE WITH LINZ DATA for Bhaktpur district (FROM SHAPEFILES)
 --INTO LADM RELATED TABLES
 DROP SCHEMA IF EXISTS test_etl CASCADE;
 CREATE SCHEMA test_etl;
@@ -21,8 +21,8 @@ BEGIN
 	FOR rec1 IN EXECUTE 'SELECT district,wardno,vdc FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
 		 address_id_vl=cast(rec1.district as text) || '-' || cast(rec1.vdc as text) || '-' || cast(rec1.wardno as text);
-		 INSERT INTO address.address (id, districtcode, vdc_code, ward_no) 
-					VALUES (address_id_vl, cast(rec1.district as text), cast(27009 as text) , cast(rec1.wardno as text)); 
+		 INSERT INTO address.address (id, vdc_code, ward_no) 
+					VALUES (address_id_vl, cast(27009 as text) , cast(rec1.wardno as text)); 
 		 exit;
 	END LOOP;
 	
@@ -35,11 +35,10 @@ BEGIN
 	FOR rec IN EXECUTE 'SELECT gid, objectid, parcelno, district,wardno,vdc, grids1,parcelty,
 		ST_GeometryN(the_geom, 1) AS the_geom,''current'' AS parcel_status FROM testdata."mulpani_parcel" WHERE (ST_GeometryN(the_geom, 1) IS NOT NULL)'
 	LOOP
-		INSERT INTO cadastre.cadastre_object (id, transaction_id, parcel_no, parcel_typecode,geom_polygon,map_sheet_id,status_code,name_firstpart,name_lastpart)
+		INSERT INTO cadastre.cadastre_object (id, transaction_id, parcel_no, land_use_code,geom_polygon,map_sheet_id,status_code,name_firstpart,name_lastpart)
 		VALUES (rec.gid, transaction_id_vl, rec.parcelno,rec.parcelty,rec.the_geom, rec.grids1, rec.parcel_status
 		,cast(rec.district as text) || '-' || cast(rec.vdc as text) || '-' || cast(rec.wardno as text),rec.parcelno);
-		
-		INSERT INTO cadastre.spatial_unit_address (spatial_unit_id, address_id) VALUES (rec.gid, address_id_vl); 
+
 	END LOOP;
 	
     RETURN 'ok';
