@@ -963,6 +963,7 @@ CREATE TABLE application.application(
     action_notes varchar(255),
     status_code varchar(20) NOT NULL DEFAULT ('lodged'),
     office_code varchar(20),
+    fy_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -1012,6 +1013,7 @@ CREATE TABLE application.application_historic
     action_notes varchar(255),
     status_code varchar(20),
     office_code varchar(20),
+    fy_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -1033,15 +1035,15 @@ CREATE TRIGGER __track_history AFTER UPDATE OR DELETE
 DROP TABLE IF EXISTS party.party CASCADE;
 CREATE TABLE party.party(
     id varchar(40) NOT NULL,
-    is_shild bool DEFAULT ('f'),
-    parent_id varchar(40) NOT NULL,
+    is_child bool DEFAULT ('f'),
+    parent_id varchar(40),
     ext_id varchar(255),
     type_code varchar(20) NOT NULL,
     name varchar(255),
     last_name varchar(50),
-    father_type_code varchar(20) NOT NULL,
+    father_type_code varchar(20),
     fathers_name varchar(255),
-    grandfather_type_code varchar(20) NOT NULL,
+    grandfather_type_code varchar(20),
     grandfather_name varchar(255),
     alias varchar(50),
     gender_code varchar(20),
@@ -1090,7 +1092,7 @@ DROP TABLE IF EXISTS party.party_historic CASCADE;
 CREATE TABLE party.party_historic
 (
     id varchar(40),
-    is_shild bool,
+    is_child bool,
     parent_id varchar(40),
     ext_id varchar(255),
     type_code varchar(20),
@@ -1486,6 +1488,23 @@ insert into application.application_status_type(code, display_value, status) val
 
 
 
+--Table system.financial_year ----
+DROP TABLE IF EXISTS system.financial_year CASCADE;
+CREATE TABLE system.financial_year(
+    code varchar(20) NOT NULL,
+    display_value varchar(250),
+    status char(1) NOT NULL DEFAULT ('c'),
+    current bool NOT NULL DEFAULT ('f'),
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    description varchar(255),
+
+    -- Internal constraints
+    
+    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
+);
+
+    
 --Table application.request_type ----
 DROP TABLE IF EXISTS application.request_type CASCADE;
 CREATE TABLE application.request_type(
@@ -2077,7 +2096,7 @@ CREATE TABLE administrative.ba_unit(
     cadastre_object_id varchar(40),
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
     transaction_id varchar(40),
-    fy_code varchar(10),
+    fy_code varchar(20) NOT NULL,
     office_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -2113,7 +2132,7 @@ CREATE TABLE administrative.ba_unit_historic
     cadastre_object_id varchar(40),
     status_code varchar(20),
     transaction_id varchar(40),
-    fy_code varchar(10),
+    fy_code varchar(20),
     office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
@@ -2180,12 +2199,13 @@ CREATE TABLE cadastre.cadastre_object(
     official_area numeric(19, 2) DEFAULT (0),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
-    office_code varchar(20),
     land_type_code varchar(20),
     land_use_code varchar(20),
     land_class_code varchar(20),
     guthi_name varchar(255),
     address_id varchar(40),
+    office_code varchar(20) NOT NULL,
+    fy_code varchar(20) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -2234,12 +2254,13 @@ CREATE TABLE cadastre.cadastre_object_historic
     official_area numeric(19, 2),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
-    office_code varchar(20),
     land_type_code varchar(20),
     land_use_code varchar(20),
     land_class_code varchar(20),
     guthi_name varchar(255),
     address_id varchar(40),
+    office_code varchar(20),
+    fy_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -2660,7 +2681,7 @@ DROP TABLE IF EXISTS administrative.rrr CASCADE;
 CREATE TABLE administrative.rrr(
     id varchar(40) NOT NULL,
     ba_unit_id varchar(40) NOT NULL,
-    fy_code varchar(10) NOT NULL,
+    fy_code varchar(20) NOT NULL,
     nr varchar(20) NOT NULL,
     sn varchar(20),
     type_code varchar(20) NOT NULL,
@@ -2713,7 +2734,7 @@ CREATE TABLE administrative.rrr_historic
 (
     id varchar(40),
     ba_unit_id varchar(40),
-    fy_code varchar(10),
+    fy_code varchar(20),
     nr varchar(20),
     sn varchar(20),
     type_code varchar(20),
@@ -3142,6 +3163,7 @@ CREATE TABLE administrative.required_relationship_baunit(
     from_ba_unit_id varchar(40) NOT NULL,
     to_ba_unit_id varchar(40) NOT NULL,
     relation_code varchar(20) NOT NULL,
+    transaction_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -3170,6 +3192,7 @@ CREATE TABLE administrative.required_relationship_baunit_historic
     from_ba_unit_id varchar(40),
     to_ba_unit_id varchar(40),
     relation_code varchar(20),
+    transaction_id varchar(40),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4748,23 +4771,6 @@ insert into system.query_field(query_name, index_in_query, name) values('dynamic
 
 
 
---Table system.financial_year ----
-DROP TABLE IF EXISTS system.financial_year CASCADE;
-CREATE TABLE system.financial_year(
-    code varchar(20) NOT NULL,
-    display_value varchar(250),
-    status char(1) NOT NULL DEFAULT ('c'),
-    current bool NOT NULL DEFAULT ('f'),
-    start_date date NOT NULL,
-    end_date date NOT NULL,
-    description varchar(255),
-
-    -- Internal constraints
-    
-    CONSTRAINT financial_year_pkey PRIMARY KEY (code)
-);
-
-    
 --Table system.np_calendar ----
 DROP TABLE IF EXISTS system.np_calendar CASCADE;
 CREATE TABLE system.np_calendar(
@@ -5487,6 +5493,26 @@ CREATE INDEX party_id_office_type_code_fk167_ind ON party.party (id_office_type_
 ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_tenancy_type_code_fk168 
             FOREIGN KEY (tenancy_type_code) REFERENCES administrative.tenancy_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX rrr_tenancy_type_code_fk168_ind ON administrative.rrr (tenancy_type_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_fy_code_fk169 
+            FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_fy_code_fk169_ind ON cadastre.cadastre_object (fy_code);
+
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_fy_code_fk170 
+            FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX ba_unit_fy_code_fk170_ind ON administrative.ba_unit (fy_code);
+
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_fy_code_fk171 
+            FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX rrr_fy_code_fk171_ind ON administrative.rrr (fy_code);
+
+ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_transaction_id_fk172 
+            FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX required_relationship_baunit_transaction_id_fk172_ind ON administrative.required_relationship_baunit (transaction_id);
+
+ALTER TABLE application.application ADD CONSTRAINT application_fy_code_fk173 
+            FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX application_fy_code_fk173_ind ON application.application (fy_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
@@ -5507,6 +5533,24 @@ DROP TRIGGER IF EXISTS trg_change_of_status ON source.source CASCADE;
 CREATE TRIGGER trg_change_of_status before update
    ON source.source FOR EACH ROW
    EXECUTE PROCEDURE source.f_for_tbl_source_trg_change_of_status();
+    
+-- triggers for table system.financial_year -- 
+
+ 
+
+CREATE OR REPLACE FUNCTION system.f_for_tbl_financial_year_trg_update_current() RETURNS TRIGGER 
+AS $$
+BEGIN
+    IF ((TG_OP = 'UPDATE' OR TG_OP = 'INSERT') AND NEW.current='t') THEN
+        UPDATE "system".financial_year SET "current"='f' where "current"='t';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS trg_update_current ON system.financial_year CASCADE;
+CREATE TRIGGER trg_update_current before insert or update
+   ON system.financial_year FOR EACH ROW
+   EXECUTE PROCEDURE system.f_for_tbl_financial_year_trg_update_current();
     
 -- triggers for table administrative.ba_unit -- 
 
@@ -6061,6 +6105,20 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION party.get_party_name(party_id character varying)
+  RETURNS character varying AS
+$BODY$
+BEGIN
+  IF(party_id IS NOT NULL) THEN
+    return (SELECT COALESCE("name", '') + (CASE COALESCE(last_name, '') WHEN '' THEN '' ELSE ' ' + COALESCE(last_name, '') END) as party_name FROM party.party WHERE id = party_id);
+  ELSE
+    return '';
+  END IF;
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
 
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 

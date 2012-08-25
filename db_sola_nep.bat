@@ -5,6 +5,7 @@ set dbname=sola
 set pw=
 set extra_options=--single-transaction --quiet -v ON_ERROR_STOP=1
 %psql_path%psql %extra_options% --host=%host% --port=5432 --username=postgres --password=%pw% --dbname=%dbname% --file=%script_folder%sola.sql
+%psql_path%psql %extra_options% --host=%host% --port=5432 --username=postgres --password=%pw% --dbname=%dbname% --file=%script_folder%testdata.sql
 %psql_path%psql %extra_options% --host=%host% --port=5432 --username=postgres --password=%pw% --dbname=%dbname% --file=%script_folder%business_rules.sql
 %psql_path%psql %extra_options% --host=%host% --port=5432 --username=postgres --password=%pw% --dbname=%dbname% --file=%script_folder%nep_calendar.sql
 %psql_path%psql %extra_options% --host=%host% --port=5432 --username=postgres --password=%pw% --dbname=%dbname% --file=%script_folder%srid_insert.sql
