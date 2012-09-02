@@ -960,12 +960,12 @@ CREATE TABLE application.application(
     valuation_amount numeric(20, 2) NOT NULL DEFAULT (0),
     total_amount_paid numeric(20, 2) NOT NULL DEFAULT (0),
     fee_paid bool NOT NULL DEFAULT (false),
+    payment_remarks varchar(255),
     action_code varchar(20) NOT NULL DEFAULT ('lodge'),
     action_notes varchar(255),
     status_code varchar(20) NOT NULL DEFAULT ('lodged'),
     receipt_number varchar(20),
     receipt_date date,
-    payment_remarks varchar(255),
     office_code varchar(20),
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
@@ -1013,12 +1013,12 @@ CREATE TABLE application.application_historic
     valuation_amount numeric(20, 2),
     total_amount_paid numeric(20, 2),
     fee_paid bool,
+    payment_remarks varchar(255),
     action_code varchar(20),
     action_notes varchar(255),
     status_code varchar(20),
     receipt_number varchar(20),
     receipt_date date,
-    payment_remarks varchar(255),
     office_code varchar(20),
     rowidentifier varchar(40),
     rowversion integer,
@@ -6072,6 +6072,27 @@ END;
 $BODY$
 LANGUAGE plpgsql VOLATILE
 COST 100;
+
+CREATE OR REPLACE FUNCTION application.f_get_application_status_change_date(appId text)
+  RETURNS timestamp without time zone AS
+$BODY$
+DECLARE result timestamp without time zone;
+BEGIN
+      return (select max(status_change_time)
+              from 
+              (select id, status_code, change_time as status_change_time, rowversion 
+              from application.application 
+              where id=$1
+              union 
+              select id, status_code, change_time as status_change_time, rowversion
+              from application.application_historic
+              where id=$1) app_all LEFT JOIN application.application_historic ah on app_all.id = ah.id and ah.rowversion = app_all.rowversion - 1
+              where ah.status_code != app_all.status_code or ah.status_code is null
+              );
+END;
+$BODY$
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
 
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 
