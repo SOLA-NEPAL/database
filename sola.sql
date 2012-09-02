@@ -957,7 +957,7 @@ CREATE TABLE application.application(
     CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
     services_fee numeric(20, 2) NOT NULL DEFAULT (0),
     tax numeric(20, 2) NOT NULL DEFAULT (0),
-    total_fee numeric(20, 2) NOT NULL DEFAULT (0),
+    valuation_amount numeric(20, 2) NOT NULL DEFAULT (0),
     total_amount_paid numeric(20, 2) NOT NULL DEFAULT (0),
     fee_paid bool NOT NULL DEFAULT (false),
     action_code varchar(20) NOT NULL DEFAULT ('lodge'),
@@ -1010,7 +1010,7 @@ CREATE TABLE application.application_historic
     CONSTRAINT enforce_geotype_location CHECK (geometrytype(location) = 'MULTIPOINT'::text OR location IS NULL),
     services_fee numeric(20, 2),
     tax numeric(20, 2),
-    total_fee numeric(20, 2),
+    valuation_amount numeric(20, 2),
     total_amount_paid numeric(20, 2),
     fee_paid bool,
     action_code varchar(20),
@@ -4119,17 +4119,8 @@ CREATE INDEX segments_index_on_the_geom ON cadastre.segments USING gist (the_geo
 --Table application.application_property ----
 DROP TABLE IF EXISTS application.application_property CASCADE;
 CREATE TABLE application.application_property(
-    id varchar(40) NOT NULL,
     application_id varchar(40) NOT NULL,
-    name_firstpart varchar(20) NOT NULL,
-    name_lastpart varchar(20) NOT NULL,
-    area numeric(20, 2) NOT NULL DEFAULT (0),
-    total_value numeric(20, 2) NOT NULL DEFAULT (0),
-    verified_exists bool NOT NULL DEFAULT (false),
-    verified_location bool NOT NULL DEFAULT (false),
-    ba_unit_id varchar(40),
-    moth_no varchar(15),
-    page_no varchar(15),
+    ba_unit_id varchar(40) NOT NULL,
     rowidentifier varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
     rowversion integer NOT NULL DEFAULT (0),
     change_action char(1) NOT NULL DEFAULT ('i'),
@@ -4138,8 +4129,7 @@ CREATE TABLE application.application_property(
 
     -- Internal constraints
     
-    CONSTRAINT application_property_property_once UNIQUE (application_id, name_firstpart, name_lastpart),
-    CONSTRAINT application_property_pkey PRIMARY KEY (id)
+    CONSTRAINT application_property_pkey PRIMARY KEY (application_id,ba_unit_id)
 );
 
 
@@ -4156,17 +4146,8 @@ CREATE TRIGGER __track_changes BEFORE UPDATE OR INSERT
 DROP TABLE IF EXISTS application.application_property_historic CASCADE;
 CREATE TABLE application.application_property_historic
 (
-    id varchar(40),
     application_id varchar(40),
-    name_firstpart varchar(20),
-    name_lastpart varchar(20),
-    area numeric(20, 2),
-    total_value numeric(20, 2),
-    verified_exists bool,
-    verified_location bool,
     ba_unit_id varchar(40),
-    moth_no varchar(15),
-    page_no varchar(15),
     rowidentifier varchar(40),
     rowversion integer,
     change_action char(1),
@@ -4759,28 +4740,21 @@ insert into system.np_calendar(nep_year, nep_month, dayss) values(2070, 1, 31);
 
 
 
---Table system.restriction_type ----
-DROP TABLE IF EXISTS system.restriction_type CASCADE;
-CREATE TABLE system.restriction_type(
-    code varchar(20) NOT NULL,
-    display_value varchar(255) NOT NULL,
-    description varchar(255),
-    status char(1) NOT NULL,
+--Table system.vdc_appuser ----
+DROP TABLE IF EXISTS system.vdc_appuser CASCADE;
+CREATE TABLE system.vdc_appuser(
+    id varchar(40) NOT NULL,
+    vdc_code varchar(20) NOT NULL,
+    ward_no varchar(10),
+    appuser_id varchar(40) NOT NULL,
 
     -- Internal constraints
     
-    CONSTRAINT restriction_type_pkey PRIMARY KEY (code)
+    CONSTRAINT vdc_appuser_unique_vdc_ward_user UNIQUE (vdc_code, ward_no, appuser_id),
+    CONSTRAINT vdc_appuser_pkey PRIMARY KEY (id)
 );
 
     
- -- Data for the table system.restriction_type -- 
-insert into system.restriction_type(code, display_value, description, status) values('1', 'Likhat Parit', '', 'c');
-insert into system.restriction_type(code, display_value, status) values('2', 'Bt Letter', 'c');
-insert into system.restriction_type(code, display_value, status) values('3', 'Bt Application', 'c');
-insert into system.restriction_type(code, display_value, status) values('4', 'unknown', 'c');
-
-
-
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
@@ -4951,7 +4925,7 @@ ALTER TABLE application.service ADD CONSTRAINT service_action_code_fk41
 CREATE INDEX service_action_code_fk41_ind ON application.service (action_code);
 
 ALTER TABLE application.application_property ADD CONSTRAINT application_property_application_id_fk42 
-            FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (application_id) REFERENCES application.application(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX application_property_application_id_fk42_ind ON application.application_property (application_id);
 
 ALTER TABLE application.application_uses_source ADD CONSTRAINT application_uses_source_source_id_fk43 
@@ -4967,7 +4941,7 @@ ALTER TABLE application.request_type_requires_source_type ADD CONSTRAINT request
 CREATE INDEX request_type_requires_source_type_request_type_code_fk45_ind ON application.request_type_requires_source_type (request_type_code);
 
 ALTER TABLE application.application_property ADD CONSTRAINT application_property_ba_unit_id_fk46 
-            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (ba_unit_id) REFERENCES administrative.ba_unit(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX application_property_ba_unit_id_fk46_ind ON application.application_property (ba_unit_id);
 
 ALTER TABLE application.application ADD CONSTRAINT application_assignee_id_fk47 
@@ -5469,6 +5443,14 @@ CREATE INDEX required_relationship_baunit_transaction_id_fk170_ind ON administra
 ALTER TABLE application.application ADD CONSTRAINT application_fy_code_fk171 
             FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX application_fy_code_fk171_ind ON application.application (fy_code);
+
+ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_vdc_code_fk172 
+            FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX vdc_appuser_vdc_code_fk172_ind ON system.vdc_appuser (vdc_code);
+
+ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_appuser_id_fk173 
+            FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX vdc_appuser_appuser_id_fk173_ind ON system.vdc_appuser (appuser_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
@@ -6075,6 +6057,21 @@ END;
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
+
+CREATE OR REPLACE FUNCTION administrative.get_ba_unit_moth_loc (IN text) 
+RETURNS TABLE(loc_id character varying, moth_id character varying, page_no character varying, moth_no character varying)
+AS
+$BODY$ 
+BEGIN
+
+RETURN QUERY SELECT l.id, m.id, l.pana_no, m.mothluj_no 
+FROM administrative.rrr r inner join (administrative.loc l INNER JOIN administrative.moth m on l.moth_id=m.id) on r.loc_id=l.id
+WHERE r.status_code='current' AND r.ba_unit_id = '';
+
+END;
+$BODY$
+LANGUAGE plpgsql VOLATILE
+COST 100;
 
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 
