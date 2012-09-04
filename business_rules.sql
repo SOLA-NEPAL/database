@@ -120,10 +120,8 @@ values('application-br3-check-properties-are-not-historic', 'sql',
 insert into system.br_definition(br_id, active_from, active_until, body) 
 values('application-br3-check-properties-are-not-historic', now(), 'infinity', 
 'select count(*)=0 as vl
-from application.application_property  
-where application_id=#{id}
-and (name_firstpart, name_lastpart) 
-    in (select name_firstpart, name_lastpart from administrative.ba_unit where status_code in (''historic''))
+from application.application_property ap inner join administrative.ba_unit ba on ap.ba_unit_id = ba.id
+where ap.application_id=#{id} and ba.status_code in (''historic'')
 ');
 
 ----------------------------------------------------------------------------------------------------
@@ -149,23 +147,6 @@ values('application-br5-check-there-are-front-desk-services', now(), 'infinity',
 from application.service
 where application_id = #{id} 
   and request_type_code in (''serviceEnquiry'', ''documentCopy'', ''cadastrePrint'', ''surveyPlanCopy'', ''titleSearch'')
-');
-
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback) 
-values('application-br6-check-new-title-service-is-needed', 'sql', 
-'There is no digital record for this property. Add a New Digital Title service to your application.::::Non esiste un formato digitale per questa proprieta. Aggiungere un Nuovo Titolo Digitale alla vostra pratica' );
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('application-br6-check-new-title-service-is-needed', now(), 'infinity', 
-'select 
-      case when count(*)=0 then (select count(*)>0 from application.service where request_type_code = ''newFreehold'')
-           else true
-      end as vl
-from application.application_property  
-where application_id=#{id}
-and (name_firstpart, name_lastpart) not
-    in (select name_firstpart, name_lastpart from administrative.ba_unit)
 ');
 
 ----------------------------------------------------------------------------------------------------
@@ -458,30 +439,6 @@ WHERE id= #{id}
 	OR TO_NUMBER(name_lastpart, ''9999'') = 0');
 ----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('application-check-no-previous-digital-title-service', 'sql', 'Checks to see if a digital title already exists for requested property::::ITALIANO',
- '#{id}(application.application.id) is requested where service is for newDigitalTitle or newDigitalProperty');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('application-check-no-previous-digital-title-service', now(), 'infinity', 
-'SELECT  count(*) > 0 as vl
-FROM application.application_property 
-	INNER JOIN administrative.ba_unit ON application.application_property.name_firstpart || ''/'' || application.application_property.name_lastpart = administrative.ba_unit.name
-	INNER JOIN administrative.rrr ON administrative.rrr.ba_unit_id = administrative.ba_unit.id
-WHERE application.application_property.application_id = #{id}
-	AND administrative.rrr.is_primary');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('mortgage-value-check', 'sql', 'Mortgage is for more than reported value::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('mortgage-value-check', now(), 'infinity', 
-'SELECT (total_value < mortgage_amount) AS vl from application.application_property 
-	INNER JOIN administrative.ba_unit ON application.application_property.name_firstpart || ''/'' || application.application_property.name_lastpart = administrative.ba_unit.name
-	INNER JOIN administrative.rrr ON administrative.rrr.ba_unit_id = administrative.ba_unit.id
-WHERE application.application_property.application_id = #{id}');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
 values('ba_unit_shares-total-check', 'sql', 'Shares do not total to 1::::ITALIANO',
  '#{id}(administrative.ba_unit.id) is requested');
 
@@ -522,47 +479,6 @@ WHERE administrative.rrr.ba_unit_id = #{id}
 	AND administrative.rrr.status_code != ''cancelled''
 	AND application.application.status_code = ''pending''
 	AND source.source.type_code = ''waiver''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('current-rrr-for-variation-or-cancellation-check', 'sql', 'Title includes no current right or restriction (apart from primary right). Confirm request for variation or cancellation and check title identifier::::ITALIANO',
- '#{id}(application.application.id) is requested where there is a service that varies or extinguishes an existing rrr');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('current-rrr-for-variation-or-cancellation-check', now(), 'infinity', 
-'Select count(*) > 0 as vl FROM application.application
-	INNER JOIN application.application_property ON application.application.id = application.application_property.application_id
-	INNER JOIN administrative.ba_unit ON application.application_property.name_firstpart || ''/'' || application.application_property.name_lastpart = administrative.ba_unit.name
-	INNER JOIN administrative.rrr ON administrative.rrr.ba_unit_id = administrative.ba_unit.id
-WHERE application.application.id = #{id}
-AND administrative.rrr.status_code = ''current''');
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback, technical_description) 
-values('applicant-name-to-owner-name-check', 'sql', 'Applicant name is different from current recorded owners::::ITALIANO',
- '#{id}(application.application.id) is requested');
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('applicant-name-to-owner-name-check', now(), 'infinity', 
-'Select count(*) > 0 as vl FROM application.application
-	INNER JOIN application.application_property ON application.application.id = application.application_property.application_id
-	INNER JOIN administrative.ba_unit ON application.application_property.name_firstpart || ''/'' || application.application_property.name_lastpart = administrative.ba_unit.name
-	INNER JOIN administrative.rrr ON administrative.rrr.ba_unit_id = administrative.ba_unit.id
-	INNER JOIN administrative.rrr_share ON administrative.rrr.id = administrative.rrr_share.rrr_id
-	INNER JOIN administrative.party_for_rrr ON administrative.rrr_share.id = administrative.party_for_rrr.share_id
-	INNER JOIN party.party ON administrative.party_for_rrr.party_id = party.party.id
-	INNER JOIN party.party_role ON party.party.id = party.party_role.party_id
-WHERE application.application.id = #{id}
-	AND administrative.rrr.is_primary
-	AND administrative.rrr.status_code = ''current''
-	AND party.name IN (Select party.name FROM application.application
-		   INNER JOIN party.party ON application.application.contact_person_id = party.party.id
-		   INNER JOIN party.party_role ON party.party.id = party.party_role.party_id
-	   WHERE application.application.id = #{id}
-	   AND party.party_role.type_code = ''applicant'')
-	AND party.last_name IN (Select party.last_name FROM application.application
-		   INNER JOIN party.party ON application.application.contact_person_id = party.party.id
-		   INNER JOIN party.party_role ON party.party.id = party.party_role.party_id
-	   WHERE application.application.id = #{id}
-	   AND party.party_role.type_code = ''applicant'')');
 ----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code, feedback, technical_description) 
 values('applicant-identification-check', 'sql', 'No personal identification details recorded for application::::ITALIANO',
@@ -842,9 +758,6 @@ values('application-br4-check-sources-date-not-in-the-future', 'warning', 'valid
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 values('application-br5-check-there-are-front-desk-services', 'warning', 'validate', 'application', 7);
 
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('application-br6-check-new-title-service-is-needed', 'warning', 'validate', 'application', 8);
-
 --modified 1 November request_type from newTitle to newDigitalTitle-------------
 --insert into system.br_validation(br_id, severity_code, target_service_moment, target_code, target_request_type_code, order_of_execution) 
 --values('request-newfreehold-br1-check-title-source-not-old', 'critical', 'start', 'service', 'newDigitalTitle',  3);
@@ -971,12 +884,6 @@ values('new-cadastre-objects-present', 'critical', 'current', 'cadastre_object',
 --insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 --values('baunit-check-name', 'medium', 'validate', 'application', 9);
 
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('application-check-no-previous-digital-title-service', 'warning', 'validate', 'application', 10);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('mortgage-value-check', 'warning', 'validate', 'application', 2);
-
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
 values('ba_unit_shares-total-check', 'critical', 'pending', 'rrr', 1);
 
@@ -985,12 +892,6 @@ values('current-caveat-check', 'medium', 'pending', 'ba_unit', 17);
 
 insert into system.br_validation(br_id, severity_code, target_reg_moment, target_code, order_of_execution) 
 values('current-caveat-and-no-withdrawal-or-waiver', 'critical', 'current', 'ba_unit', 2);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('current-rrr-for-variation-or-cancellation-check', 'medium', 'validate', 'application', 11);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('applicant-name-to-owner-name-check', 'warning', 'validate', 'application', 25);
 
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 values('applicant-identification-check', 'medium', 'approve', 'application', 13);
