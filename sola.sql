@@ -1287,6 +1287,7 @@ CREATE TABLE party.id_type(
 insert into party.id_type(code, display_value, status, description) values('nationalID', 'National ID::::Carta Identita Nazionale', 'c', 'The main person ID that exists in the country::::Il principale documento identificativo nel paese');
 insert into party.id_type(code, display_value, status, description) values('nationalPassport', 'National Passport::::Passaporto Nazionale', 'c', 'A passport issued by the country::::Passaporto fornito dal paese');
 insert into party.id_type(code, display_value, status, description) values('otherPassport', 'Other Passport::::Altro Passaporto', 'c', 'A passport issued by another country::::Passaporto Fornito da un altro paese');
+insert into party.id_type(code, display_value, status, description) values('citizenship', 'Citizenship::::Citizenship', 'c', 'Citizenship::::Citizenship');
 
 
 
@@ -2099,7 +2100,7 @@ CREATE TABLE administrative.ba_unit(
     name varchar(255),
     name_firstpart varchar(20) NOT NULL,
     name_lastpart varchar(50) NOT NULL,
-    cadastre_object_id varchar(40),
+    cadastre_object_id varchar(40) NOT NULL,
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
     transaction_id varchar(40),
     fy_code varchar(20) NOT NULL,
@@ -2184,7 +2185,7 @@ insert into administrative.ba_unit_type(code, display_value, description, status
 DROP TABLE IF EXISTS cadastre.cadastre_object CASCADE;
 CREATE TABLE cadastre.cadastre_object(
     id varchar(40) NOT NULL,
-    type_code varchar(20) NOT NULL DEFAULT ('parcel'),
+    type_code varchar(20) DEFAULT ('parcel'),
     map_sheet_id varchar(40),
     map_sheet_id2 varchar(40),
     map_sheet_id3 varchar(40),
@@ -2192,8 +2193,8 @@ CREATE TABLE cadastre.cadastre_object(
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
-    name_firstpart varchar(20),
-    name_lastpart varchar(50),
+    name_firstpart varchar(20) NOT NULL,
+    name_lastpart varchar(50) NOT NULL,
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
     geom_polygon GEOMETRY,
     CONSTRAINT enforce_dims_geom_polygon CHECK (st_ndims(geom_polygon) = 2),
@@ -2201,14 +2202,13 @@ CREATE TABLE cadastre.cadastre_object(
             CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40) NOT NULL,
-    parcel_no integer,
+    parcel_no varchar(10),
     official_area numeric(19, 2) DEFAULT (0),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
     land_type_code varchar(20),
     land_use_code varchar(20),
     land_class_code varchar(20),
-    guthi_name varchar(255),
     address_id varchar(40),
     office_code varchar(20) NOT NULL,
     fy_code varchar(20) NOT NULL,
@@ -2256,14 +2256,13 @@ CREATE TABLE cadastre.cadastre_object_historic
             CONSTRAINT enforce_srid_geom_polygon CHECK (st_srid(geom_polygon) = 97261),
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40),
-    parcel_no integer,
+    parcel_no varchar(10),
     official_area numeric(19, 2),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
     land_type_code varchar(20),
     land_use_code varchar(20),
     land_class_code varchar(20),
-    guthi_name varchar(255),
     address_id varchar(40),
     office_code varchar(20),
     fy_code varchar(20),
@@ -4601,6 +4600,8 @@ insert into system.approle(code, display_value, status, description) values('Man
 insert into system.approle(code, display_value, status, description) values('ManageSettings', 'Manage system settings', 'c', 'Manage system settings');
 insert into system.approle(code, display_value, status, description) values('ApplnEdit', 'Application Edit', 'c', 'Allows editing of Applications');
 insert into system.approle(code, display_value, status, description) values('ManageBR', 'Manage business rules', 'c', 'Allows to manage business rules');
+insert into system.approle(code, display_value, status, description) values('MapSheetSave', 'Manage office map sheets', 'c', 'Manage map sheets in the current office');
+insert into system.approle(code, display_value, status, description) values('ParcelDetailsSave', 'Change parcel details', 'c', 'Change parcel details, except spatial data');
 
 
 
@@ -4627,6 +4628,8 @@ insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssi
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignSelf', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignOthers', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('MapSheetSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelDetailsSave', 'super-group-id');
 
 
 
