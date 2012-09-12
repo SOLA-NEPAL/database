@@ -2688,12 +2688,12 @@ CREATE TABLE administrative.rrr(
     ba_unit_id varchar(40) NOT NULL,
     fy_code varchar(20) NOT NULL,
     nr varchar(20) NOT NULL,
-    registration_number varchar(20),
     sn varchar(20),
     type_code varchar(20) NOT NULL,
     status_code varchar(20) NOT NULL DEFAULT ('pending'),
     is_primary bool NOT NULL DEFAULT (false),
     transaction_id varchar(40) NOT NULL,
+    registration_number varchar(20),
     registration_date timestamp,
     owner_type_code varchar(20),
     ownership_type_code varchar(20),
@@ -2744,12 +2744,12 @@ CREATE TABLE administrative.rrr_historic
     ba_unit_id varchar(40),
     fy_code varchar(20),
     nr varchar(20),
-    registration_number varchar(20),
     sn varchar(20),
     type_code varchar(20),
     status_code varchar(20),
     is_primary bool,
     transaction_id varchar(40),
+    registration_number varchar(20),
     registration_date timestamp,
     owner_type_code varchar(20),
     ownership_type_code varchar(20),
@@ -6002,26 +6002,15 @@ $BODY$
   LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION administrative.get_loc_rrrs(IN text, IN text)
-  RETURNS TABLE(loc_id character varying, type_code character varying, owner_type_code character varying, share_type_code character varying, registration_date timestamp without time zone, status_code character varying) AS
+  RETURNS TABLE(loc_id character varying, type_code character varying, owner_type_code character varying, ownership_type_code character varying, status_code character varying) AS
 $BODY$ 
 BEGIN
-	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.owner_type_code, r.share_type_code, r.registration_date, r.status_code
+	RETURN QUERY SELECT DISTINCT r.loc_id, r.type_code, r.owner_type_code, r.ownership_type_code, r.status_code
 	FROM administrative.rrr r
 	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.office_code = $2 AND (r.status_code='pending' OR r.status_code='current');
 END;
 $BODY$
   LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION administrative.get_loc_source_ids(_loc_id text, _status text) 
-RETURNS TABLE(id character varying(40))
-AS $$ 
-BEGIN
-	RETURN QUERY SELECT DISTINCT s.source_id
-	FROM administrative.rrr r INNER JOIN administrative.source_describes_rrr s ON r.id = s.rrr_id
-	WHERE r.is_terminating = 'f' AND r.loc_id = _loc_id AND r.status_code=_status;
-END;
-$$
-LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION administrative.get_loc_party_ids(_loc_id text, _status text) 
 RETURNS TABLE(id character varying(40))
@@ -6030,19 +6019,6 @@ BEGIN
 	RETURN QUERY SELECT DISTINCT p.party_id
 	FROM administrative.rrr r INNER JOIN administrative.party_for_rrr p ON r.id = p.rrr_id
 	WHERE r.is_terminating = 'f' AND r.loc_id = _loc_id AND r.status_code=_status;
-END;
-$$
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION administrative.get_rrrloc_notation(text, text) 
-RETURNS varchar
-AS $$ 
-DECLARE result varchar;
-BEGIN
-	SELECT n.notation_text INTO result
-	FROM administrative.rrr r INNER JOIN administrative.notation n ON r.id = n.rrr_id
-	WHERE r.is_terminating = 'f' AND r.loc_id = $1 AND r.status_code=$2 LIMIT 1;
-	RETURN result;
 END;
 $$
 LANGUAGE plpgsql;
@@ -6100,7 +6076,6 @@ $BODY$
 insert into system.approle_appgroup (approle_code, appgroup_id)
 SELECT r.code, 'super-group-id' FROM system.approle r 
 where r.code not in (select approle_code from system.approle_appgroup g where appgroup_id = 'super-group-id');
-
 
 -------View system.user_roles ---------
 DROP VIEW IF EXISTS system.user_roles CASCADE;
