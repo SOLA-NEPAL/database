@@ -3187,6 +3187,12 @@ CREATE TABLE administrative.ba_unit_rel_type(
 );
 
     
+ -- Data for the table administrative.ba_unit_rel_type -- 
+insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('split', 'Splitting', 'Parcel splittiing', 'c');
+insert into administrative.ba_unit_rel_type(code, display_value, description, status) values('merge', 'Merging', 'Parcel merging', 'c');
+
+
+
 --Table administrative.ba_unit_as_party ----
 DROP TABLE IF EXISTS administrative.ba_unit_as_party CASCADE;
 CREATE TABLE administrative.ba_unit_as_party(
