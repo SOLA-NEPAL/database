@@ -2113,7 +2113,7 @@ CREATE TABLE administrative.ba_unit(
 
     -- Internal constraints
     
-    CONSTRAINT ba_unit_unique_cadastre_object UNIQUE (cadastre_object_id, status_code),
+    CONSTRAINT ba_unit_unique_cadastre_object UNIQUE (cadastre_object_id),
     CONSTRAINT ba_unit_pkey PRIMARY KEY (id)
 );
 
@@ -5789,16 +5789,15 @@ CREATE OR REPLACE FUNCTION administrative.get_ba_unit_pending_action(baunit_id c
 $BODY$
 BEGIN
 
-  return (SELECT rt.type_action_code
-  FROM ((administrative.ba_unit_target bt INNER JOIN transaction.transaction t ON bt.transaction_id = t.id)
-  INNER JOIN application.service s ON t.from_service_id = s.id)
-  INNER JOIN application.request_type rt ON s.request_type_code = rt.code
+  return (SELECT 'cancel'
+  FROM administrative.ba_unit_target bt INNER JOIN transaction.transaction t ON bt.transaction_id = t.id
   WHERE bt.ba_unit_id = baunit_id AND t.status_code = 'pending'
   LIMIT 1);
 
 END;
 $BODY$
-  LANGUAGE plpgsql;
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
 
 CREATE OR REPLACE FUNCTION application.getlodgement(fromdate character varying, todate character varying)
   RETURNS SETOF record AS
@@ -6043,20 +6042,26 @@ $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
 
-CREATE OR REPLACE FUNCTION administrative.get_ba_unit_moth_loc (IN text) 
-RETURNS TABLE(loc_id character varying, moth_id character varying, page_no character varying, moth_no character varying)
-AS
+CREATE OR REPLACE FUNCTION administrative.get_ba_unit_moth_loc(IN text, IN boolean)
+  RETURNS TABLE(ba_ubit_id character varying, loc_id character varying, moth_id character varying, page_no character varying, moth_no character varying) AS
 $BODY$ 
 BEGIN
 
-RETURN QUERY SELECT l.id, m.id, l.pana_no, m.mothluj_no 
-FROM administrative.rrr r inner join (administrative.loc l INNER JOIN administrative.moth m on l.moth_id=m.id) on r.loc_id=l.id
-WHERE r.status_code='current' AND r.ba_unit_id = '';
+IF $2 = 't' AND (SELECT COUNT(1) FROM administrative.rrr r inner join (administrative.loc l INNER JOIN administrative.moth m on l.moth_id=m.id) on r.loc_id=l.id
+WHERE r.status_code='current' AND r.ba_unit_id = $1)<1 THEN
+  RETURN QUERY SELECT DISTINCT r.ba_unit_id, l.id, m.id, l.pana_no, m.mothluj_no 
+  FROM administrative.rrr r inner join (administrative.loc l INNER JOIN administrative.moth m on l.moth_id=m.id) on r.loc_id=l.id
+  WHERE r.status_code='pending' AND r.ba_unit_id = $1;
+ELSE
+  RETURN QUERY SELECT DISTINCT r.ba_unit_id, l.id, m.id, l.pana_no, m.mothluj_no 
+  FROM administrative.rrr r inner join (administrative.loc l INNER JOIN administrative.moth m on l.moth_id=m.id) on r.loc_id=l.id
+  WHERE r.status_code='current' AND r.ba_unit_id = $1;
+END IF;
 
 END;
 $BODY$
-LANGUAGE plpgsql VOLATILE
-COST 100;
+  LANGUAGE plpgsql VOLATILE
+  COST 100;
 
 CREATE OR REPLACE FUNCTION application.f_get_application_status_change_date(appId text)
   RETURNS timestamp without time zone AS

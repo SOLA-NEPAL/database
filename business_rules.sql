@@ -114,18 +114,6 @@ and s.type_code in (''title'')');
 
 ----------------------------------------------------------------------------------------------------
 insert into system.br(id, technical_type_code, feedback) 
-values('application-br3-check-properties-are-not-historic', 'sql', 
-'All properties identified for the application are not historic.::::Tutte le proprieta identificate per la pratica non sono storiche' );
-
-insert into system.br_definition(br_id, active_from, active_until, body) 
-values('application-br3-check-properties-are-not-historic', now(), 'infinity', 
-'select count(*)=0 as vl
-from application.application_property ap inner join administrative.ba_unit ba on ap.ba_unit_id = ba.id
-where ap.application_id=#{id} and ba.status_code in (''historic'')
-');
-
-----------------------------------------------------------------------------------------------------
-insert into system.br(id, technical_type_code, feedback) 
 values('application-br4-check-sources-date-not-in-the-future', 'sql', 
 'No documents have submission dates for the future.::::Nessun documento ha le date di inoltro per il futuro' );
 
@@ -748,9 +736,6 @@ values('application-br1-check-required-sources-are-present', 'critical', 'valida
 
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 values('application-br2-check-title-documents-not-old', 'medium', 'validate', 'application', 4);
-
-insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
-values('application-br3-check-properties-are-not-historic', 'critical', 'validate', 'application', 5);
 
 insert into system.br_validation(br_id, severity_code, target_application_moment, target_code, order_of_execution) 
 values('application-br4-check-sources-date-not-in-the-future', 'warning', 'validate', 'application', 6);
