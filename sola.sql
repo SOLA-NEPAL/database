@@ -4383,7 +4383,7 @@ insert into address.district(code, display_value, zone_code) values('27', 'Bhakt
 DROP TABLE IF EXISTS cadastre.map_sheet CASCADE;
 CREATE TABLE cadastre.map_sheet(
     id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    map_number varchar(10) NOT NULL,
+    map_number varchar(50) NOT NULL,
     sheet_type integer,
     ward_no varchar(10),
     office_code varchar(20) NOT NULL,
