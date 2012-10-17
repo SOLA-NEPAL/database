@@ -358,14 +358,15 @@ yr integer:=0;
 mm integer:=0;
 d integer:=0;
 cnt integer;
---dt Date;
 r integer;
 r1 integer;
 i integer;
 dd integer:=0;
 dateDiff integer:=0;
+mnth varchar(2);
+days varchar(2);
+
 BEGIN
---dt:=eng_date;
 if englishdate< constDate then
 RAISE EXCEPTION 'Invalid english date';
 end if;
@@ -403,13 +404,26 @@ WHILE i<= cnt LOOP
    i=i+1;
 end LOOP;
 
-retDate=yr||'-'||mm||'-'||dateDiff-d+1;
+IF mm < 9 THEN
+  mnth='0' || mm;
+ELSE
+  mnth=mm;
+END IF;
+
+d = dateDiff-d+1;
+
+IF d < 9 THEN
+  days='0' || d;
+ELSE
+  days=d;
+END IF;
+ 
+retDate=yr||'-'||mnth||'-'||days;
 return retDate ;
 END$BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION english_to_nepalidatestring(date)
-  OWNER TO postgres;
+ALTER FUNCTION english_to_nepalidatestring(date) OWNER TO postgres;
 COMMENT ON FUNCTION english_to_nepalidatestring(date) IS 'This function converts the given western date in the format "yyyy-MM-dd" to Nepali date';--Adding trigger function to track changes--
 
 CREATE OR REPLACE FUNCTION f_for_trg_track_changes() RETURNS TRIGGER 
@@ -1659,6 +1673,7 @@ insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('caveat', 'restrictions', 'Caveat::::Ammonizione', false, true, true, 'Extension to LADM', 'c');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('historicPreservation', 'restrictions', 'Historic Preservation::::Conservazione Storica', false, false, false, 'Extension to LADM', 'c');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('limitedAccess', 'restrictions', 'Limited Access (to Road)::::Accesso limitato (su strada)', false, false, false, 'Extension to LADM', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('simpleRestriction', 'restrictions', 'Simple restriction', false, false, false, '', 'c');
 
 
 
@@ -2218,7 +2233,7 @@ CREATE TABLE cadastre.cadastre_object(
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40) NOT NULL,
     parcel_no varchar(10),
-    official_area numeric(19, 2) DEFAULT (0),
+    official_area numeric(19, 4) DEFAULT (0),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
     land_type_code varchar(20),
@@ -2272,7 +2287,7 @@ CREATE TABLE cadastre.cadastre_object_historic
     CONSTRAINT enforce_geotype_geom_polygon CHECK (geometrytype(geom_polygon) = 'POLYGON'::text OR geom_polygon IS NULL),
     transaction_id varchar(40),
     parcel_no varchar(10),
-    official_area numeric(19, 2),
+    official_area numeric(19, 4),
     area_unit_type_code varchar(20),
     parcel_note varchar(255),
     land_type_code varchar(20),
@@ -2693,6 +2708,8 @@ CREATE TABLE cadastre.area_unit_type(
 insert into cadastre.area_unit_type(code, display_value, status) values('ropani', 'Ropani::::Ropani', 'c');
 insert into cadastre.area_unit_type(code, display_value, status) values('bighar', 'Bighar::::Bighar', 'c');
 insert into cadastre.area_unit_type(code, display_value, status) values('sqm', 'Sqare meters::::Sqare meters', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('hectare', 'Hhectare::::Hectare', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('sqfeet', 'Square feet::::Square feet', 'c');
 
 
 
