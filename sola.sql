@@ -4595,32 +4595,20 @@ CREATE TABLE system.approle(
 
     
  -- Data for the table system.approle -- 
-insert into system.approle(code, display_value, status, description) values('DashbrdViewAssign', 'View Assigned Applications', 'c', 'View Assigned Applications in Dashboard');
-insert into system.approle(code, display_value, status, description) values('DashbrdViewUnassign', 'View Unassigned Applications', 'c', 'View Unassigned Applications in Dashboard');
-insert into system.approle(code, display_value, status, description) values('DashbrdViewOwn', 'View Own Applications', 'c', 'View Applications assigned to user  in Dashboard');
 insert into system.approle(code, display_value, status, description) values('ApplnView', 'Search and View Applications', 'c', 'Search and view applications');
 insert into system.approle(code, display_value, status, description) values('ApplnCreate', 'Lodge new Applications', 'c', 'Lodge new Applications');
 insert into system.approle(code, display_value, status, description) values('ApplnStatus', 'Generate and View Status Report', 'c', 'Generate and View Status Report');
 insert into system.approle(code, display_value, status, description) values('ApplnAssignDeprt', 'Assign Applications to Department staff', 'c', 'Able to assign (unassigned) applications to department staff');
-insert into system.approle(code, display_value, status, description) values('ApplnUnassignSelf', 'Unassign Applications to Self', 'c', 'Able to unassign (assigned) applications from yourself');
 insert into system.approle(code, display_value, status, description) values('ApplnAssignAll', 'Assign Applications to all users in office', 'c', 'Able to assign (unassigned) applications to any user in office');
-insert into system.approle(code, display_value, status, description) values('ApplnUnassignOthers', 'Unassign Applications to Others', 'c', 'Able to unassign (assigned) applications to other users');
 insert into system.approle(code, display_value, status, description) values('StartService', 'Start Service', 'c', 'Start Service');
 insert into system.approle(code, display_value, status, description) values('CompleteService', 'Complete Service', 'c', 'Complete Service (prior to approval)');
 insert into system.approle(code, display_value, status, description) values('CancelService', 'Cancel Service', 'c', 'Cancel Service');
 insert into system.approle(code, display_value, status, description) values('RevertService', 'Revert Service', 'c', 'Revert previously Complete Service');
-insert into system.approle(code, display_value, status, description) values('ApplnRequisition', 'Requisition application and request', 'c', 'Request further information from applicant');
-insert into system.approle(code, display_value, status, description) values('ApplnResubmit', 'Resubmit Application', 'c', 'Resubmit (requisitioned) application');
 insert into system.approle(code, display_value, status, description) values('ApplnApprove', 'Approve Application', 'c', 'Approve Application');
-insert into system.approle(code, display_value, status, description) values('ApplnWithdraw', 'Withdraw Application', 'c', 'Applicant withdraws their application');
 insert into system.approle(code, display_value, status, description) values('ApplnReject', 'Reject Application', 'c', 'Land Office rejects an application');
 insert into system.approle(code, display_value, status, description) values('ApplnValidate', 'Validate Application', 'c', 'User manually runs validation rules for application');
-insert into system.approle(code, display_value, status, description) values('ApplnDespatch', 'Despatch Application', 'c', 'Despatch any documents to be returned to applicant and any certificates/reports/map prints requested by applicant');
 insert into system.approle(code, display_value, status, description) values('ApplnArchive', 'Archive Application', 'c', 'Paper Application File is stored in Land Office Archive');
 insert into system.approle(code, display_value, status, description) values('BaunitSave', 'Create or Modify BA Unit', 'c', 'Create or Modify BA Unit (Property)');
-insert into system.approle(code, display_value, status, description) values('BauunitrrrSave', 'Create or Modify Rights or Restrictions', 'c', 'Create or Modify Rights or Restrictions');
-insert into system.approle(code, display_value, status, description) values('BaunitParcelSave', 'Create or Modify (BA Unit) Parcels', 'c', 'Create or Modify (BA Unit) Parcels');
-insert into system.approle(code, display_value, status, description) values('BaunitNotatSave', 'Create or Modify (BA Unit) Notations', 'c', 'Create or Modify (BA Unit) Notations');
 insert into system.approle(code, display_value, status, description) values('BaunitCertificate', 'Generate and Print (BA Unit) Certificate', 'c', 'Generate and Print (BA Unit) Certificate');
 insert into system.approle(code, display_value, status, description) values('BaunitSearch', 'Search BA Unit', 'c', 'Search BA Unit');
 insert into system.approle(code, display_value, status, description) values('TransactionCommit', 'Approve (and Cancel) Transaction', 'c', 'Approve (and Cancel) Transaction');
@@ -4640,6 +4628,8 @@ insert into system.approle(code, display_value, status, description) values('App
 insert into system.approle(code, display_value, status, description) values('ManageBR', 'Manage business rules', 'c', 'Allows to manage business rules');
 insert into system.approle(code, display_value, status, description) values('MapSheetSave', 'Manage office map sheets', 'c', 'Manage map sheets in the current office');
 insert into system.approle(code, display_value, status, description) values('ParcelDetailsSave', 'Change parcel details', 'c', 'Change parcel details, except spatial data');
+insert into system.approle(code, display_value, status, description) values('RHSave', 'Save rightholders', 'c', 'The same as party save role, but checks if party has any rights.');
+insert into system.approle(code, display_value, status, description) values('MothManagement', 'Create and manage Moth', 'c', 'Allows to create and manage Moth and it''s pages');
 
 
 
@@ -4656,16 +4646,16 @@ CREATE TABLE system.approle_appgroup(
 
     
  -- Data for the table system.approle_appgroup -- 
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DashbrdViewAssign', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DashbrdViewUnassign', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DashbrdViewOwn', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnView', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCreate', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignSelf', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnUnassignOthers', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('MapSheetSave', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelDetailsSave', 'super-group-id');
 
