@@ -2126,7 +2126,7 @@ insert into party.party_role_type(code, display_value, status, description) valu
 DROP TABLE IF EXISTS administrative.ba_unit CASCADE;
 CREATE TABLE administrative.ba_unit(
     id varchar(40) NOT NULL,
-    type_code varchar(20) NOT NULL,
+    type_code varchar(20),
     name varchar(255),
     name_firstpart varchar(20) NOT NULL,
     name_lastpart varchar(50) NOT NULL,
@@ -2220,6 +2220,7 @@ CREATE TABLE cadastre.cadastre_object(
     map_sheet_id2 varchar(40),
     map_sheet_id3 varchar(40),
     map_sheet_id4 varchar(40),
+    dataset_id varchar(40),
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
@@ -2274,6 +2275,7 @@ CREATE TABLE cadastre.cadastre_object_historic
     map_sheet_id2 varchar(40),
     map_sheet_id3 varchar(40),
     map_sheet_id4 varchar(40),
+    dataset_id varchar(40),
     building_unit_type_code varchar(20),
     approval_datetime timestamp,
     historic_datetime timestamp,
@@ -2617,7 +2619,7 @@ insert into cadastre.building_unit_type(code, display_value, status) values('sha
 DROP TABLE IF EXISTS cadastre.map_sheet CASCADE;
 CREATE TABLE cadastre.map_sheet(
     id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
-    map_number varchar(10) NOT NULL,
+    map_number varchar(50) NOT NULL,
     sheet_type integer,
     ward_no varchar(10),
     office_code varchar(20) NOT NULL,
@@ -2713,6 +2715,22 @@ insert into cadastre.area_unit_type(code, display_value, status) values('sqfeet'
 
 
 
+--Table cadastre.dataset ----
+DROP TABLE IF EXISTS cadastre.dataset CASCADE;
+CREATE TABLE cadastre.dataset(
+    id varchar(40) NOT NULL DEFAULT (uuid_generate_v1()),
+    name varchar(255) NOT NULL,
+    srid integer NOT NULL,
+    office_code varchar(20) NOT NULL,
+    vdc_code varchar(20) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT dataset_unique_dataset_name UNIQUE (name, office_code),
+    CONSTRAINT dataset_pkey PRIMARY KEY (id)
+);
+
+    
 --Table administrative.rrr ----
 DROP TABLE IF EXISTS administrative.rrr CASCADE;
 CREATE TABLE administrative.rrr(
@@ -2858,6 +2876,8 @@ CREATE TABLE administrative.loc(
 
     -- Internal constraints
     
+    CONSTRAINT loc_unique_page_number UNIQUE (moth_id, pana_no),
+    CONSTRAINT loc_unique_tmp_page_number UNIQUE (moth_id, tmp_pana_no),
     CONSTRAINT loc_pkey PRIMARY KEY (id)
 );
 
@@ -4630,6 +4650,8 @@ insert into system.approle(code, display_value, status, description) values('Map
 insert into system.approle(code, display_value, status, description) values('ParcelDetailsSave', 'Change parcel details', 'c', 'Change parcel details, except spatial data');
 insert into system.approle(code, display_value, status, description) values('RHSave', 'Save rightholders', 'c', 'The same as party save role, but checks if party has any rights.');
 insert into system.approle(code, display_value, status, description) values('MothManagement', 'Create and manage Moth', 'c', 'Allows to create and manage Moth and it''s pages');
+insert into system.approle(code, display_value, status, description) values('RestrictionSearch', 'Search restrictions', 'c', 'Search restrictions');
+insert into system.approle(code, display_value, status, description) values('PrintRestrLetter', 'Print restriction letter', 'c', 'Print restriction letter');
 
 
 
@@ -4646,18 +4668,43 @@ CREATE TABLE system.approle_appgroup(
 
     
  -- Data for the table system.approle_appgroup -- 
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnView', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCreate', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('StartService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('CompleteService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('CancelService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RevertService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnApprove', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnReject', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnValidate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnArchive', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitCertificate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('TransactionCommit', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ViewMap', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintMap', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PartySave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourcePrint', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ReportGenerate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ArchiveApps', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSecurity', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageRefdata', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSettings', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnEdit', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageBR', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('MapSheetSave', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelDetailsSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RHSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('MothManagement', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RestrictionSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintRestrLetter', 'super-group-id');
 
 
 
@@ -5482,6 +5529,18 @@ CREATE INDEX party_grandfather_type_code_fk172_ind ON party.party (grandfather_t
 ALTER TABLE party.party ADD CONSTRAINT party_father_type_code_fk173 
             FOREIGN KEY (father_type_code) REFERENCES party.father_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX party_father_type_code_fk173_ind ON party.party (father_type_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_dataset_id_fk174 
+            FOREIGN KEY (dataset_id) REFERENCES cadastre.dataset(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_dataset_id_fk174_ind ON cadastre.cadastre_object (dataset_id);
+
+ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_office_code_fk175 
+            FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX dataset_office_code_fk175_ind ON cadastre.dataset (office_code);
+
+ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_vdc_code_fk176 
+            FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX dataset_vdc_code_fk176_ind ON cadastre.dataset (vdc_code);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
