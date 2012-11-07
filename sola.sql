@@ -549,7 +549,9 @@ CREATE TABLE system.office(
 
     
  -- Data for the table system.office -- 
-insert into system.office(code, display_value, district_code) values('7-25-003-001', 'Lalitpur - LMO first section', '25');
+insert into system.office(code, display_value, district_code, status) values('101', 'मालपोत कायार्लय काठमाडौं कलंकी', '27', 'c');
+insert into system.office(code, display_value, district_code, status) values('102', 'मालपोत कायार्लय काठमाडौं डिल्लीबजार', '27', 'c');
+insert into system.office(code, display_value, district_code, status) values('104', 'मालपोत कायार्लय चावहिल', '27', 'c');
 
 
 
@@ -570,8 +572,8 @@ CREATE TABLE address.district(
 
     
  -- Data for the table address.district -- 
-insert into address.district(code, display_value, zone_code) values('25', 'Lalitpur', 7);
-insert into address.district(code, display_value, zone_code) values('27', 'Bhaktpur', 7);
+insert into address.district(code, display_value, zone_code, status) values('25', 'Lalitpur', 7, 'c');
+insert into address.district(code, display_value, zone_code, status) values('27', 'Bhaktpur', 7, 'c');
 
 
 
@@ -1165,6 +1167,7 @@ CREATE TABLE party.party_type(
     display_value varchar(250) NOT NULL,
     status char(1) NOT NULL DEFAULT ('t'),
     description varchar(555),
+    individual bool NOT NULL DEFAULT ('t'),
 
     -- Internal constraints
     
@@ -1174,10 +1177,18 @@ CREATE TABLE party.party_type(
 
     
  -- Data for the table party.party_type -- 
-insert into party.party_type(code, display_value, status) values('naturalPerson', 'Natural Person::::Persona Naturale', 'c');
-insert into party.party_type(code, display_value, status) values('nonNaturalPerson', 'Non-natural Person::::Persona Giuridica', 'c');
-insert into party.party_type(code, display_value, status) values('baunit', 'Basic Administrative Unit::::Unita Amministrativa di Base', 'c');
-insert into party.party_type(code, display_value) values('group', 'Group::::Gruppo');
+insert into party.party_type(code, display_value, status, individual) values('1800', 'Not Specified::::उल्लेख नभएको', 'c', true);
+insert into party.party_type(code, display_value, status, individual) values('1801', 'Indiviual::::व्यक्रिगत', 'c', true);
+insert into party.party_type(code, display_value, status, individual) values('1802', 'Guthi::::सामाजिक संस्था', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1803', 'Government Office::::सरकारी कायार्लय', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1804', 'वित्तिय संस्था', 'c', true);
+insert into party.party_type(code, display_value, status, individual) values('1805', 'Guthi::::गुठी', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1806', 'प्राज्ञिक संस्था', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1807', 'खेलकुद संस्था', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1808', 'सावर्जनिक संस्था', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1809', 'प्राईभेट संस्था', 'c', false);
+insert into party.party_type(code, display_value, status, individual) values('1810', 'Minor::::नाबालाक', 'c', true);
+insert into party.party_type(code, display_value, status, individual) values('1899', 'Guardian::::संरक्षक', 'c', true);
 
 
 
@@ -1342,8 +1353,38 @@ CREATE TABLE party.id_office_type(
 
     
  -- Data for the table party.id_office_type -- 
-insert into party.id_office_type(code, display_value, status) values('nidcenter', 'National ID center', 'c');
-insert into party.id_office_type(code, display_value, status) values('lidcenter', 'Local ID center', 'c');
+insert into party.id_office_type(code, display_value, status) values('1', 'District Admin. Office::::जिल्ला प्रशासन कायर्ालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('10', 'Magistrate Office::::मजिष्ट्रेटको कायर्ालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('11', 'Bada Hakim::::बडा हाकिमको कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('12', 'HMG::::नेपाल सरकार', 'c');
+insert into party.id_office_type(code, display_value, status) values('13', 'NGO::::जिल्ला शिक्षा कायर्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('14', 'District Office::::जिल्ला कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('15', 'Rinance::::काठमाण्डौ नगरपालिका', 'c');
+insert into party.id_office_type(code, display_value, status) values('16', 'Gwosara::::गोश्वारा', 'c');
+insert into party.id_office_type(code, display_value, status) values('17', 'Bhoomi Sudhar Mantralaya::::भूमि सुधार मन्त्रालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('18', 'Mal Pot Karrjyalaya::::मालपोत कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('19', 'नखुलेको', 'c');
+insert into party.id_office_type(code, display_value, status) values('2', 'Private Organizations::::इलाका प्रशासन कायार्ल', 'c');
+insert into party.id_office_type(code, display_value, status) values('20', 'भूYसुचना तथा अभिलेख विभाग', 'c');
+insert into party.id_office_type(code, display_value, status) values('21', 'विद्यालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('22', 'स्थानीय विकास मन्त्रालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('23', 'नगरपंचायत', 'c');
+insert into party.id_office_type(code, display_value, status) values('24', 'कम्प्यूटर शखा', 'c');
+insert into party.id_office_type(code, display_value, status) values('25', 'जिल्ला सहकारी कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('26', 'सहकारी विभाग', 'c');
+insert into party.id_office_type(code, display_value, status) values('27', 'आन्तरिक राजश्व विभाग', 'c');
+insert into party.id_office_type(code, display_value, status) values('28', 'कम्पनी रजिष्टारको कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('29', 'पञ्जिकाधिकारीको कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('3', 'Chief District Officer::::प्रमुख जिल्ला अधिकारी', 'c');
+insert into party.id_office_type(code, display_value, status) values('30', 'क्षेत्रीय शिक्षा निदेर्शनालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('32', 'समाजकल्याण परिषद', 'c');
+insert into party.id_office_type(code, display_value, status) values('33', 'उद्योग मंन्त्रालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('4', 'CC Issueing Mobile Team::::नागरीकता टोली', 'c');
+insert into party.id_office_type(code, display_value, status) values('5', 'Local Admin. Office::::नेपाल राष्ट्र बैंक', 'c');
+insert into party.id_office_type(code, display_value, status) values('6', 'Zonal Commisoner Office::::अंचलाधिशको कायार्लय', 'c');
+insert into party.id_office_type(code, display_value, status) values('7', 'Home Ministry::::गृह मंत्रालय', 'c');
+insert into party.id_office_type(code, display_value, status) values('8', 'Corporations::::संस्थान (गुठी)', 'c');
+insert into party.id_office_type(code, display_value, status) values('9', 'District Panchayt Office::::जिल्ला पञ्चायत कायार्लय', 'c');
 
 
 
@@ -1362,6 +1403,16 @@ CREATE TABLE party.father_type(
 );
 
     
+ -- Data for the table party.father_type -- 
+insert into party.father_type(code, display_value, status) values('3601', 'Father::::बाबु', 'c');
+insert into party.father_type(code, display_value, status) values('3602', 'Husband::::पति', 'c');
+insert into party.father_type(code, display_value, status) values('3603', 'Grand Father::::बाजे', 'c');
+insert into party.father_type(code, display_value, status) values('3604', 'Father in Law::::ससुरा', 'c');
+insert into party.father_type(code, display_value, status) values('3605', 'बाबु बाजे::::बाबु  पति', 'c');
+insert into party.father_type(code, display_value, status) values('3606', 'पिता ससुरा::::पिता ससुरा', 'c');
+
+
+
 --Table party.grandfather_type ----
 DROP TABLE IF EXISTS party.grandfather_type CASCADE;
 CREATE TABLE party.grandfather_type(
@@ -1377,6 +1428,16 @@ CREATE TABLE party.grandfather_type(
 );
 
     
+ -- Data for the table party.grandfather_type -- 
+insert into party.grandfather_type(code, display_value, status) values('3601', 'Father::::बाबु', 'c');
+insert into party.grandfather_type(code, display_value, status) values('3602', 'Husband::::पति', 'c');
+insert into party.grandfather_type(code, display_value, status) values('3603', 'Grand Father::::बाजे', 'c');
+insert into party.grandfather_type(code, display_value, status) values('3604', 'Father in Law::::ससुरा', 'c');
+insert into party.grandfather_type(code, display_value, status) values('3605', 'बाबु बाजे::::बाबु  पति', 'c');
+insert into party.grandfather_type(code, display_value, status) values('3606', 'पिता ससुरा::::पिता ससुरा', 'c');
+
+
+
 --Table system.appuser ----
 DROP TABLE IF EXISTS system.appuser CASCADE;
 CREATE TABLE system.appuser(
@@ -1460,7 +1521,7 @@ CREATE TABLE system.department(
 
     
  -- Data for the table system.department -- 
-insert into system.department(code, office_code, display_value) values('Lalitpur-001', '7-25-003-001', 'Section-001, Lalitpur LMO');
+insert into system.department(code, office_code, display_value, status) values('Lalitpur-001', '101', 'Section-001, Lalitpur LMO', 'c');
 
 
 
@@ -1541,6 +1602,11 @@ CREATE TABLE system.financial_year(
 );
 
     
+ -- Data for the table system.financial_year -- 
+insert into system.financial_year(code, display_value, status, current, start_date, end_date) values('68', '6970', 'c', true, '16.07.2012', '18.07.2013');
+
+
+
 --Table application.request_type ----
 DROP TABLE IF EXISTS application.request_type CASCADE;
 CREATE TABLE application.request_type(
@@ -1566,41 +1632,41 @@ CREATE TABLE application.request_type(
 
     
  -- Data for the table application.request_type -- 
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'registrationServices', 'Change to Cadastre::::किता काट्', 'c', 30, 25.00, 0.10, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('redefineCadastre', 'registrationServices', 'Redefine Cadastre::::किता संसोधन', 'c', 30, 25.00, 0.10, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('registrationDismiss', 'registrationServices', 'Registration Dismissal::::दाखिला खारेज', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('missingLandRegister', 'registrationServices', 'Missing Land Registration::::छुट जग्गा दर्ता', 'x', 1, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownershipClearance', 'registrationServices', 'Ownership Clearance::::हकसफि', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('Guthi', 'informationServices', 'Guthi::::गूठी', 'c', 1, 0.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnDeeds', 'registrationServices', 'Deed Registration::::लिखट रजिष्टेसन', 'x', 3, 1.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('resignation', 'registrationServices', 'Resignation::::राजिनामा', 'c', 5, 5.00, 0.00, 0.01, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('regnPowerOfAttorney', 'registrationServices', 'Willingness Letter::::बकस पत्र', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('propertyDivision', 'registrationServices', 'Property Division::::अंशवण्डा', 'c', 3, 5.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('exchange', 'informationServices', 'Exchange::::सट्टा पट्टा', 'x', 1, 5.00, 0.00, 0, 1);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('leaveNotice', 'informationServices', 'Leave Notice::::छोड पत्र', 'x', 1, 1.00, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('multipleOwner', 'registrationServices', 'Multiple Ownership Registration::::सगोलनामा', 'c', 1, 0.50, 0.00, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('locMerging', 'registrationServices', 'LOC Merging::::श्रेष्ता एकिकरण', 'x', 1, 0.00, 0.10, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('oldSurvey', 'registrationServices', 'Old Survey::::पुरानो नापी', 'x', 5, 5.00, 0.10, 0, 0);
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newSurvey', 'registrationServices', 'New Survey::::नयां नापी', 'c', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('manuJodiako', 'registrationServices', 'Manu Jodiako::::मानु जोडिएको', 'x', 5, 5.00, 0.00, 0.01, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newOwnership', 'registrationServices', 'Register New Ownership::::जग्गा नामसारी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('removeDuplicate', 'registrationServices', 'Duplication Registration Removal::::दोहोरो दर्ता हटाइएको', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('afterDeathWilling', 'registrationServices', 'After Death Willingness Letter::::शेष पछिको बकसपत्र', 'c', 5, 5.00, 0.01, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('shresthaAdhyabadhik', 'registrationServices', 'Shresta Adhyabadhik::::श्रेष्ता अध्यावधिक', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('guthiRaitani', 'registrationServices', 'Guthi Raitani Numberi::::गुठि रैतानी नम्बरी', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('ownerCancellation', 'registrationServices', 'Ownership Registration Cancellation::::मोही दाखिल खारेज', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('chakalaBandhi', 'registrationServices', 'Chakala Bandhi::::चकला बन्धी', 'x', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('newApartment', 'registrationServices', 'Building Development::::बिकसित घडेरी', 'c', 5, 5.00, 0.00, 0.02, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('stayCurrent', 'registrationServices', 'Validate Current Condition::::हा. सा.', 'x', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('lakhaBandhaki', 'registrationServices', 'Lakha Bandhaki::::लख बन्धकी', 'c', 5, 50.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('distriBandhaki', 'registrationServices', 'Dristi Bandahaki::::दृषटी बन्धकी', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('agreement', 'registrationServices', 'Aggrement::::मिला पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('donationLetter', 'registrationServices', 'Donation Letter:::: दान पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('rightReceived', 'registrationServices', 'Right Receiving Recipt::::अंश बुझेको भरपाई', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('threeGeneration', 'registrationServices', 'Three Generation Donation Letter::::तिनपुस्ते बकस पत्र', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('decisionBased', 'registrationServices', 'Decision Letter::::निर्णय अनुसार', 'c', 5, 5.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('memoBased', 'registrationServices', 'Memo Based::::टिप्पणी अनुसार', 'c', 5, 0.00, 0.00, 0, 1, '');
-insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required, notation_template) values('cancelProperty', 'registrationServices', 'Registration Cancellation::::दर्ता फारी', 'c', 5, 5, 0, 0, 1, '');
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2001', 'registrationServices', 'Chhut Darta::::छुट जग्गा दतार्', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('cadastreChange', 'cadastreServices', 'Change to Cadastre::::किता काट्', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2002', 'registrationServices', 'Da Kha::::दाखिला खारेज', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2003', 'registrationServices', 'Hak Safi::::नामसारी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2004', 'registrationServices', 'Ammendment::::संसोधन', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2005', 'registrationServices', 'हकसफी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2007', 'registrationServices', 'Rajinama::::राजिनामा', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2008', 'registrationServices', 'Ha Ba::::बकस पत्र', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2009', 'registrationServices', 'Ansha Banda::::अंशवण्डा', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2010', 'registrationServices', 'Satta Patta::::सट्टा पटटा', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2011', 'registrationServices', 'Chhod Patra::::छोड पत्र', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2012', 'registrationServices', 'Darta Phari::::दतार् फारी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2013', 'registrationServices', 'Sagol Nama::::सगोलनामा', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2014', 'registrationServices', 'Yekikaran::::श्रेष्ता एकिकरण', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2015', 'registrationServices', 'Old survey::::पूरानो नापी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2016', 'registrationServices', 'New survey::::नयां नापी ४२', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2017', 'registrationServices', 'Bhog Bandhaki::::जग्गा दतार् नामसारी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2018', 'registrationServices', 'अन्य', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2019', 'registrationServices', 'Blank::::।', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2020', 'registrationServices', 'Dan Patra::::दोहोरो दतार् हटाइएको', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2021', 'registrationServices', 'She Ba::::शेष पछिको वकसपत्र', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2022', 'registrationServices', 'Shresta Adhybadhik::::श्रेष्ता अध्यावधिक', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2023', 'registrationServices', 'Datra Namsari::::दतार् नामसारी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2024', 'registrationServices', 'विकसित घडेरी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2025', 'registrationServices', 'गुठि रैतानी नम्बरी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2026', 'registrationServices', 'मोही दाखिल खारेज', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2027', 'registrationServices', 'चकला बन्धी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2028', 'registrationServices', 'हा.सा.', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2031', 'registrationServices', 'लगतकट्टा', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2032', 'registrationServices', 'Lakha Bandhaki::::लख वन्धकी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2033', 'registrationServices', 'Dristi Bandhaki::::दृíटी वन्धकी', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2034', 'registrationServices', 'Mila Patra::::मिला पत्र', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2035', 'registrationServices', 'Dan Patra::::दान पत्र', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2036', 'registrationServices', 'Ansa Bughayako Bharpai::::अंश बुझेको भरपाई', 'c', 1, 0, 0, 0, 1);
+insert into application.request_type(code, request_category_code, display_value, status, nr_days_to_complete, base_fee, area_base_fee, value_base_fee, nr_properties_required) values('2037', 'registrationServices', 'तिनपुस्ते वकस पत्र', 'c', 1, 0, 0, 0, 1);
 
 
 
@@ -1622,6 +1688,14 @@ CREATE TABLE application.request_category_type(
  -- Data for the table application.request_category_type -- 
 insert into application.request_category_type(code, display_value, status) values('registrationServices', 'Registration Services::::Registration Services', 'c');
 insert into application.request_category_type(code, display_value, status) values('informationServices', 'Information Services::::Information Services', 'c');
+insert into application.request_category_type(code, display_value, status) values('cadastreServices', 'Cadastre services::::Cadastre services', 'c');
+insert into application.request_category_type(code, display_value, status) values('2101', 'Land Transaction::::जग्गा कारोवार', 'x');
+insert into application.request_category_type(code, display_value, status) values('2102', 'Floor Transaction::::तल्ला कारोवार', 'x');
+insert into application.request_category_type(code, display_value, status) values('2103', 'Tenant Transaction::::मोही कारोवार', 'x');
+insert into application.request_category_type(code, display_value, status) values('2104', 'Change Owner::::जग्गाधनी परिवतर्न', 'x');
+insert into application.request_category_type(code, display_value, status) values('2105', 'Change Tenant::::मोही परिवतर्न', 'x');
+insert into application.request_category_type(code, display_value, status) values('2106', 'Amendment::::संशोधन', 'x');
+insert into application.request_category_type(code, display_value, status) values('2107', 'Merge Land Parcel::::जग्गा एकिकरण', 'x');
 
 
 
@@ -1645,34 +1719,8 @@ CREATE TABLE administrative.rrr_type(
 
     
  -- Data for the table administrative.rrr_type -- 
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('agriActivity', 'rights', 'Agriculture Activity::::Attivita Agricola', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('commonOwnership', 'ownership', 'Common Ownership::::Proprieta Comune', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('customaryType', 'rights', 'Customary Right::::Diritto Abituale', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('firewood', 'rights', 'Firewood Collection::::Collezione legna da ardere', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('fishing', 'rights', 'Fishing Right::::Diritto di Pesca', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('grazing', 'rights', 'Grazing Right::::Diritto di Pascolo', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('informalOccupation', 'rights', 'Informal Occupation::::Occupazione informale', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('lease', 'rights', 'Lease::::Affitto', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('occupation', 'rights', 'Occupation::::Occupazione', false, true, true, 'c');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownership', 'ownership', 'Ownership::::Proprieta', true, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownershipAssumed', 'rights', 'Ownership Assumed::::Proprieta Assunta', true, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('superficies', 'rights', 'Superficies::::Superficie', false, true, true, 'x');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('tenancy', 'rights', 'Tenancy::::Locazione', true, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('usufruct', 'rights', 'Usufruct::::Usufrutto', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterrights', 'rights', 'Water Right::::Servitu di Acqua', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('adminPublicServitude', 'restrictions', 'Administrative Public Servitude::::Servitu  Amministrazione Pubblica', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monument', 'restrictions', 'Monument::::Monumento', false, true, true, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('mortgage', 'restrictions', 'Mortgage::::Ipoteca', false, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('noBuilding', 'restrictions', 'Building Restriction::::Restrizione di Costruzione', false, false, false, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('servitude', 'restrictions', 'Servitude::::Servitu', false, false, false, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('monumentMaintenance', 'responsibilities', 'Monument Maintenance::::Mantenimento Monumenti', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('waterwayMaintenance', 'responsibilities', 'Waterway Maintenance::::Mantenimento Acqurdotti', false, false, false, 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('lifeEstate', 'rights', 'Life Estate::::Patrimonio vita', true, true, true, 'Extension to LADM', 'x');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('apartment', 'ownership', 'Apartment Ownership::::Proprieta Appartamento', true, true, true, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('stateOwnership', 'ownership', 'State Ownership::::Proprieta di Stato', true, false, false, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('caveat', 'restrictions', 'Caveat::::Ammonizione', false, true, true, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('historicPreservation', 'restrictions', 'Historic Preservation::::Conservazione Storica', false, false, false, 'Extension to LADM', 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('limitedAccess', 'restrictions', 'Limited Access (to Road)::::Accesso limitato (su strada)', false, false, false, 'Extension to LADM', 'c');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('simpleRestriction', 'restrictions', 'Simple restriction', false, false, false, '', 'c');
 
 
@@ -2633,7 +2681,7 @@ CREATE TABLE cadastre.map_sheet(
 
     
  -- Data for the table cadastre.map_sheet -- 
-insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '010', 0, '7-25-003-001', 97260);
+insert into cadastre.map_sheet(id, map_number, sheet_type, office_code, srid) values('1', '010', 0, '101', 97260);
 
 
 
@@ -2651,6 +2699,16 @@ CREATE TABLE cadastre.land_type(
 );
 
     
+ -- Data for the table cadastre.land_type -- 
+insert into cadastre.land_type(code, display_value, status) values('1201', 'Dhanahar::::खेत', 'c');
+insert into cadastre.land_type(code, display_value, status) values('1202', 'Bhir::::वारी', 'c');
+insert into cadastre.land_type(code, display_value, status) values('1203', 'LowLand::::शहरी', 'c');
+insert into cadastre.land_type(code, display_value, status) values('1204', 'UpLand::::चौर', 'c');
+insert into cadastre.land_type(code, display_value, status) values('1205', 'UpLand::::बाटो', 'c');
+insert into cadastre.land_type(code, display_value, status) values('1206', 'विकसीत घडेरी', 'c');
+
+
+
 --Table cadastre.land_use ----
 DROP TABLE IF EXISTS cadastre.land_use CASCADE;
 CREATE TABLE cadastre.land_use(
@@ -2666,14 +2724,105 @@ CREATE TABLE cadastre.land_use(
 
     
  -- Data for the table cadastre.land_use -- 
-insert into cadastre.land_use(code, display_value, description, status) values('0', 'Private::::Private', 'Private::::Private', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('20', 'River::::River', 'River::::River', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('30', 'Forest::::Forest', 'Forest::::Forest', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('60', 'Government::::Government', 'Government::::Government', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('70', 'Institutional::::Institutional', 'Institutional::::Institutional', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('10', 'Public::::Public', 'Public::::Public', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('40', 'Cultivatable::::Cultivatable', 'Cultivatable::::Cultivatable', 'c');
-insert into cadastre.land_use(code, display_value, description, status) values('50', 'Not Cultivatable::::Not Cultivatable', 'Not Cultivatable::::Not Cultivatable', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1401', 'Cutivated::::आवादी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1402', 'Cultivatable::::आवाद लायक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1403', 'Barren::::आवाद वेलायक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1404', 'Dewlling Land::::घडेरी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1405', 'Govt. Land::::ृऐलानी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1406', 'Riverside::::घर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1407', 'Building & Land::::घर जग्गा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1408', 'Play Ground::::जग्गा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1409', 'River::::घर पाताल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1410', 'Pond::::पोखरी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1411', 'Temple::::मंदीर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1412', 'सागल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1413', 'चोक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1414', 'Forest::::वन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1415', 'Garden::::वगैचा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1416', 'पतिर्', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1417', 'Road::::सडक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1418', 'Canal::::नहर कुलेसा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1419', 'वनवुटयान', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1420', 'पानी पधेरो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1421', 'बाझो, पतिर्', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1422', 'नदी उकास', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1423', 'Private Forest::::नीजि वन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1424', 'Others::::अन्य', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1425', 'Tea Garden::::्चिया वारी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1426', 'Cardamom Farm::::अलैची खेती', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1427', 'Grave Land::::चिहान घाट', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1428', 'पाटी पौवा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1429', 'खोलो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1430', 'बगर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1431', 'चौर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1432', 'Pasture Land::::गौचर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1433', 'Government::::सरकारी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1434', 'पखार्ल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1435', 'बाटो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1436', 'खर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1437', 'बा¤स', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1438', 'निगालो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1439', 'चौतारी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1440', 'स्कूल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1441', 'नदी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1442', 'सावर्जनीक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1443', 'गोरेटो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1444', 'देवस्थान', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1445', 'धारा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1446', 'टहरा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1447', 'कुवा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1448', 'कुलेसो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1449', 'कुलो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1450', 'उतिस वुटेन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1451', 'बास', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1452', 'भीर प्रति', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1453', 'बुटेन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1454', 'जंगल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1455', 'सल्लाधारी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1456', 'ढुéा/ढुéेन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1457', 'प्र. वेलायक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1458', 'आवादी वे.प्र.', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1459', 'चिलाउने', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1460', 'राजबन्दी बगैचा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1461', 'निगालो वांस', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1462', 'आवादी ला.प्र.', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1463', '.', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1464', 'ढुéे धारा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1465', 'साली नदी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1466', 'चौतारा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1467', 'राजकुलो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1468', 'साझा चोक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1469', 'इनार', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1470', 'गोरेटो कुलो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1471', 'जंगल बुटेन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1472', 'झाडी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1473', 'प्रति वगर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1474', 'नदी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1475', 'खोला कुलो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1476', 'कुलो घट्ट', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1477', 'सानु खहर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1478', 'ठूलो खहर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1479', 'भीर जंगल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1480', 'खोल्सो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1481', 'पहीरो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1482', 'प्र.बूटेन', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1483', 'गौरण', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1484', 'खो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1485', 'वू.भिर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1486', 'प्र.सडक', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1487', 'ढूगो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1488', 'पो', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1489', 'माहा¤देव खोला', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1490', 'प्रतिर् ढूéा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1491', 'गूम्वा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1492', 'ढूéा', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1493', 'पंञ्चायत घर चोक स्कूल', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1494', 'टावर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1495', 'भिर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1496', 'चमेर', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1497', 'चौकी', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1498', 'ढिस्को', 'c');
+insert into cadastre.land_use(code, display_value, status) values('1499', 'प्र. भिर', 'c');
 
 
 
@@ -2691,6 +2840,23 @@ CREATE TABLE cadastre.land_class(
 );
 
     
+ -- Data for the table cadastre.land_class -- 
+insert into cadastre.land_class(code, display_value, status) values('1601', 'Abbal::::अब्बल', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1602', 'Doyam::::दोयम', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1603', 'Shim::::सीम', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1604', 'Chahar::::चाहार', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1605', 'Panchaun::::पांचौ', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1606', 'Municipality A::::क', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1607', 'Municipality B::::ख', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1608', 'Municipality C::::ग', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1609', 'Municipality D::::घ', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1610', 'Municipality E::::ङ', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1611', 'Municipality F::::च', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1612', 'Non Classified::::अवगिर्कृत', 'c');
+insert into cadastre.land_class(code, display_value, status) values('1613', 'Others::::अन्य', 'c');
+
+
+
 --Table cadastre.area_unit_type ----
 DROP TABLE IF EXISTS cadastre.area_unit_type CASCADE;
 CREATE TABLE cadastre.area_unit_type(
@@ -2707,11 +2873,11 @@ CREATE TABLE cadastre.area_unit_type(
 
     
  -- Data for the table cadastre.area_unit_type -- 
-insert into cadastre.area_unit_type(code, display_value, status) values('ropani', 'Ropani::::Ropani', 'c');
-insert into cadastre.area_unit_type(code, display_value, status) values('bighar', 'Bighar::::Bighar', 'c');
-insert into cadastre.area_unit_type(code, display_value, status) values('sqm', 'Sqare meters::::Sqare meters', 'c');
-insert into cadastre.area_unit_type(code, display_value, status) values('hectare', 'Hhectare::::Hectare', 'c');
-insert into cadastre.area_unit_type(code, display_value, status) values('sqfeet', 'Square feet::::Square feet', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('1501', 'Ropani::::रोपनी', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('1502', 'Bigha::::विगाहा', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('1503', 'SqM::::वगर् मिटर', 'c');
+insert into cadastre.area_unit_type(code, display_value, status) values('1500', 'पहीरो प्रतिर्', 'x');
+insert into cadastre.area_unit_type(code, display_value, status) values('1504', 'Blank::::.', 'x');
 
 
 
@@ -2991,10 +3157,20 @@ CREATE TABLE administrative.restriction_reason(
 
     
  -- Data for the table administrative.restriction_reason -- 
-insert into administrative.restriction_reason(code, display_value, status) values('1', 'Legal Case', 'c');
-insert into administrative.restriction_reason(code, display_value, status) values('2', 'Acquisition', 'c');
-insert into administrative.restriction_reason(code, display_value, status) values('3', 'Land Ceiling', 'c');
-insert into administrative.restriction_reason(code, display_value, status) values('4', 'Financial Transaction', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('1', 'Legal Case::::मुद्दा मामिला', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('2', 'Acquisition::::अधिकरण', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('3', 'Land ceiling::::हदबन्दि', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('4', 'Financial transaction::::आर्थिक कारोबार', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('10', 'Advance Receive::::बैना बुझिलिएको', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('11', 'Litigation::::खिचोला (झमेला)', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('12', 'हालैको बकस पत्र ', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('13', 'नखुलेको', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('14', 'आयोग रोक्का', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('5', 'Bhog bandagi::::भोग बन्धकी', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('6', 'Dristi Bandhaki::::दृष्टि बन्धकी', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('7', 'Lakha Bandhaki::::लख बन्धिकी', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('8', 'Will::::शेष पछिको बकस पत्र', 'c');
+insert into administrative.restriction_reason(code, display_value, status) values('9', 'Contract Paper::::करार नामा', 'c');
 
 
 
@@ -3013,10 +3189,22 @@ CREATE TABLE administrative.owner_type(
 
     
  -- Data for the table administrative.owner_type -- 
-insert into administrative.owner_type(code, display_value, description, status) values('pguth', 'Private Guthi', 'Private', 'c');
-insert into administrative.owner_type(code, display_value, description, status) values('gguth', 'Govt. Guth', 'Group', 'c');
-insert into administrative.owner_type(code, display_value, status) values('public', 'Public', 'c');
-insert into administrative.owner_type(code, display_value, status) values('aailani', 'Aailani', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3401', 'Raikar::::रैकर निजि', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3402', 'Private Guthi::::निजी गुठी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3403', 'Govt. Guth::::गठी. अधिनस्त', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3404', 'Govt. Guthi Tai::::गुठी तैनाथी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3405', 'Govt. Guthi Nam::::गुठी नंवरी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3406', 'Govt. Guthi Rai::::राज गुठी रैतान नंवरी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3407', 'Govt.::::सरकारी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3408', 'Public::::सावर्जनीक', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3409', 'Aailani::::एैलानी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3410', 'UnClaimed::::पतिर्', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3411', 'Govt. Amanati::::स. अमानती', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3412', 'Others::::अन्य', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3413', 'road::::बाटो प्रयोजन', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3414', '.', 'x');
+insert into administrative.owner_type(code, display_value, status) values('3415', 'सहकारी', 'c');
+insert into administrative.owner_type(code, display_value, status) values('3416', 'स्थानिय निकाय', 'c');
 
 
 
@@ -3035,8 +3223,26 @@ CREATE TABLE administrative.ownership_type(
 
     
  -- Data for the table administrative.ownership_type -- 
-insert into administrative.ownership_type(code, display_value, description, status) values('single', 'Single', 'Single', 'c');
-insert into administrative.ownership_type(code, display_value, description, status) values('joint', 'Joint', 'Joint', 'c');
+insert into administrative.ownership_type(code, display_value, description, status) values('3001', 'Single::::एकलौटी', 'Single', 'c');
+insert into administrative.ownership_type(code, display_value, description, status) values('3002', 'Joint::::संयुक्त', 'Joint', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3003', 'पू. कोठा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3004', 'प. कोठा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3005', 'खण्डे हक', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3006', 'वगर् मिटर', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3007', 'उ. कोठा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3008', 'द. कोठा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3009', 'Blank::::बाटो (करिडोर)', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3010', 'कौसी', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3011', 'अन्य', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3012', 'एकलौटी', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3013', 'तल्ला', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3014', 'कोठा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3015', 'मोहीलागेको', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3016', 'संगोल', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3017', 'एकलौटी', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3018', 'साझा', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3019', 'सबै', 'c');
+insert into administrative.ownership_type(code, display_value, status) values('3020', 'बराबर', 'c');
 
 
 
@@ -3055,9 +3261,9 @@ CREATE TABLE administrative.restriction_release_reason(
 
     
  -- Data for the table administrative.restriction_release_reason -- 
-insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'Court Order', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'Office Decision', 'c');
-insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'Release Letter', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('1', 'By Letter::::फुकुवा पत्रानुसार', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('2', 'By Office::::कार्यालयको निर्णयानुसार', 'c');
+insert into administrative.restriction_release_reason(code, display_value, status) values('3', 'By Court Order::::अदालतको आदेशानुसार', 'c');
 
 
 
@@ -3076,6 +3282,12 @@ CREATE TABLE administrative.tenancy_type(
 );
 
     
+ -- Data for the table administrative.tenancy_type -- 
+insert into administrative.tenancy_type(code, display_value, description, status) values('3301', 'TC1::::दतार्वाला', '', 'c');
+insert into administrative.tenancy_type(code, display_value, status) values('3302', 'TC2::::जोताहा', 'c');
+
+
+
 --Table administrative.source_describes_rrr ----
 DROP TABLE IF EXISTS administrative.source_describes_rrr CASCADE;
 CREATE TABLE administrative.source_describes_rrr(
@@ -4282,38 +4494,38 @@ CREATE TABLE application.request_type_requires_source_type(
 
     
  -- Data for the table application.request_type_requires_source_type -- 
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', 'cadastreChange');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', 'redefineCadastre');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', 'missingLandRegister');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'missingLandRegister');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'resignation');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'regnDeeds');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', 'newSurvey');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('powerOfAttorney', 'regnPowerOfAttorney');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'propertyDivision');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'manuJodiako');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'manuJodiako');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'removeDuplicate');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'afterDeathWilling');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', 'shresthaAdhyabadhik');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'guthiRaitani');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'ownerCancellation');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'chakalaBandhi');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'chakalaBandhi');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'newApartment');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'stayCurrent');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'lakhaBandhaki');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'lakhaBandhaki');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'distriBandhaki');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'distriBandhaki');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'agreement');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'donationLetter');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', 'rightReceived');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'rightReceived');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'threeGeneration');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'threeGeneration');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', 'decisionBased');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', 'decisionBased');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('powerOfAttorney', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
 
 
 
@@ -4620,8 +4832,6 @@ insert into system.approle(code, display_value, status, description) values('App
 insert into system.approle(code, display_value, status, description) values('ApplnStatus', 'Generate and View Status Report', 'c', 'Generate and View Status Report');
 insert into system.approle(code, display_value, status, description) values('ApplnAssignDeprt', 'Assign Applications to Department staff', 'c', 'Able to assign (unassigned) applications to department staff');
 insert into system.approle(code, display_value, status, description) values('ApplnAssignAll', 'Assign Applications to all users in office', 'c', 'Able to assign (unassigned) applications to any user in office');
-insert into system.approle(code, display_value, status, description) values('StartService', 'Start Service', 'c', 'Start Service');
-insert into system.approle(code, display_value, status, description) values('CompleteService', 'Complete Service', 'c', 'Complete Service (prior to approval)');
 insert into system.approle(code, display_value, status, description) values('CancelService', 'Cancel Service', 'c', 'Cancel Service');
 insert into system.approle(code, display_value, status, description) values('RevertService', 'Revert Service', 'c', 'Revert previously Complete Service');
 insert into system.approle(code, display_value, status, description) values('ApplnApprove', 'Approve Application', 'c', 'Approve Application');
@@ -4652,6 +4862,9 @@ insert into system.approle(code, display_value, status, description) values('RHS
 insert into system.approle(code, display_value, status, description) values('MothManagement', 'Create and manage Moth', 'c', 'Allows to create and manage Moth and it''s pages');
 insert into system.approle(code, display_value, status, description) values('RestrictionSearch', 'Search restrictions', 'c', 'Search restrictions');
 insert into system.approle(code, display_value, status, description) values('PrintRestrLetter', 'Print restriction letter', 'c', 'Print restriction letter');
+insert into system.approle(code, display_value, status, description) values('DoRegServices', 'Run and complete registration services', 'c', 'Allows to run and complete registration services');
+insert into system.approle(code, display_value, status, description) values('DoCadastreServices', 'Run and complete cadastre services', 'c', 'Allows to run and complete cadastre services');
+insert into system.approle(code, display_value, status, description) values('DoInfoServices', 'Run and complete information services', 'c', 'Allows to run and complete information services');
 
 
 
@@ -4673,8 +4886,8 @@ insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCrea
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('StartService', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('CompleteService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('CancelService', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('RevertService', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnApprove', 'super-group-id');
@@ -4705,6 +4918,9 @@ insert into system.approle_appgroup(approle_code, appgroup_id) values('RHSave', 
 insert into system.approle_appgroup(approle_code, appgroup_id) values('MothManagement', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('RestrictionSearch', 'super-group-id');
 insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintRestrLetter', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoRegServices', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoCadastreServices', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoInfoServices', 'super-group-id');
 
 
 
@@ -5454,93 +5670,93 @@ ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_land_class_c
             FOREIGN KEY (land_class_code) REFERENCES cadastre.land_class(code) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX cadastre_object_land_class_code_fk154_ind ON cadastre.cadastre_object (land_class_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_address_id_fk155 
-            FOREIGN KEY (address_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_address_id_fk155_ind ON cadastre.cadastre_object (address_id);
-
-ALTER TABLE party.party ADD CONSTRAINT party_parent_id_fk156 
+ALTER TABLE party.party ADD CONSTRAINT party_parent_id_fk155 
             FOREIGN KEY (parent_id) REFERENCES party.party(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_parent_id_fk156_ind ON party.party (parent_id);
+CREATE INDEX party_parent_id_fk155_ind ON party.party (parent_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_id_office_district_code_fk157 
+ALTER TABLE party.party ADD CONSTRAINT party_id_office_district_code_fk156 
             FOREIGN KEY (id_office_district_code) REFERENCES address.district(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_id_office_district_code_fk157_ind ON party.party (id_office_district_code);
+CREATE INDEX party_id_office_district_code_fk156_ind ON party.party (id_office_district_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id2_fk158 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id2_fk157 
             FOREIGN KEY (map_sheet_id2) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_map_sheet_id2_fk158_ind ON cadastre.cadastre_object (map_sheet_id2);
+CREATE INDEX cadastre_object_map_sheet_id2_fk157_ind ON cadastre.cadastre_object (map_sheet_id2);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id3_fk159 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id3_fk158 
             FOREIGN KEY (map_sheet_id3) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_map_sheet_id3_fk159_ind ON cadastre.cadastre_object (map_sheet_id3);
+CREATE INDEX cadastre_object_map_sheet_id3_fk158_ind ON cadastre.cadastre_object (map_sheet_id3);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id4_fk160 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_map_sheet_id4_fk159 
             FOREIGN KEY (map_sheet_id4) REFERENCES cadastre.map_sheet(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_map_sheet_id4_fk160_ind ON cadastre.cadastre_object (map_sheet_id4);
+CREATE INDEX cadastre_object_map_sheet_id4_fk159_ind ON cadastre.cadastre_object (map_sheet_id4);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_area_unit_type_code_fk161 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_area_unit_type_code_fk160 
             FOREIGN KEY (area_unit_type_code) REFERENCES cadastre.area_unit_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_area_unit_type_code_fk161_ind ON cadastre.cadastre_object (area_unit_type_code);
+CREATE INDEX cadastre_object_area_unit_type_code_fk160_ind ON cadastre.cadastre_object (area_unit_type_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_release_reason_code_fk162 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_restriction_release_reason_code_fk161 
             FOREIGN KEY (restriction_release_reason_code) REFERENCES administrative.restriction_release_reason(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_restriction_release_reason_code_fk162_ind ON administrative.rrr (restriction_release_reason_code);
+CREATE INDEX rrr_restriction_release_reason_code_fk161_ind ON administrative.rrr (restriction_release_reason_code);
 
-ALTER TABLE party.party ADD CONSTRAINT party_id_office_type_code_fk163 
+ALTER TABLE party.party ADD CONSTRAINT party_id_office_type_code_fk162 
             FOREIGN KEY (id_office_type_code) REFERENCES party.id_office_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_id_office_type_code_fk163_ind ON party.party (id_office_type_code);
+CREATE INDEX party_id_office_type_code_fk162_ind ON party.party (id_office_type_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_tenancy_type_code_fk164 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_tenancy_type_code_fk163 
             FOREIGN KEY (tenancy_type_code) REFERENCES administrative.tenancy_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_tenancy_type_code_fk164_ind ON administrative.rrr (tenancy_type_code);
+CREATE INDEX rrr_tenancy_type_code_fk163_ind ON administrative.rrr (tenancy_type_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_fy_code_fk165 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_fy_code_fk164 
             FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_fy_code_fk165_ind ON cadastre.cadastre_object (fy_code);
+CREATE INDEX cadastre_object_fy_code_fk164_ind ON cadastre.cadastre_object (fy_code);
 
-ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_fy_code_fk166 
+ALTER TABLE administrative.ba_unit ADD CONSTRAINT ba_unit_fy_code_fk165 
             FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX ba_unit_fy_code_fk166_ind ON administrative.ba_unit (fy_code);
+CREATE INDEX ba_unit_fy_code_fk165_ind ON administrative.ba_unit (fy_code);
 
-ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_fy_code_fk167 
+ALTER TABLE administrative.rrr ADD CONSTRAINT rrr_fy_code_fk166 
             FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX rrr_fy_code_fk167_ind ON administrative.rrr (fy_code);
+CREATE INDEX rrr_fy_code_fk166_ind ON administrative.rrr (fy_code);
 
-ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_transaction_id_fk168 
+ALTER TABLE administrative.required_relationship_baunit ADD CONSTRAINT required_relationship_baunit_transaction_id_fk167 
             FOREIGN KEY (transaction_id) REFERENCES transaction.transaction(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX required_relationship_baunit_transaction_id_fk168_ind ON administrative.required_relationship_baunit (transaction_id);
+CREATE INDEX required_relationship_baunit_transaction_id_fk167_ind ON administrative.required_relationship_baunit (transaction_id);
 
-ALTER TABLE application.application ADD CONSTRAINT application_fy_code_fk169 
+ALTER TABLE application.application ADD CONSTRAINT application_fy_code_fk168 
             FOREIGN KEY (fy_code) REFERENCES system.financial_year(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX application_fy_code_fk169_ind ON application.application (fy_code);
+CREATE INDEX application_fy_code_fk168_ind ON application.application (fy_code);
 
-ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_vdc_code_fk170 
+ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_vdc_code_fk169 
             FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX vdc_appuser_vdc_code_fk170_ind ON system.vdc_appuser (vdc_code);
+CREATE INDEX vdc_appuser_vdc_code_fk169_ind ON system.vdc_appuser (vdc_code);
 
-ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_appuser_id_fk171 
+ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_appuser_id_fk170 
             FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX vdc_appuser_appuser_id_fk171_ind ON system.vdc_appuser (appuser_id);
+CREATE INDEX vdc_appuser_appuser_id_fk170_ind ON system.vdc_appuser (appuser_id);
 
-ALTER TABLE party.party ADD CONSTRAINT party_grandfather_type_code_fk172 
+ALTER TABLE party.party ADD CONSTRAINT party_grandfather_type_code_fk171 
             FOREIGN KEY (grandfather_type_code) REFERENCES party.grandfather_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_grandfather_type_code_fk172_ind ON party.party (grandfather_type_code);
+CREATE INDEX party_grandfather_type_code_fk171_ind ON party.party (grandfather_type_code);
 
-ALTER TABLE party.party ADD CONSTRAINT party_father_type_code_fk173 
+ALTER TABLE party.party ADD CONSTRAINT party_father_type_code_fk172 
             FOREIGN KEY (father_type_code) REFERENCES party.father_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX party_father_type_code_fk173_ind ON party.party (father_type_code);
+CREATE INDEX party_father_type_code_fk172_ind ON party.party (father_type_code);
 
-ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_dataset_id_fk174 
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_dataset_id_fk173 
             FOREIGN KEY (dataset_id) REFERENCES cadastre.dataset(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX cadastre_object_dataset_id_fk174_ind ON cadastre.cadastre_object (dataset_id);
+CREATE INDEX cadastre_object_dataset_id_fk173_ind ON cadastre.cadastre_object (dataset_id);
 
-ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_office_code_fk175 
+ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_office_code_fk174 
             FOREIGN KEY (office_code) REFERENCES system.office(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX dataset_office_code_fk175_ind ON cadastre.dataset (office_code);
+CREATE INDEX dataset_office_code_fk174_ind ON cadastre.dataset (office_code);
 
-ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_vdc_code_fk176 
+ALTER TABLE cadastre.dataset ADD CONSTRAINT dataset_vdc_code_fk175 
             FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX dataset_vdc_code_fk176_ind ON cadastre.dataset (vdc_code);
+CREATE INDEX dataset_vdc_code_fk175_ind ON cadastre.dataset (vdc_code);
+
+ALTER TABLE cadastre.cadastre_object ADD CONSTRAINT cadastre_object_address_id_fk176 
+            FOREIGN KEY (address_id) REFERENCES address.address(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX cadastre_object_address_id_fk176_ind ON cadastre.cadastre_object (address_id);
 --Generate triggers for tables --
 -- triggers for table source.source -- 
 
