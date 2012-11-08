@@ -787,24 +787,14 @@ CREATE TABLE source.administrative_source_type(
 
     
  -- Data for the table source.administrative_source_type -- 
-insert into source.administrative_source_type(code, display_value, status, has_status) values('agriConsent', 'Agricultural Consent::::Permesso Agricolo', 'x', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('agriLease', 'Agricultural Lease::::Contratto Affitto Agricolo', 'x', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('agriNotaryStatement', 'Agricultural Notary Statement::::Dichiarazione Agricola Notaio', 'x', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('deed', 'Deed', 'c', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('lease', 'Lease::::ITALIANO', 'c', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('mortgage', 'Mortgage::::Ipoteca', 'c', false);
-insert into source.administrative_source_type(code, display_value, status, has_status) values('title', 'Title::::Titolo', 'c', false);
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('proclamation', 'Proclamation::::Bando', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('courtOrder', 'Court Order::::Ordine Tribunale', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('agreement', 'Agreement::::Accordo', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('contractForSale', 'Contract for Sale::::ITALIANO', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('will', 'Will::::ITALIANO', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('powerOfAttorney', 'Power of Attorney::::ITALIANO', 'c', true, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('standardDocument', 'Standard Document::::ITALIANO', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('cadastralMap', 'Cadastral Map::::Mappa Catastale', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('cadastralSurvey', 'Cadastral Survey::::Rilevamento Catastale', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('waiver', 'Waiver to Caveat or other requirement', 'c', false, 'Extension to LADM');
-insert into source.administrative_source_type(code, display_value, status, has_status, description) values('idVerification', 'Form of Identification including Personal ID', 'c', false, 'Extension to LADM');
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2201', 'Deed::::लिखत', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2202', 'Application::::मिसील', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2203', 'Court Order::::अदालती आदेश', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2204', 'Land Napi::::जग्गा नाप जाँच ऐन', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2205', 'Application::::निवेदन अनुसार', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2206', 'Other::::अन्य', 'c', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2207', 'Not Defined::::उल्लेख नभएको', 'x', false);
+insert into source.administrative_source_type(code, display_value, status, has_status) values('2208', 'Letter::::चिठ्ठी', 'c', false);
 
 
 
@@ -1721,7 +1711,7 @@ CREATE TABLE administrative.rrr_type(
  -- Data for the table administrative.rrr_type -- 
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('ownership', 'ownership', 'Ownership::::Proprieta', true, true, true, 'c');
 insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, status) values('tenancy', 'rights', 'Tenancy::::Locazione', true, true, true, 'c');
-insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('simpleRestriction', 'restrictions', 'Simple restriction', false, false, false, '', 'c');
+insert into administrative.rrr_type(code, rrr_group_type_code, display_value, is_primary, share_check, party_required, description, status) values('simpleRestriction', 'restrictions', 'Restriction', false, false, false, '', 'c');
 
 
 
@@ -4494,38 +4484,38 @@ CREATE TABLE application.request_type_requires_source_type(
 
     
  -- Data for the table application.request_type_requires_source_type -- 
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('cadastralSurvey', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('powerOfAttorney', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('mortgage', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('lease', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('deed', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('title', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
+insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
 
 
 
