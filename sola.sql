@@ -5039,6 +5039,12 @@ CREATE TABLE system.vdc_appuser(
 );
 
     
+ -- Data for the table system.vdc_appuser -- 
+insert into system.vdc_appuser(id, vdc_code, appuser_id) values('vdc1', '43055', 'test-id');
+insert into system.vdc_appuser(id, vdc_code, appuser_id) values('vdc2', '27009', 'test-id');
+
+
+
 
 ALTER TABLE source.spatial_source ADD CONSTRAINT spatial_source_type_code_fk0 
             FOREIGN KEY (type_code) REFERENCES source.spatial_source_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
