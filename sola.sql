@@ -1593,7 +1593,7 @@ CREATE TABLE system.financial_year(
 
     
  -- Data for the table system.financial_year -- 
-insert into system.financial_year(code, display_value, status, current, start_date, end_date) values('68', '6970', 'c', true, '16.07.2012', '18.07.2013');
+insert into system.financial_year(code, display_value, status, current, start_date, end_date) values('68', '6970', 'c', true, '2012-07-16', '2013-07-18');
 
 
 
@@ -4483,42 +4483,6 @@ CREATE TABLE application.request_type_requires_source_type(
 );
 
     
- -- Data for the table application.request_type_requires_source_type -- 
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-
-
-
 --Table system.setting ----
 DROP TABLE IF EXISTS system.setting CASCADE;
 CREATE TABLE system.setting(
@@ -4654,14 +4618,14 @@ CREATE TABLE system.query(
 
     
  -- Data for the table system.query -- 
-insert into system.query(name, sql) values('SpatialResult.getParcels', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co where type_code= ''parcel'' and status_code= ''current'' and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('SpatialResult.getParcelsPending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co  where type_code= ''parcel'' and status_code= ''pending''   and ST_Intersects(co.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid})) union select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co_t.geom_polygon) as the_geom,co.map_sheet_id,co.parcel_type  from cadastre.cadastre_object co inner join cadastre.cadastre_object_target co_t on co.id = co_t.cadastre_object_id and co_t.geom_polygon is not null where ST_Intersects(co_t.geom_polygon, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))       and co_t.transaction_id in (select id from transaction.transaction where status_code not in (''approved''))');
+insert into system.query(name, sql) values('SpatialResult.getParcels', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co where type_code= ''parcel'' and status_code= ''current'' and co.dataset_id = #{datasetId}');
+insert into system.query(name, sql) values('SpatialResult.getParcelsPending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co.geom_polygon) as the_geom,co.map_sheet_id,co.type_code  from cadastre.cadastre_object co  where type_code= ''parcel'' and status_code= ''pending'' union select co.id, co.name_firstpart || ''/'' || co.name_lastpart as label,  st_asewkb(co_t.geom_polygon) as the_geom,co.map_sheet_id,co.type_code  from cadastre.cadastre_object co inner join cadastre.cadastre_object_target co_t on co.id = co_t.cadastre_object_id and co_t.geom_polygon is not null where co_t.transaction_id in (select id from transaction.transaction where status_code not in (''approved'')) and co.dataset_id = #{datasetId}');
 insert into system.query(name, sql) values('SpatialResult.getSurveyControls', 'select id, label, st_asewkb(geom) as the_geom from cadastre.survey_control  where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
 insert into system.query(name, sql) values('SpatialResult.getRoads', 'select id, label, st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
 insert into system.query(name, sql) values('SpatialResult.getPlaceNames', 'select id, label, st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
 insert into system.query(name, sql) values('SpatialResult.getApplications', 'select id, nr as label, st_asewkb(location) as the_geom from application.application where ST_Intersects(location, SetSRID(ST_MakeBox3D(ST_Point(#{minx}, #{miny}),ST_Point(#{maxx}, #{maxy})), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_parcel', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,      (select string_agg(ba.name_firstpart || ''/'' || ba.name_lastpart, '','')      from administrative.ba_unit_contains_spatial_unit bas, administrative.ba_unit ba      where spatial_unit_id= co.id and bas.ba_unit_id= ba.id) as ba_units,      ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area      WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,       st_asewkb(co.geom_polygon) as the_geom      from cadastre.cadastre_object co      where type_code= ''parcel'' and status_code= ''current''      and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
-insert into system.query(name, sql) values('dynamic.informationtool.get_parcel_pending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr,       ( SELECT spatial_value_area.size FROM cadastre.spatial_value_area         WHERE spatial_value_area.type_code=''officialArea'' and spatial_value_area.spatial_unit_id = co.id) AS area_official_sqm,   st_asewkb(co.geom_polygon) as the_geom    from cadastre.cadastre_object co  where type_code= ''parcel'' and ((status_code= ''pending''    and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})))   or (co.id in (select cadastre_object_id           from cadastre.cadastre_object_target co_t inner join transaction.transaction t on co_t.transaction_id=t.id           where ST_Intersects(co_t.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})) and t.status_code not in (''approved''))))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_parcel', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr, (select string_agg(ba.name_firstpart || ''/'' || ba.name_lastpart, '','') from administrative.ba_unit ba where ba.cadastre_object_id = co.id) as ba_units, co.official_area AS area_official_sqm, st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co where type_code= ''parcel'' and status_code= ''current'' and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
+insert into system.query(name, sql) values('dynamic.informationtool.get_parcel_pending', 'select co.id, co.name_firstpart || ''/'' || co.name_lastpart as parcel_nr, co.official_area AS area_official_sqm,   st_asewkb(co.geom_polygon) as the_geom from cadastre.cadastre_object co  where type_code= ''parcel'' and ((status_code= ''pending'' and ST_Intersects(co.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})))   or (co.id in (select cadastre_object_id from cadastre.cadastre_object_target co_t inner join transaction.transaction t on co_t.transaction_id=t.id where ST_Intersects(co_t.geom_polygon, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid})) and t.status_code not in (''approved''))))');
 insert into system.query(name, sql) values('dynamic.informationtool.get_place_name', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.place_name where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 insert into system.query(name, sql) values('dynamic.informationtool.get_road', 'select id, label,  st_asewkb(geom) as the_geom from cadastre.road where ST_Intersects(geom, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
 insert into system.query(name, sql) values('dynamic.informationtool.get_application', 'select id, nr,  st_asewkb(location) as the_geom from application.application where ST_Intersects(location, ST_SetSRID(ST_GeomFromWKB(#{wkb_geom}), #{srid}))');
@@ -4858,62 +4822,6 @@ insert into system.approle(code, display_value, status, description) values('DoI
 
 
 
---Table system.approle_appgroup ----
-DROP TABLE IF EXISTS system.approle_appgroup CASCADE;
-CREATE TABLE system.approle_appgroup(
-    approle_code varchar(20) NOT NULL,
-    appgroup_id varchar(40) NOT NULL,
-
-    -- Internal constraints
-    
-    CONSTRAINT approle_appgroup_pkey PRIMARY KEY (approle_code,appgroup_id)
-);
-
-    
- -- Data for the table system.approle_appgroup -- 
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnView', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCreate', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('CancelService', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('RevertService', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnApprove', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnReject', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnValidate', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnArchive', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitCertificate', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSearch', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('TransactionCommit', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ViewMap', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintMap', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('PartySave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSearch', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('SourcePrint', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ReportGenerate', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ArchiveApps', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSecurity', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageRefdata', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSettings', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnEdit', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageBR', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('MapSheetSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelDetailsSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('RHSave', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('MothManagement', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('RestrictionSearch', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintRestrLetter', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DoRegServices', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DoCadastreServices', 'super-group-id');
-insert into system.approle_appgroup(approle_code, appgroup_id) values('DoInfoServices', 'super-group-id');
-
-
-
 --Table system.appgroup ----
 DROP TABLE IF EXISTS system.appgroup CASCADE;
 CREATE TABLE system.appgroup(
@@ -5042,6 +4950,60 @@ CREATE TABLE system.vdc_appuser(
  -- Data for the table system.vdc_appuser -- 
 insert into system.vdc_appuser(id, vdc_code, appuser_id) values('vdc1', '43055', 'test-id');
 insert into system.vdc_appuser(id, vdc_code, appuser_id) values('vdc2', '27009', 'test-id');
+
+
+
+--Table system.approle_appgroup ----
+DROP TABLE IF EXISTS system.approle_appgroup CASCADE;
+CREATE TABLE system.approle_appgroup(
+    approle_code varchar(20) NOT NULL,
+    appgroup_id varchar(40) NOT NULL,
+
+    -- Internal constraints
+    
+    CONSTRAINT approle_appgroup_pkey PRIMARY KEY (approle_code,appgroup_id)
+);
+
+    
+ -- Data for the table system.approle_appgroup -- 
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnView', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnCreate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnStatus', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignDeprt', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnAssignAll', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('CancelService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RevertService', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnApprove', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnReject', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnValidate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnArchive', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitCertificate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('BaunitSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('TransactionCommit', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ViewMap', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintMap', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PartySave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourceSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('SourcePrint', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ReportGenerate', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ArchiveApps', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSecurity', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageRefdata', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageSettings', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ApplnEdit', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ManageBR', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('MapSheetSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('ParcelDetailsSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RHSave', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('MothManagement', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('RestrictionSearch', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('PrintRestrLetter', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoRegServices', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoCadastreServices', 'super-group-id');
+insert into system.approle_appgroup(approle_code, appgroup_id) values('DoInfoServices', 'super-group-id');
 
 
 
@@ -5438,13 +5400,13 @@ ALTER TABLE system.appuser_appgroup ADD CONSTRAINT appuser_appgroup_appgroup_id_
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
 CREATE INDEX appuser_appgroup_appgroup_id_fk97_ind ON system.appuser_appgroup (appgroup_id);
 
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk98 
-            FOREIGN KEY (approle_code) REFERENCES system.approle(code) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_approle_code_fk98_ind ON system.approle_appgroup (approle_code);
-
-ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk99 
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_appgroup_id_fk98 
             FOREIGN KEY (appgroup_id) REFERENCES system.appgroup(id) ON UPDATE CASCADE ON DELETE CASCADE;
-CREATE INDEX approle_appgroup_appgroup_id_fk99_ind ON system.approle_appgroup (appgroup_id);
+CREATE INDEX approle_appgroup_appgroup_id_fk98_ind ON system.approle_appgroup (appgroup_id);
+
+ALTER TABLE system.approle_appgroup ADD CONSTRAINT approle_appgroup_approle_code_fk99 
+            FOREIGN KEY (approle_code) REFERENCES system.approle(code) ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX approle_appgroup_approle_code_fk99_ind ON system.approle_appgroup (approle_code);
 
 ALTER TABLE application.service_action_type ADD CONSTRAINT service_action_type_status_to_set_fk100 
             FOREIGN KEY (status_to_set) REFERENCES application.service_status_type(code) ON UPDATE CASCADE ON DELETE RESTRICT;
