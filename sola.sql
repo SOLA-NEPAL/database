@@ -1593,7 +1593,7 @@ CREATE TABLE system.financial_year(
 
     
  -- Data for the table system.financial_year -- 
-insert into system.financial_year(code, display_value, status, current, start_date, end_date) values('68', '6970', 'c', true, '16.07.2012', '18.07.2013');
+insert into system.financial_year(code, display_value, status, current, start_date, end_date) values('68', '6970', 'c', true, '07/16/2012', '07/18/2013');
 
 
 
@@ -4481,43 +4481,6 @@ CREATE TABLE application.request_type_requires_source_type(
     
     CONSTRAINT request_type_requires_source_type_pkey PRIMARY KEY (source_type_code,request_type_code)
 );
-
-    
- -- Data for the table application.request_type_requires_source_type -- 
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-insert into application.request_type_requires_source_type(source_type_code, request_type_code) values('', '');
-
-
 
 --Table system.setting ----
 DROP TABLE IF EXISTS system.setting CASCADE;
