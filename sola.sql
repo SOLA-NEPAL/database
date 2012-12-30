@@ -404,7 +404,7 @@ WHILE i<= cnt LOOP
    i=i+1;
 end LOOP;
 
-IF mm < 9 THEN
+IF mm <= 9 THEN
   mnth='0' || mm;
 ELSE
   mnth=mm;
@@ -412,7 +412,7 @@ END IF;
 
 d = dateDiff-d+1;
 
-IF d < 9 THEN
+IF d <= 9 THEN
   days='0' || d;
 ELSE
   days=d;
