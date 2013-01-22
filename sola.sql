@@ -5679,11 +5679,11 @@ ALTER TABLE application.application ADD CONSTRAINT application_fy_code_fk167
 CREATE INDEX application_fy_code_fk167_ind ON application.application (fy_code);
 
 ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_vdc_code_fk168 
-            FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (vdc_code) REFERENCES address.vdc(code) ON UPDATE CASCADE ON DELETE Cascade;
 CREATE INDEX vdc_appuser_vdc_code_fk168_ind ON system.vdc_appuser (vdc_code);
 
 ALTER TABLE system.vdc_appuser ADD CONSTRAINT vdc_appuser_appuser_id_fk169 
-            FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+            FOREIGN KEY (appuser_id) REFERENCES system.appuser(id) ON UPDATE CASCADE ON DELETE Cascade;
 CREATE INDEX vdc_appuser_appuser_id_fk169_ind ON system.vdc_appuser (appuser_id);
 
 ALTER TABLE party.party ADD CONSTRAINT party_grandfather_type_code_fk170 
